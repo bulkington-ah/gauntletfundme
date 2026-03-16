@@ -1,5 +1,5 @@
 import { createStaticSessionViewerGateway } from "@/infrastructure/auth";
-import { createStaticPublicContentRepository } from "@/infrastructure/public-content";
+import { createPostgresPublicContentEngagementRepository } from "@/infrastructure/persistence";
 
 import {
   followTarget,
@@ -10,11 +10,45 @@ import {
   getPublicFundraiserBySlug,
   getPublicProfileBySlug,
   type LookupBySlugRequest,
+  type PublicContentReadRepository,
 } from "../public-content";
+import type {
+  FollowOwnerLookup,
+  FollowTargetLookup,
+  FollowWriteRepository,
+  SessionViewerGateway,
+} from "../engagement";
 
-export const createApplicationApi = () => {
-  const publicContentReadRepository = createStaticPublicContentRepository();
-  const sessionViewerGateway = createStaticSessionViewerGateway();
+type Dependencies = {
+  publicContentReadRepository?: PublicContentReadRepository;
+  followTargetLookup?: FollowTargetLookup;
+  followOwnerLookup?: FollowOwnerLookup;
+  followWriteRepository?: FollowWriteRepository;
+  sessionViewerGateway?: SessionViewerGateway;
+};
+
+export const createApplicationApi = (dependencies: Dependencies = {}) => {
+  let persistenceAdapter:
+    | ReturnType<typeof createPostgresPublicContentEngagementRepository>
+    | null = null;
+  const resolvePersistenceAdapter = () => {
+    if (!persistenceAdapter) {
+      persistenceAdapter = createPostgresPublicContentEngagementRepository();
+    }
+
+    return persistenceAdapter;
+  };
+
+  const publicContentReadRepository =
+    dependencies.publicContentReadRepository ?? resolvePersistenceAdapter();
+  const followTargetLookup =
+    dependencies.followTargetLookup ?? resolvePersistenceAdapter();
+  const followOwnerLookup =
+    dependencies.followOwnerLookup ?? resolvePersistenceAdapter();
+  const followWriteRepository =
+    dependencies.followWriteRepository ?? resolvePersistenceAdapter();
+  const sessionViewerGateway =
+    dependencies.sessionViewerGateway ?? createStaticSessionViewerGateway();
 
   return {
     getPublicProfileBySlug: (request: LookupBySlugRequest) =>
@@ -27,7 +61,9 @@ export const createApplicationApi = () => {
       followTarget(
         {
           sessionViewerGateway,
-          followTargetLookup: publicContentReadRepository,
+          followTargetLookup,
+          followOwnerLookup,
+          followWriteRepository,
         },
         request,
       ),

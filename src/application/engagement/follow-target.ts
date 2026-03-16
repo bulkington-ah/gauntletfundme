@@ -5,7 +5,13 @@ import {
   type FollowTargetType,
 } from "@/domain";
 
-import type { AuthenticatedViewer, FollowTargetLookup, SessionViewerGateway } from "./ports";
+import type {
+  AuthenticatedViewer,
+  FollowOwnerLookup,
+  FollowTargetLookup,
+  FollowWriteRepository,
+  SessionViewerGateway,
+} from "./ports";
 
 export type FollowTargetRequest = {
   sessionToken: string | null;
@@ -27,18 +33,25 @@ export type FollowTargetResult =
       message: string;
     }
   | {
-      status: "not_implemented";
+      status: "forbidden";
       message: string;
+    }
+  | {
+      status: "success";
       viewer: AuthenticatedViewer;
       target: {
         type: FollowTargetType;
         slug: string;
       };
+      followId: string;
+      created: boolean;
     };
 
 type Dependencies = {
   sessionViewerGateway: SessionViewerGateway;
   followTargetLookup: FollowTargetLookup;
+  followOwnerLookup: FollowOwnerLookup;
+  followWriteRepository: FollowWriteRepository;
 };
 
 export const followTarget = async (
@@ -59,7 +72,7 @@ export const followTarget = async (
     return {
       status: "unauthorized",
       message:
-        "Authentication is required for follow commands. Send the x-demo-session header to exercise this placeholder write path.",
+        "Authentication is required for follow commands. Send the x-demo-session header to continue.",
     };
   }
 
@@ -77,15 +90,35 @@ export const followTarget = async (
     };
   }
 
+  const targetOwnerUserId = await dependencies.followOwnerLookup.findOwnerUserIdByTarget(
+    target.targetType,
+    target.id,
+  );
+
+  if (targetOwnerUserId === viewer.userId) {
+    return {
+      status: "forbidden",
+      message: "You cannot follow your own profile, fundraiser, or community.",
+    };
+  }
+
+  const persistedFollow = await dependencies.followWriteRepository.createFollowIfAbsent(
+    {
+      userId: viewer.userId,
+      targetType: target.targetType,
+      targetId: target.id,
+    },
+  );
+
   return {
-    status: "not_implemented",
-    message:
-      "The follow command boundary is wired through application and auth checks, but persistence is intentionally deferred to a later task.",
+    status: "success",
     viewer,
     target: {
       type: target.targetType,
       slug: target.slug,
     },
+    followId: persistedFollow.follow.id,
+    created: persistedFollow.created,
   };
 };
 

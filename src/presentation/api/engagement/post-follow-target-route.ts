@@ -1,4 +1,4 @@
-import { applicationApi } from "../application-api";
+import { getApplicationApi } from "../application-api";
 import { jsonResponse, parseJsonBody } from "../http";
 
 type FollowTargetBody = {
@@ -23,7 +23,7 @@ export const handlePostFollowTargetRoute = async (
     );
   }
 
-  const result = await applicationApi.followTarget({
+  const result = await getApplicationApi().followTarget({
     sessionToken: request.headers.get(demoSessionHeader),
     targetType: body.targetType,
     targetSlug: body.targetSlug,
@@ -45,18 +45,22 @@ export const handlePostFollowTargetRoute = async (
       );
     case "not_found":
       return jsonResponse({ error: result.status, message: result.message }, 404);
-    case "not_implemented":
+    case "forbidden":
+      return jsonResponse({ error: result.status, message: result.message }, 403);
+    case "success":
       return jsonResponse(
         {
-          error: result.status,
-          message: result.message,
           viewer: result.viewer,
           target: result.target,
+          follow: {
+            id: result.followId,
+            created: result.created,
+          },
           meta: {
             demoSessionHeader,
           },
         },
-        501,
+        result.created ? 201 : 200,
       );
   }
 };

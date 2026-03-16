@@ -3,3 +3,6 @@ coverage
 node_modules
 npm-debug.log*
 vitest-report
+.env
+.env.local
+.env.*.local

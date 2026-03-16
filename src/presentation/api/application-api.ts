@@ -1,3 +1,17 @@
 import { createApplicationApi } from "@/application";
 
-export const applicationApi = createApplicationApi();
+let applicationApi: ReturnType<typeof createApplicationApi> | null = null;
+
+export const getApplicationApi = () => {
+  if (!applicationApi) {
+    applicationApi = createApplicationApi();
+  }
+
+  return applicationApi;
+};
+
+export const setApplicationApiForTesting = (
+  nextApplicationApi: ReturnType<typeof createApplicationApi>,
+) => {
+  applicationApi = nextApplicationApi;
+};

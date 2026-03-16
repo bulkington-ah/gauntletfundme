@@ -1,4 +1,4 @@
-import { applicationApi } from "../application-api";
+import { getApplicationApi } from "../application-api";
 import { jsonResponse } from "../http";
 
 type SlugRouteContext = {
@@ -9,7 +9,7 @@ export const handleGetPublicProfileRoute = async (
   _request: Request,
   context: SlugRouteContext,
 ): Promise<Response> => {
-  const result = await applicationApi.getPublicProfileBySlug({
+  const result = await getApplicationApi().getPublicProfileBySlug({
     slug: context.slug,
   });
 

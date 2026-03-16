@@ -1,4 +1,4 @@
-import { applicationApi } from "../application-api";
+import { getApplicationApi } from "../application-api";
 import { jsonResponse } from "../http";
 
 type SlugRouteContext = {
@@ -9,7 +9,7 @@ export const handleGetPublicFundraiserRoute = async (
   _request: Request,
   context: SlugRouteContext,
 ): Promise<Response> => {
-  const result = await applicationApi.getPublicFundraiserBySlug({
+  const result = await getApplicationApi().getPublicFundraiserBySlug({
     slug: context.slug,
   });
 

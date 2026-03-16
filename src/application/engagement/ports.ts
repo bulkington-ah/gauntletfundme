@@ -1,4 +1,4 @@
-import type { FollowTargetType, UserRole } from "@/domain";
+import type { Follow, FollowTargetType, UserRole } from "@/domain";
 
 export type AuthenticatedViewer = {
   userId: string;
@@ -22,4 +22,24 @@ export interface FollowTargetLookup {
     targetType: FollowTargetType,
     slug: string,
   ): Promise<FollowTargetReference | null>;
+}
+
+export type FollowOwnerLookup = {
+  findOwnerUserIdByTarget(
+    targetType: FollowTargetType,
+    targetId: string,
+  ): Promise<string | null>;
+};
+
+export type FollowWriteResult = {
+  follow: Follow;
+  created: boolean;
+};
+
+export interface FollowWriteRepository {
+  createFollowIfAbsent(input: {
+    userId: string;
+    targetType: FollowTargetType;
+    targetId: string;
+  }): Promise<FollowWriteResult>;
 }
