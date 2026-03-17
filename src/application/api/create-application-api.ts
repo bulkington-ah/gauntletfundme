@@ -36,9 +36,13 @@ import {
   type PublicContentReadRepository,
 } from "../public-content";
 import {
+  resolveReport,
+  type ReportReviewLookup,
+  type ReportReviewWriteRepository,
   submitReport,
   type ReportTargetLookup,
   type ReportWriteRepository,
+  type ResolveReportRequest,
   type SubmitReportRequest,
 } from "../moderation";
 import type {
@@ -58,6 +62,8 @@ type Dependencies = {
   donationIntentWriteRepository?: DonationIntentWriteRepository;
   reportTargetLookup?: ReportTargetLookup;
   reportWriteRepository?: ReportWriteRepository;
+  reportReviewLookup?: ReportReviewLookup;
+  reportReviewWriteRepository?: ReportReviewWriteRepository;
   followTargetLookup?: FollowTargetLookup;
   followOwnerLookup?: FollowOwnerLookup;
   followWriteRepository?: FollowWriteRepository;
@@ -100,6 +106,10 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     dependencies.reportTargetLookup ?? resolvePersistenceAdapter();
   const getReportWriteRepository = () =>
     dependencies.reportWriteRepository ?? resolvePersistenceAdapter();
+  const getReportReviewLookup = () =>
+    dependencies.reportReviewLookup ?? resolvePersistenceAdapter();
+  const getReportReviewWriteRepository = () =>
+    dependencies.reportReviewWriteRepository ?? resolvePersistenceAdapter();
   const followTargetLookup =
     dependencies.followTargetLookup ?? resolvePersistenceAdapter();
   const followOwnerLookup =
@@ -162,6 +172,15 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
           sessionViewerGateway,
           reportTargetLookup: getReportTargetLookup(),
           reportWriteRepository: getReportWriteRepository(),
+        },
+        request,
+      ),
+    resolveReport: (request: ResolveReportRequest) =>
+      resolveReport(
+        {
+          sessionViewerGateway,
+          reportReviewLookup: getReportReviewLookup(),
+          reportReviewWriteRepository: getReportReviewWriteRepository(),
         },
         request,
       ),

@@ -10,6 +10,7 @@ export * from "./engagement/post-follow-target-route";
 export * from "./engagement/post-start-donation-intent-route";
 export * from "./engagement/post-unfollow-target-route";
 export * from "./http";
+export * from "./moderation/post-resolve-report-route";
 export * from "./moderation/post-submit-report-route";
 export * from "./public/get-public-community-route";
 export * from "./public/get-public-fundraiser-route";

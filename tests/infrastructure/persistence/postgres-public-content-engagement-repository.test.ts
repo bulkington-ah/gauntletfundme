@@ -220,6 +220,39 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(second.report.id).toBe(first.report.id);
     expect(second.report.status).toBe("submitted");
   });
+
+  it("applies moderation actions so removed content is excluded from public feeds", async () => {
+    const repository = createRepository();
+
+    const reportWrite = await repository.createReportIfAbsent({
+      reporterUserId: "user_moderator_morgan",
+      targetType: "post",
+      targetId: "post_kickoff_update",
+      reason: "Spam",
+    });
+
+    await repository.setModerationStatus({
+      targetType: "post",
+      targetId: "post_kickoff_update",
+      moderationStatus: "removed",
+    });
+    await repository.setReportStatus({
+      reportId: reportWrite.report.id,
+      status: "actioned",
+    });
+
+    const report = await repository.findReportById(reportWrite.report.id);
+    const community = await repository.findCommunityBySlug(
+      "neighbors-helping-neighbors",
+    );
+
+    expect(report).not.toBeNull();
+    expect(report?.status).toBe("actioned");
+    expect(community).not.toBeNull();
+    expect(
+      community?.discussion.some((entry) => entry.post.id === "post_kickoff_update"),
+    ).toBe(false);
+  });
 });
 
 const createRepository = () => {

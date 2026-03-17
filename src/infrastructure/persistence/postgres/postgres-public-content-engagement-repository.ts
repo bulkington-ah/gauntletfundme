@@ -12,6 +12,8 @@ import type {
   PublicContentReadRepository,
   PublicFundraiserSnapshot,
   PublicProfileSnapshot,
+  ReportReviewLookup,
+  ReportReviewWriteRepository,
   ReportTargetLookup,
   ReportWriteRepository,
   ReportWriteResult,
@@ -50,6 +52,8 @@ export const createPostgresPublicContentEngagementRepository = (
   DonationIntentWriteRepository &
   DiscussionTargetLookup &
   DiscussionWriteRepository &
+  ReportReviewLookup &
+  ReportReviewWriteRepository &
   ReportTargetLookup &
   ReportWriteRepository &
   FollowTargetLookup &
@@ -415,6 +419,74 @@ export const createPostgresPublicContentEngagementRepository = (
       }
     },
 
+    async findReportById(reportId) {
+      const result = await query<ReportRow>(
+        `SELECT id, reporter_user_id, target_type, target_id, reason, status, created_at
+         FROM reports
+         WHERE id = $1
+         LIMIT 1`,
+        [reportId],
+      );
+      const report = result.rows[0];
+
+      return report ? mapReport(report) : null;
+    },
+
+    async findReportModerationContext(targetType, targetId) {
+      switch (targetType) {
+        case "post": {
+          const result = await query<{
+            id: string;
+            owner_user_id: string;
+            moderation_status: ModerationStatus;
+          }>(
+            `SELECT p.id, c.owner_user_id, p.moderation_status
+             FROM posts p
+             INNER JOIN communities c ON c.id = p.community_id
+             WHERE p.id = $1
+             LIMIT 1`,
+            [targetId],
+          );
+          const context = result.rows[0];
+
+          return context
+            ? {
+                targetType,
+                targetId: context.id,
+                ownerUserId: context.owner_user_id,
+                moderationStatus: context.moderation_status,
+              }
+            : null;
+        }
+
+        case "comment": {
+          const result = await query<{
+            id: string;
+            owner_user_id: string;
+            moderation_status: ModerationStatus;
+          }>(
+            `SELECT c.id, co.owner_user_id, c.moderation_status
+             FROM comments c
+             INNER JOIN posts p ON p.id = c.post_id
+             INNER JOIN communities co ON co.id = p.community_id
+             WHERE c.id = $1
+             LIMIT 1`,
+            [targetId],
+          );
+          const context = result.rows[0];
+
+          return context
+            ? {
+                targetType,
+                targetId: context.id,
+                ownerUserId: context.owner_user_id,
+                moderationStatus: context.moderation_status,
+              }
+            : null;
+        }
+      }
+    },
+
     async findTargetBySlug(targetType, slug) {
       switch (targetType) {
         case "profile": {
@@ -655,6 +727,36 @@ export const createPostgresPublicContentEngagementRepository = (
         report: mapReport(insertedRow),
         created: true,
       } satisfies ReportWriteResult;
+    },
+
+    async setModerationStatus(input) {
+      switch (input.targetType) {
+        case "post":
+          await query(
+            `UPDATE posts
+             SET moderation_status = $2
+             WHERE id = $1`,
+            [input.targetId, input.moderationStatus],
+          );
+          return;
+        case "comment":
+          await query(
+            `UPDATE comments
+             SET moderation_status = $2
+             WHERE id = $1`,
+            [input.targetId, input.moderationStatus],
+          );
+          return;
+      }
+    },
+
+    async setReportStatus(input) {
+      await query(
+        `UPDATE reports
+         SET status = $2
+         WHERE id = $1`,
+        [input.reportId, input.status],
+      );
     },
 
     async removeFollowIfPresent(input) {

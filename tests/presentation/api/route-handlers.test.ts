@@ -8,6 +8,7 @@ import {
   handlePostCreateCommentRoute,
   handlePostCreatePostRoute,
   handlePostFollowTargetRoute,
+  handlePostResolveReportRoute,
   handlePostStartDonationIntentRoute,
   handlePostSubmitReportRoute,
   handlePostUnfollowTargetRoute,
@@ -122,6 +123,44 @@ describe("API route handlers", () => {
               },
               created: true,
             };
+          },
+        },
+        reportReviewLookup: {
+          async findReportById(reportId) {
+            return reportId === "report_resolve_route_test"
+              ? {
+                  id: "report_resolve_route_test",
+                  reporterUserId: "user_supporter_jordan",
+                  targetType: "comment",
+                  targetId: "comment_container_followup",
+                  reason: "Harassment",
+                  status: "submitted",
+                  createdAt: new Date("2026-03-16T15:16:00.000Z"),
+                }
+              : null;
+          },
+          async findReportModerationContext(targetType, targetId) {
+            if (
+              targetType === "comment" &&
+              targetId === "comment_container_followup"
+            ) {
+              return {
+                targetType: "comment",
+                targetId: "comment_container_followup",
+                ownerUserId: "user_organizer_avery",
+                moderationStatus: "visible",
+              };
+            }
+
+            return null;
+          },
+        },
+        reportReviewWriteRepository: {
+          async setModerationStatus() {
+            return;
+          },
+          async setReportStatus() {
+            return;
           },
         },
         followWriteRepository: {
@@ -493,6 +532,68 @@ describe("API route handlers", () => {
         createdAt: "2026-03-16T15:15:00.000Z",
       },
       created: true,
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns unauthorized for report resolution without a session token header", async () => {
+    const response = await handlePostResolveReportRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          reportId: "report_resolve_route_test",
+          action: "remove",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "unauthorized",
+      message:
+        "Authentication is required to moderate content. Send the x-session-token header to continue.",
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns 200 for a moderator resolving a report action", async () => {
+    const response = await handlePostResolveReportRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-session-token": "demo-moderator-session",
+        },
+        body: JSON.stringify({
+          reportId: "report_resolve_route_test",
+          action: "remove",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_moderator_morgan",
+        role: "moderator",
+      },
+      resolution: {
+        reportId: "report_resolve_route_test",
+        action: "remove",
+        reportStatus: "actioned",
+      },
+      target: {
+        type: "comment",
+        id: "comment_container_followup",
+        moderationStatus: "removed",
+      },
       meta: {
         sessionTokenHeader: "x-session-token",
       },
