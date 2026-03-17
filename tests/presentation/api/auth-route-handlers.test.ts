@@ -195,4 +195,8 @@ const createApplicationApiStub = ({
     status: "unauthorized",
     message: "not configured for this test",
   }),
+  unfollowTarget: vi.fn().mockResolvedValue({
+    status: "unauthorized",
+    message: "not configured for this test",
+  }),
 });

@@ -14,7 +14,9 @@ import {
 } from "../accounts";
 import {
   followTarget,
+  unfollowTarget,
   type FollowTargetRequest,
+  type UnfollowTargetRequest,
 } from "../engagement";
 import {
   getPublicCommunityBySlug,
@@ -97,6 +99,15 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
           sessionViewerGateway,
           followTargetLookup,
           followOwnerLookup,
+          followWriteRepository,
+        },
+        request,
+      ),
+    unfollowTarget: (request: UnfollowTargetRequest) =>
+      unfollowTarget(
+        {
+          sessionViewerGateway,
+          followTargetLookup,
           followWriteRepository,
         },
         request,

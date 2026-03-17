@@ -1,23 +1,20 @@
 import {
-  followTarget,
-  type FollowOwnerLookup,
+  unfollowTarget,
   type FollowTargetLookup,
   type FollowWriteRepository,
   type SessionViewerGateway,
 } from "@/application";
 
-describe("followTarget", () => {
+describe("unfollowTarget", () => {
   it("rejects unsupported target types before touching dependencies", async () => {
     const sessionViewerGateway = createSessionViewerGatewayStub();
     const followTargetLookup = createFollowTargetLookupStub();
-    const followOwnerLookup = createFollowOwnerLookupStub();
     const followWriteRepository = createFollowWriteRepositoryStub();
 
-    const result = await followTarget(
+    const result = await unfollowTarget(
       {
         sessionViewerGateway,
         followTargetLookup,
-        followOwnerLookup,
         followWriteRepository,
       },
       {
@@ -33,21 +30,19 @@ describe("followTarget", () => {
     });
     expect(sessionViewerGateway.findViewerBySessionToken).not.toHaveBeenCalled();
     expect(followTargetLookup.findTargetBySlug).not.toHaveBeenCalled();
-    expect(followOwnerLookup.findOwnerUserIdByTarget).not.toHaveBeenCalled();
-    expect(followWriteRepository.createFollowIfAbsent).not.toHaveBeenCalled();
+    expect(followWriteRepository.removeFollowIfPresent).not.toHaveBeenCalled();
+    expect(followWriteRepository.countFollowersForTarget).not.toHaveBeenCalled();
   });
 
   it("returns unauthorized when no viewer can be resolved", async () => {
     const sessionViewerGateway = createSessionViewerGatewayStub();
     const followTargetLookup = createFollowTargetLookupStub();
-    const followOwnerLookup = createFollowOwnerLookupStub();
     const followWriteRepository = createFollowWriteRepositoryStub();
 
-    const result = await followTarget(
+    const result = await unfollowTarget(
       {
         sessionViewerGateway,
         followTargetLookup,
-        followOwnerLookup,
         followWriteRepository,
       },
       {
@@ -59,59 +54,42 @@ describe("followTarget", () => {
 
     expect(result.status).toBe("unauthorized");
     expect(followTargetLookup.findTargetBySlug).not.toHaveBeenCalled();
-    expect(followOwnerLookup.findOwnerUserIdByTarget).not.toHaveBeenCalled();
-    expect(followWriteRepository.createFollowIfAbsent).not.toHaveBeenCalled();
+    expect(followWriteRepository.removeFollowIfPresent).not.toHaveBeenCalled();
+    expect(followWriteRepository.countFollowersForTarget).not.toHaveBeenCalled();
   });
 
-  it("rejects self-follow attempts after resolving target ownership", async () => {
+  it("returns not_found when target lookup fails", async () => {
     const sessionViewerGateway = createSessionViewerGatewayStub({
       viewer: {
-        userId: "user_supporter_jordan",
+        userId: "user_123",
         role: "supporter",
       },
     });
-    const followTargetLookup = createFollowTargetLookupStub({
-      target: {
-        id: "community_123",
-        slug: "neighbors-helping-neighbors",
-        targetType: "community",
-      },
-    });
-    const followOwnerLookup = createFollowOwnerLookupStub({
-      ownerUserId: "user_supporter_jordan",
-    });
+    const followTargetLookup = createFollowTargetLookupStub();
     const followWriteRepository = createFollowWriteRepositoryStub();
 
-    const result = await followTarget(
+    const result = await unfollowTarget(
       {
         sessionViewerGateway,
         followTargetLookup,
-        followOwnerLookup,
         followWriteRepository,
       },
       {
         sessionToken: "demo-supporter-session",
         targetType: "community",
-        targetSlug: "neighbors-helping-neighbors",
+        targetSlug: "missing-target",
       },
     );
 
-    expect(followTargetLookup.findTargetBySlug).toHaveBeenCalledWith(
-      "community",
-      "neighbors-helping-neighbors",
-    );
-    expect(followOwnerLookup.findOwnerUserIdByTarget).toHaveBeenCalledWith(
-      "community",
-      "community_123",
-    );
     expect(result).toEqual({
-      status: "forbidden",
-      message: "You cannot follow your own profile, fundraiser, or community.",
+      status: "not_found",
+      message: 'No community was found for slug "missing-target".',
     });
-    expect(followWriteRepository.createFollowIfAbsent).not.toHaveBeenCalled();
+    expect(followWriteRepository.removeFollowIfPresent).not.toHaveBeenCalled();
+    expect(followWriteRepository.countFollowersForTarget).not.toHaveBeenCalled();
   });
 
-  it("creates follows idempotently through the write repository", async () => {
+  it("removes follow records idempotently through the write repository", async () => {
     const sessionViewerGateway = createSessionViewerGatewayStub({
       viewer: {
         userId: "user_123",
@@ -125,27 +103,15 @@ describe("followTarget", () => {
         targetType: "community",
       },
     });
-    const followOwnerLookup = createFollowOwnerLookupStub({
-      ownerUserId: "user_999",
-    });
     const followWriteRepository = createFollowWriteRepositoryStub({
-      result: {
-        follow: {
-          id: "follow_123",
-          userId: "user_123",
-          targetType: "community",
-          targetId: "community_123",
-          createdAt: new Date("2026-03-16T12:00:00.000Z"),
-        },
-        created: false,
-      },
+      removed: false,
+      followerCount: 7,
     });
 
-    const result = await followTarget(
+    const result = await unfollowTarget(
       {
         sessionViewerGateway,
         followTargetLookup,
-        followOwnerLookup,
         followWriteRepository,
       },
       {
@@ -155,8 +121,12 @@ describe("followTarget", () => {
       },
     );
 
-    expect(followWriteRepository.createFollowIfAbsent).toHaveBeenCalledWith({
+    expect(followWriteRepository.removeFollowIfPresent).toHaveBeenCalledWith({
       userId: "user_123",
+      targetType: "community",
+      targetId: "community_123",
+    });
+    expect(followWriteRepository.countFollowersForTarget).toHaveBeenCalledWith({
       targetType: "community",
       targetId: "community_123",
     });
@@ -170,14 +140,9 @@ describe("followTarget", () => {
         type: "community",
         slug: "neighbors-helping-neighbors",
       },
-      followId: "follow_123",
-      created: false,
-      followerCount: 8,
-      following: true,
-    });
-    expect(followWriteRepository.countFollowersForTarget).toHaveBeenCalledWith({
-      targetType: "community",
-      targetId: "community_123",
+      removed: false,
+      followerCount: 7,
+      following: false,
     });
   });
 });
@@ -202,41 +167,20 @@ const createFollowTargetLookupStub = ({
   findTargetBySlug: vi.fn().mockResolvedValue(target),
 });
 
-const createFollowOwnerLookupStub = ({
-  ownerUserId = null,
-}: {
-  ownerUserId?: Awaited<
-    ReturnType<FollowOwnerLookup["findOwnerUserIdByTarget"]>
-  >;
-} = {}): FollowOwnerLookup & {
-  findOwnerUserIdByTarget: ReturnType<typeof vi.fn>;
-} => ({
-  findOwnerUserIdByTarget: vi.fn().mockResolvedValue(ownerUserId),
-});
-
 const createFollowWriteRepositoryStub = ({
-  result = {
-    follow: {
-      id: "follow_1",
-      userId: "user_1",
-      targetType: "community",
-      targetId: "community_1",
-      createdAt: new Date("2026-03-16T12:00:00.000Z"),
-    },
-    created: true,
-  },
-  followerCount = 8,
+  removed = true,
+  followerCount = 0,
 }: {
-  result?: Awaited<ReturnType<FollowWriteRepository["createFollowIfAbsent"]>>;
+  removed?: boolean;
   followerCount?: number;
 } = {}): FollowWriteRepository & {
   createFollowIfAbsent: ReturnType<typeof vi.fn>;
   removeFollowIfPresent: ReturnType<typeof vi.fn>;
   countFollowersForTarget: ReturnType<typeof vi.fn>;
 } => ({
-  createFollowIfAbsent: vi.fn().mockResolvedValue(result),
+  createFollowIfAbsent: vi.fn(),
   removeFollowIfPresent: vi.fn().mockResolvedValue({
-    removed: true,
+    removed,
   }),
   countFollowersForTarget: vi.fn().mockResolvedValue(followerCount),
 });

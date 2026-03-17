@@ -5,6 +5,7 @@ export * from "./auth/post-logout-route";
 export * from "./auth/post-sign-up-route";
 export * from "./auth/session-header";
 export * from "./engagement/post-follow-target-route";
+export * from "./engagement/post-unfollow-target-route";
 export * from "./http";
 export * from "./public/get-public-community-route";
 export * from "./public/get-public-fundraiser-route";

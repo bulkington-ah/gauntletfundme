@@ -17,7 +17,7 @@ Implemented foundations currently include:
 - Postgres-backed repository adapters for public reads and follow persistence
 - account and session auth foundations (sign up, login, logout, session lookup)
 - centralized authorization policies for owner/member/moderator/anonymous checks
-- follow command with auth checks, self-follow protection, and idempotent persistence semantics
+- follow and unfollow commands with auth checks, self-follow protection, idempotent persistence semantics, and follower count state in API responses
 - public profile page route with slug-based lookup and connected fundraiser/community links
 - public fundraiser page route with organizer context, story rendering, and mocked donation entry
 - public community page route with discussion feed, comment visibility, and connected links

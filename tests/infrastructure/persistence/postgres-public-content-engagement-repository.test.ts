@@ -48,6 +48,46 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(first.created).toBe(true);
     expect(second.created).toBe(false);
     expect(second.follow.id).toBe(first.follow.id);
+    expect(
+      await repository.countFollowersForTarget({
+        targetType: "community",
+        targetId: target.id,
+      }),
+    ).toBe(2);
+  });
+
+  it("removes follows idempotently and returns the latest follower count", async () => {
+    const repository = createRepository();
+
+    const target = await repository.findTargetBySlug(
+      "community",
+      "neighbors-helping-neighbors",
+    );
+
+    expect(target).not.toBeNull();
+    if (!target) {
+      throw new Error("Expected target to be found.");
+    }
+
+    const firstRemoval = await repository.removeFollowIfPresent({
+      userId: "user_supporter_jordan",
+      targetType: "community",
+      targetId: target.id,
+    });
+    const secondRemoval = await repository.removeFollowIfPresent({
+      userId: "user_supporter_jordan",
+      targetType: "community",
+      targetId: target.id,
+    });
+
+    expect(firstRemoval.removed).toBe(true);
+    expect(secondRemoval.removed).toBe(false);
+    expect(
+      await repository.countFollowersForTarget({
+        targetType: "community",
+        targetId: target.id,
+      }),
+    ).toBe(0);
   });
 
   it("resolves target owners for self-follow checks", async () => {

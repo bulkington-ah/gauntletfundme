@@ -1,16 +1,16 @@
+import { sessionTokenHeader } from "../auth/session-header";
 import { getApplicationApi } from "../application-api";
 import { jsonResponse, parseJsonBody } from "../http";
-import { sessionTokenHeader } from "../auth/session-header";
 
-type FollowTargetBody = {
+type UnfollowTargetBody = {
   targetType?: string;
   targetSlug?: string;
 };
 
-export const handlePostFollowTargetRoute = async (
+export const handlePostUnfollowTargetRoute = async (
   request: Request,
 ): Promise<Response> => {
-  const body = await parseJsonBody<FollowTargetBody>(request);
+  const body = await parseJsonBody<UnfollowTargetBody>(request);
 
   if (!body?.targetType || !body.targetSlug) {
     return jsonResponse(
@@ -22,7 +22,7 @@ export const handlePostFollowTargetRoute = async (
     );
   }
 
-  const result = await getApplicationApi().followTarget({
+  const result = await getApplicationApi().unfollowTarget({
     sessionToken: request.headers.get(sessionTokenHeader),
     targetType: body.targetType,
     targetSlug: body.targetSlug,
@@ -52,8 +52,7 @@ export const handlePostFollowTargetRoute = async (
           viewer: result.viewer,
           target: result.target,
           follow: {
-            id: result.followId,
-            created: result.created,
+            removed: result.removed,
             followerCount: result.followerCount,
             following: result.following,
           },
@@ -61,7 +60,7 @@ export const handlePostFollowTargetRoute = async (
             sessionTokenHeader,
           },
         },
-        result.created ? 201 : 200,
+        200,
       );
   }
 };

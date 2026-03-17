@@ -419,6 +419,30 @@ export const createPostgresPublicContentEngagementRepository = (
         created: true,
       } satisfies FollowWriteResult;
     },
+
+    async removeFollowIfPresent(input) {
+      const deletionResult = await query<{ id: string }>(
+        `DELETE FROM follows
+         WHERE user_id = $1 AND target_type = $2 AND target_id = $3
+         RETURNING id`,
+        [input.userId, input.targetType, input.targetId],
+      );
+
+      return {
+        removed: deletionResult.rows.length > 0,
+      };
+    },
+
+    async countFollowersForTarget(input) {
+      const countResult = await query<{ follower_count: string }>(
+        `SELECT COUNT(*)::text AS follower_count
+         FROM follows
+         WHERE target_type = $1 AND target_id = $2`,
+        [input.targetType, input.targetId],
+      );
+
+      return Number(countResult.rows[0]?.follower_count ?? "0");
+    },
   };
 };
 

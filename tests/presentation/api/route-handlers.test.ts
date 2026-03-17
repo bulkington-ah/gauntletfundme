@@ -6,6 +6,7 @@ import {
   handleGetPublicFundraiserRoute,
   handleGetPublicProfileRoute,
   handlePostFollowTargetRoute,
+  handlePostUnfollowTargetRoute,
   setApplicationApiForTesting,
 } from "@/presentation/api";
 
@@ -35,6 +36,14 @@ describe("API route handlers", () => {
               },
               created: true,
             };
+          },
+          async removeFollowIfPresent() {
+            return {
+              removed: true,
+            };
+          },
+          async countFollowersForTarget() {
+            return 2;
           },
         },
       }),
@@ -170,6 +179,8 @@ describe("API route handlers", () => {
       follow: {
         id: "follow_created_test",
         created: true,
+        followerCount: 2,
+        following: true,
       },
       meta: {
         sessionTokenHeader: "x-session-token",
@@ -202,6 +213,14 @@ describe("API route handlers", () => {
               created: false,
             };
           },
+          async removeFollowIfPresent() {
+            return {
+              removed: true,
+            };
+          },
+          async countFollowersForTarget() {
+            return 2;
+          },
         },
       }),
     );
@@ -225,6 +244,8 @@ describe("API route handlers", () => {
       follow: {
         id: "follow_existing_test",
         created: false,
+        followerCount: 2,
+        following: true,
       },
     });
   });
@@ -254,6 +275,14 @@ describe("API route handlers", () => {
               created: true,
             };
           },
+          async removeFollowIfPresent() {
+            return {
+              removed: true,
+            };
+          },
+          async countFollowersForTarget() {
+            return 2;
+          },
         },
       }),
     );
@@ -276,6 +305,67 @@ describe("API route handlers", () => {
     await expect(response.json()).resolves.toEqual({
       error: "forbidden",
       message: "You cannot follow your own profile, fundraiser, or community.",
+    });
+  });
+
+  it("returns unauthorized for unfollow commands without a session token header", async () => {
+    const response = await handlePostUnfollowTargetRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          targetType: "community",
+          targetSlug: "neighbors-helping-neighbors",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "unauthorized",
+      message:
+        "Authentication is required for follow commands. Send the x-session-token header to continue.",
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns 200 for an unfollow command after resolving a session", async () => {
+    const response = await handlePostUnfollowTargetRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-session-token": "demo-supporter-session",
+        },
+        body: JSON.stringify({
+          targetType: "community",
+          targetSlug: "neighbors-helping-neighbors",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_supporter_jordan",
+        role: "supporter",
+      },
+      target: {
+        type: "community",
+        slug: "neighbors-helping-neighbors",
+      },
+      follow: {
+        removed: true,
+        followerCount: 2,
+        following: false,
+      },
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
     });
   });
 });

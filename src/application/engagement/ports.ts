@@ -42,4 +42,15 @@ export interface FollowWriteRepository {
     targetType: FollowTargetType;
     targetId: string;
   }): Promise<FollowWriteResult>;
+  removeFollowIfPresent(input: {
+    userId: string;
+    targetType: FollowTargetType;
+    targetId: string;
+  }): Promise<{
+    removed: boolean;
+  }>;
+  countFollowersForTarget(input: {
+    targetType: FollowTargetType;
+    targetId: string;
+  }): Promise<number>;
 }

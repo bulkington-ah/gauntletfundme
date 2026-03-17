@@ -8,19 +8,18 @@ import { authorizeProtectedAction } from "@/application/authorization";
 
 import type {
   AuthenticatedViewer,
-  FollowOwnerLookup,
   FollowTargetLookup,
   FollowWriteRepository,
   SessionViewerGateway,
 } from "./ports";
 
-export type FollowTargetRequest = {
+export type UnfollowTargetRequest = {
   sessionToken: string | null;
   targetType: string;
   targetSlug: string;
 };
 
-export type FollowTargetResult =
+export type UnfollowTargetResult =
   | {
       status: "invalid_request";
       message: string;
@@ -30,11 +29,11 @@ export type FollowTargetResult =
       message: string;
     }
   | {
-      status: "not_found";
+      status: "forbidden";
       message: string;
     }
   | {
-      status: "forbidden";
+      status: "not_found";
       message: string;
     }
   | {
@@ -44,24 +43,22 @@ export type FollowTargetResult =
         type: FollowTargetType;
         slug: string;
       };
-      followId: string;
-      created: boolean;
+      removed: boolean;
       followerCount: number;
-      following: true;
+      following: false;
     };
 
 type Dependencies = {
   sessionViewerGateway: SessionViewerGateway;
   followTargetLookup: FollowTargetLookup;
-  followOwnerLookup: FollowOwnerLookup;
   followWriteRepository: FollowWriteRepository;
 };
 
-export const followTarget = async (
+export const unfollowTarget = async (
   dependencies: Dependencies,
-  request: FollowTargetRequest,
-): Promise<FollowTargetResult> => {
-  const validationError = validateFollowTargetRequest(request);
+  request: UnfollowTargetRequest,
+): Promise<UnfollowTargetResult> => {
+  const validationError = validateUnfollowTargetRequest(request);
 
   if (validationError) {
     return validationError;
@@ -70,7 +67,6 @@ export const followTarget = async (
   const viewer = await dependencies.sessionViewerGateway.findViewerBySessionToken(
     request.sessionToken,
   );
-
   const authorization = authorizeProtectedAction({
     action: "follow_target",
     viewer,
@@ -100,31 +96,11 @@ export const followTarget = async (
     };
   }
 
-  const targetOwnerUserId = await dependencies.followOwnerLookup.findOwnerUserIdByTarget(
-    target.targetType,
-    target.id,
-  );
-
-  const ownershipAuthorization = authorizeProtectedAction({
-    action: "follow_target",
-    viewer: authorization.viewer,
-    ownerUserId: targetOwnerUserId,
+  const removal = await dependencies.followWriteRepository.removeFollowIfPresent({
+    userId: authorization.viewer.userId,
+    targetType: target.targetType,
+    targetId: target.id,
   });
-
-  if (ownershipAuthorization.status !== "authorized") {
-    return {
-      status: ownershipAuthorization.status,
-      message: ownershipAuthorization.message,
-    };
-  }
-
-  const persistedFollow = await dependencies.followWriteRepository.createFollowIfAbsent(
-    {
-      userId: authorization.viewer.userId,
-      targetType: target.targetType,
-      targetId: target.id,
-    },
-  );
   const followerCount = await dependencies.followWriteRepository.countFollowersForTarget(
     {
       targetType: target.targetType,
@@ -139,16 +115,15 @@ export const followTarget = async (
       type: target.targetType,
       slug: target.slug,
     },
-    followId: persistedFollow.follow.id,
-    created: persistedFollow.created,
+    removed: removal.removed,
     followerCount,
-    following: true,
+    following: false,
   };
 };
 
-const validateFollowTargetRequest = (
-  request: FollowTargetRequest,
-): FollowTargetResult | null => {
+const validateUnfollowTargetRequest = (
+  request: UnfollowTargetRequest,
+): UnfollowTargetResult | null => {
   if (!followTargetTypes.includes(request.targetType as FollowTargetType)) {
     return {
       status: "invalid_request",
