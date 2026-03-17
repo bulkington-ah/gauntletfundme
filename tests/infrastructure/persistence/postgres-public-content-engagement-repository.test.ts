@@ -191,6 +191,35 @@ describe("PostgresPublicContentEngagementRepository", () => {
 
     expect(fundraiserSnapshot.donationIntentCount).toBe(3);
   });
+
+  it("resolves report targets and writes reports idempotently", async () => {
+    const repository = createRepository();
+
+    expect(
+      await repository.findReportTargetById("post", "post_kickoff_update"),
+    ).toEqual({
+      id: "post_kickoff_update",
+      targetType: "post",
+    });
+
+    const first = await repository.createReportIfAbsent({
+      reporterUserId: "user_supporter_jordan",
+      targetType: "post",
+      targetId: "post_kickoff_update",
+      reason: "Misinformation",
+    });
+    const second = await repository.createReportIfAbsent({
+      reporterUserId: "user_supporter_jordan",
+      targetType: "post",
+      targetId: "post_kickoff_update",
+      reason: "Misinformation",
+    });
+
+    expect(first.created).toBe(true);
+    expect(second.created).toBe(false);
+    expect(second.report.id).toBe(first.report.id);
+    expect(second.report.status).toBe("submitted");
+  });
 });
 
 const createRepository = () => {

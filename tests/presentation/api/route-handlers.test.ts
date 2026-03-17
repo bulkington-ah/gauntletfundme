@@ -9,6 +9,7 @@ import {
   handlePostCreatePostRoute,
   handlePostFollowTargetRoute,
   handlePostStartDonationIntentRoute,
+  handlePostSubmitReportRoute,
   handlePostUnfollowTargetRoute,
   setApplicationApiForTesting,
 } from "@/presentation/api";
@@ -89,6 +90,37 @@ describe("API route handlers", () => {
               amount: input.amount,
               status: "started",
               createdAt: new Date("2026-03-16T15:10:00.000Z"),
+            };
+          },
+        },
+        reportTargetLookup: {
+          async findReportTargetById(targetType, targetId) {
+            if (
+              targetType === "comment" &&
+              targetId === "comment_container_followup"
+            ) {
+              return {
+                id: "comment_container_followup",
+                targetType: "comment",
+              };
+            }
+
+            return null;
+          },
+        },
+        reportWriteRepository: {
+          async createReportIfAbsent(input) {
+            return {
+              report: {
+                id: "report_created_route_test",
+                reporterUserId: input.reporterUserId,
+                targetType: input.targetType,
+                targetId: input.targetId,
+                reason: input.reason,
+                status: "submitted",
+                createdAt: new Date("2026-03-16T15:15:00.000Z"),
+              },
+              created: true,
             };
           },
         },
@@ -400,6 +432,69 @@ describe("API route handlers", () => {
       meta: {
         sessionTokenHeader: "x-session-token",
         mockedCheckout: true,
+      },
+    });
+  });
+
+  it("returns unauthorized for report submission without a session token header", async () => {
+    const response = await handlePostSubmitReportRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          targetType: "comment",
+          targetId: "comment_container_followup",
+          reason: "Harassment",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "unauthorized",
+      message:
+        "Authentication is required to submit reports. Send the x-session-token header to continue.",
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns 201 for an authenticated report submission", async () => {
+    const response = await handlePostSubmitReportRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-session-token": "demo-supporter-session",
+        },
+        body: JSON.stringify({
+          targetType: "comment",
+          targetId: "comment_container_followup",
+          reason: "Harassment",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_supporter_jordan",
+        role: "supporter",
+      },
+      report: {
+        id: "report_created_route_test",
+        targetType: "comment",
+        targetId: "comment_container_followup",
+        reason: "Harassment",
+        status: "submitted",
+        createdAt: "2026-03-16T15:15:00.000Z",
+      },
+      created: true,
+      meta: {
+        sessionTokenHeader: "x-session-token",
       },
     });
   });

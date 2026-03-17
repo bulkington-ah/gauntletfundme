@@ -12,6 +12,9 @@ import type {
   PublicContentReadRepository,
   PublicFundraiserSnapshot,
   PublicProfileSnapshot,
+  ReportTargetLookup,
+  ReportWriteRepository,
+  ReportWriteResult,
 } from "@/application";
 import {
   createComment,
@@ -20,12 +23,15 @@ import {
   createFollow,
   createFundraiser,
   createPost,
+  createReport,
   createUser,
   createUserProfile,
   type CommentStatus,
   type FollowTargetType,
   type ModerationStatus,
   type PostStatus,
+  type ReportStatus,
+  type ReportTargetType,
   type User,
 } from "@/domain";
 
@@ -44,6 +50,8 @@ export const createPostgresPublicContentEngagementRepository = (
   DonationIntentWriteRepository &
   DiscussionTargetLookup &
   DiscussionWriteRepository &
+  ReportTargetLookup &
+  ReportWriteRepository &
   FollowTargetLookup &
   FollowOwnerLookup &
   FollowWriteRepository => {
@@ -373,6 +381,40 @@ export const createPostgresPublicContentEngagementRepository = (
         : null;
     },
 
+    async findReportTargetById(targetType, targetId) {
+      switch (targetType) {
+        case "post": {
+          const result = await query<{ id: string }>(
+            "SELECT id FROM posts WHERE id = $1 LIMIT 1",
+            [targetId],
+          );
+          const target = result.rows[0];
+
+          return target
+            ? {
+                id: target.id,
+                targetType,
+              }
+            : null;
+        }
+
+        case "comment": {
+          const result = await query<{ id: string }>(
+            "SELECT id FROM comments WHERE id = $1 LIMIT 1",
+            [targetId],
+          );
+          const target = result.rows[0];
+
+          return target
+            ? {
+                id: target.id,
+                targetType,
+              }
+            : null;
+        }
+      }
+    },
+
     async findTargetBySlug(targetType, slug) {
       switch (targetType) {
         case "profile": {
@@ -564,6 +606,57 @@ export const createPostgresPublicContentEngagementRepository = (
       return mapDonationIntent(row);
     },
 
+    async createReportIfAbsent(input) {
+      const existingResult = await query<ReportRow>(
+        `SELECT id, reporter_user_id, target_type, target_id, reason, status, created_at
+         FROM reports
+         WHERE reporter_user_id = $1
+           AND target_type = $2
+           AND target_id = $3
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [input.reporterUserId, input.targetType, input.targetId],
+      );
+      const existingRow = existingResult.rows[0];
+
+      if (existingRow) {
+        return {
+          report: mapReport(existingRow),
+          created: false,
+        } satisfies ReportWriteResult;
+      }
+
+      const reportId = `report_${randomUUID()}`;
+      const now = new Date();
+      const insertResult = await query<ReportRow>(
+        `INSERT INTO reports
+           (id, reporter_user_id, target_type, target_id, reason, status, created_at)
+         VALUES
+           ($1, $2, $3, $4, $5, 'submitted', $6)
+         RETURNING id, reporter_user_id, target_type, target_id, reason, status, created_at`,
+        [
+          reportId,
+          input.reporterUserId,
+          input.targetType,
+          input.targetId,
+          input.reason,
+          now,
+        ],
+      );
+      const insertedRow = insertResult.rows[0];
+
+      if (!insertedRow) {
+        throw new Error(
+          "Expected the created report row to be returned after insert.",
+        );
+      }
+
+      return {
+        report: mapReport(insertedRow),
+        created: true,
+      } satisfies ReportWriteResult;
+    },
+
     async removeFollowIfPresent(input) {
       const deletionResult = await query<{ id: string }>(
         `DELETE FROM follows
@@ -667,6 +760,16 @@ type DonationIntentRow = {
   created_at: Date | string;
 };
 
+type ReportRow = {
+  id: string;
+  reporter_user_id: string;
+  target_type: ReportTargetType;
+  target_id: string;
+  reason: string;
+  status: ReportStatus;
+  created_at: Date | string;
+};
+
 type UserProfileWithUserRow = UserProfileRow & UserRow & { created_at: Date | string };
 type FundraiserWithOwnerRow = FundraiserRow & UserRow;
 type CommunityWithOwnerRow = CommunityRow & UserRow;
@@ -758,6 +861,17 @@ const mapDonationIntent = (row: DonationIntentRow) =>
     userId: row.user_id,
     fundraiserId: row.fundraiser_id,
     amount: Number(row.amount),
+    status: row.status,
+    createdAt: asDate(row.created_at, "created_at"),
+  });
+
+const mapReport = (row: ReportRow) =>
+  createReport({
+    id: row.id,
+    reporterUserId: row.reporter_user_id,
+    targetType: row.target_type,
+    targetId: row.target_id,
+    reason: row.reason,
     status: row.status,
     createdAt: asDate(row.created_at, "created_at"),
   });

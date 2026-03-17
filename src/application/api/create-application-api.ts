@@ -35,6 +35,12 @@ import {
   type LookupBySlugRequest,
   type PublicContentReadRepository,
 } from "../public-content";
+import {
+  submitReport,
+  type ReportTargetLookup,
+  type ReportWriteRepository,
+  type SubmitReportRequest,
+} from "../moderation";
 import type {
   DonationIntentTargetLookup,
   DonationIntentWriteRepository,
@@ -50,6 +56,8 @@ type Dependencies = {
   discussionWriteRepository?: DiscussionWriteRepository;
   donationIntentTargetLookup?: DonationIntentTargetLookup;
   donationIntentWriteRepository?: DonationIntentWriteRepository;
+  reportTargetLookup?: ReportTargetLookup;
+  reportWriteRepository?: ReportWriteRepository;
   followTargetLookup?: FollowTargetLookup;
   followOwnerLookup?: FollowOwnerLookup;
   followWriteRepository?: FollowWriteRepository;
@@ -88,6 +96,10 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     dependencies.donationIntentTargetLookup ?? resolvePersistenceAdapter();
   const getDonationIntentWriteRepository = () =>
     dependencies.donationIntentWriteRepository ?? resolvePersistenceAdapter();
+  const getReportTargetLookup = () =>
+    dependencies.reportTargetLookup ?? resolvePersistenceAdapter();
+  const getReportWriteRepository = () =>
+    dependencies.reportWriteRepository ?? resolvePersistenceAdapter();
   const followTargetLookup =
     dependencies.followTargetLookup ?? resolvePersistenceAdapter();
   const followOwnerLookup =
@@ -141,6 +153,15 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
           sessionViewerGateway,
           donationIntentTargetLookup: getDonationIntentTargetLookup(),
           donationIntentWriteRepository: getDonationIntentWriteRepository(),
+        },
+        request,
+      ),
+    submitReport: (request: SubmitReportRequest) =>
+      submitReport(
+        {
+          sessionViewerGateway,
+          reportTargetLookup: getReportTargetLookup(),
+          reportWriteRepository: getReportWriteRepository(),
         },
         request,
       ),

@@ -5,6 +5,7 @@ export const protectedActions = [
   "create_comment",
   "follow_target",
   "create_donation_intent",
+  "report_content",
   "moderate_content",
 ] as const;
 
@@ -47,6 +48,7 @@ export const evaluateAuthorizationPolicy = (
   switch (input.action) {
     case "create_comment":
     case "create_donation_intent":
+    case "report_content":
       return { allowed: true };
     case "follow_target":
       if (input.ownerUserId && input.ownerUserId === input.viewer.userId) {
@@ -112,5 +114,6 @@ const unauthenticatedMessageByAction: Record<ProtectedAction, string> = {
   create_comment: "Authentication is required to create comments.",
   follow_target: "Authentication is required for follow commands.",
   create_donation_intent: "Authentication is required to start donation intents.",
+  report_content: "Authentication is required to submit reports.",
   moderate_content: "Authentication is required to moderate content.",
 };

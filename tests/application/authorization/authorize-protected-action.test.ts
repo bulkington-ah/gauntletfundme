@@ -82,4 +82,22 @@ describe("authorizeProtectedAction", () => {
       message: "You cannot follow your own profile, fundraiser, or community.",
     });
   });
+
+  it("returns authorized for authenticated report submissions", () => {
+    const result = authorizeProtectedAction({
+      action: "report_content",
+      viewer: {
+        userId: "user_member",
+        role: "supporter",
+      },
+    });
+
+    expect(result).toEqual({
+      status: "authorized",
+      viewer: {
+        userId: "user_member",
+        role: "supporter",
+      },
+    });
+  });
 });

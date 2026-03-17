@@ -31,6 +31,10 @@ describe("authorization policy", () => {
       viewer: null,
       ownerUserId: "user_owner",
     });
+    const report = evaluateAuthorizationPolicy({
+      action: "report_content",
+      viewer: null,
+    });
 
     expect(profileEdit).toEqual({
       allowed: false,
@@ -46,6 +50,11 @@ describe("authorization policy", () => {
       allowed: false,
       reason: "unauthenticated",
       message: "Authentication is required for follow commands.",
+    });
+    expect(report).toEqual({
+      allowed: false,
+      reason: "unauthenticated",
+      message: "Authentication is required to submit reports.",
     });
   });
 
@@ -128,10 +137,16 @@ describe("authorization policy", () => {
     });
   });
 
-  it("allows members to comment and create donation intents", () => {
+  it("allows members to comment, report content, and create donation intents", () => {
     expect(
       evaluateAuthorizationPolicy({
         action: "create_comment",
+        viewer: memberViewer,
+      }),
+    ).toEqual({ allowed: true });
+    expect(
+      evaluateAuthorizationPolicy({
+        action: "report_content",
         viewer: memberViewer,
       }),
     ).toEqual({ allowed: true });
