@@ -7,6 +7,7 @@ export * from "./auth/session-header";
 export * from "./discussion/post-create-comment-route";
 export * from "./discussion/post-create-post-route";
 export * from "./engagement/post-follow-target-route";
+export * from "./engagement/post-start-donation-intent-route";
 export * from "./engagement/post-unfollow-target-route";
 export * from "./http";
 export * from "./public/get-public-community-route";

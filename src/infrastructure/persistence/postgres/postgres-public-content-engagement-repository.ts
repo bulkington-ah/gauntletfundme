@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 import type {
+  DonationIntentTargetLookup,
+  DonationIntentWriteRepository,
   DiscussionTargetLookup,
   DiscussionWriteRepository,
   FollowOwnerLookup,
@@ -14,6 +16,7 @@ import type {
 import {
   createComment,
   createCommunity,
+  createDonationIntent,
   createFollow,
   createFundraiser,
   createPost,
@@ -37,6 +40,8 @@ type Dependencies = {
 export const createPostgresPublicContentEngagementRepository = (
   dependencies: Dependencies = {},
 ): PublicContentReadRepository &
+  DonationIntentTargetLookup &
+  DonationIntentWriteRepository &
   DiscussionTargetLookup &
   DiscussionWriteRepository &
   FollowTargetLookup &
@@ -328,6 +333,27 @@ export const createPostgresPublicContentEngagementRepository = (
         : null;
     },
 
+    async findFundraiserBySlugForDonationIntent(slug) {
+      const result = await query<{
+        id: string;
+        slug: string;
+      }>(
+        `SELECT id, slug
+         FROM fundraisers
+         WHERE slug = $1
+         LIMIT 1`,
+        [slug],
+      );
+      const fundraiser = result.rows[0];
+
+      return fundraiser
+        ? {
+            id: fundraiser.id,
+            slug: fundraiser.slug,
+          }
+        : null;
+    },
+
     async findPostByIdForCommentCreation(postId) {
       const result = await query<{ id: string }>(
         `SELECT id
@@ -510,6 +536,34 @@ export const createPostgresPublicContentEngagementRepository = (
       return mapComment(row);
     },
 
+    async createDonationIntent(input) {
+      const donationIntentId = `intent_${randomUUID()}`;
+      const now = new Date();
+      const result = await query<DonationIntentRow>(
+        `INSERT INTO donation_intents
+           (id, user_id, fundraiser_id, amount, status, created_at)
+         VALUES
+           ($1, $2, $3, $4, 'started', $5)
+         RETURNING id, user_id, fundraiser_id, amount, status, created_at`,
+        [
+          donationIntentId,
+          input.userId,
+          input.fundraiserId,
+          input.amount,
+          now,
+        ],
+      );
+      const row = result.rows[0];
+
+      if (!row) {
+        throw new Error(
+          "Expected the created donation intent row to be returned after insert.",
+        );
+      }
+
+      return mapDonationIntent(row);
+    },
+
     async removeFollowIfPresent(input) {
       const deletionResult = await query<{ id: string }>(
         `DELETE FROM follows
@@ -604,6 +658,15 @@ type FollowRow = {
   created_at: Date | string;
 };
 
+type DonationIntentRow = {
+  id: string;
+  user_id: string;
+  fundraiser_id: string;
+  amount: number | string;
+  status: "started" | "abandoned" | "completed";
+  created_at: Date | string;
+};
+
 type UserProfileWithUserRow = UserProfileRow & UserRow & { created_at: Date | string };
 type FundraiserWithOwnerRow = FundraiserRow & UserRow;
 type CommunityWithOwnerRow = CommunityRow & UserRow;
@@ -686,6 +749,16 @@ const mapFollow = (row: FollowRow) =>
     userId: row.user_id,
     targetType: row.target_type,
     targetId: row.target_id,
+    createdAt: asDate(row.created_at, "created_at"),
+  });
+
+const mapDonationIntent = (row: DonationIntentRow) =>
+  createDonationIntent({
+    id: row.id,
+    userId: row.user_id,
+    fundraiserId: row.fundraiser_id,
+    amount: Number(row.amount),
+    status: row.status,
     createdAt: asDate(row.created_at, "created_at"),
   });
 

@@ -22,8 +22,10 @@ import {
 } from "../discussion";
 import {
   followTarget,
+  startDonationIntent,
   unfollowTarget,
   type FollowTargetRequest,
+  type StartDonationIntentRequest,
   type UnfollowTargetRequest,
 } from "../engagement";
 import {
@@ -34,6 +36,8 @@ import {
   type PublicContentReadRepository,
 } from "../public-content";
 import type {
+  DonationIntentTargetLookup,
+  DonationIntentWriteRepository,
   FollowOwnerLookup,
   FollowTargetLookup,
   FollowWriteRepository,
@@ -44,6 +48,8 @@ type Dependencies = {
   publicContentReadRepository?: PublicContentReadRepository;
   discussionTargetLookup?: DiscussionTargetLookup;
   discussionWriteRepository?: DiscussionWriteRepository;
+  donationIntentTargetLookup?: DonationIntentTargetLookup;
+  donationIntentWriteRepository?: DonationIntentWriteRepository;
   followTargetLookup?: FollowTargetLookup;
   followOwnerLookup?: FollowOwnerLookup;
   followWriteRepository?: FollowWriteRepository;
@@ -78,6 +84,10 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     dependencies.discussionTargetLookup ?? resolvePersistenceAdapter();
   const getDiscussionWriteRepository = () =>
     dependencies.discussionWriteRepository ?? resolvePersistenceAdapter();
+  const getDonationIntentTargetLookup = () =>
+    dependencies.donationIntentTargetLookup ?? resolvePersistenceAdapter();
+  const getDonationIntentWriteRepository = () =>
+    dependencies.donationIntentWriteRepository ?? resolvePersistenceAdapter();
   const followTargetLookup =
     dependencies.followTargetLookup ?? resolvePersistenceAdapter();
   const followOwnerLookup =
@@ -122,6 +132,15 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
           sessionViewerGateway,
           discussionTargetLookup: getDiscussionTargetLookup(),
           discussionWriteRepository: getDiscussionWriteRepository(),
+        },
+        request,
+      ),
+    startDonationIntent: (request: StartDonationIntentRequest) =>
+      startDonationIntent(
+        {
+          sessionViewerGateway,
+          donationIntentTargetLookup: getDonationIntentTargetLookup(),
+          donationIntentWriteRepository: getDonationIntentWriteRepository(),
         },
         request,
       ),

@@ -8,6 +8,7 @@ import {
   handlePostCreateCommentRoute,
   handlePostCreatePostRoute,
   handlePostFollowTargetRoute,
+  handlePostStartDonationIntentRoute,
   handlePostUnfollowTargetRoute,
   setApplicationApiForTesting,
 } from "@/presentation/api";
@@ -66,6 +67,28 @@ describe("API route handlers", () => {
               status: "published",
               moderationStatus: "visible",
               createdAt: new Date("2026-03-16T15:05:00.000Z"),
+            };
+          },
+        },
+        donationIntentTargetLookup: {
+          async findFundraiserBySlugForDonationIntent(fundraiserSlug) {
+            return fundraiserSlug === "warm-meals-2026"
+              ? {
+                  id: "fundraiser_warm_meals_2026",
+                  slug: "warm-meals-2026",
+                }
+              : null;
+          },
+        },
+        donationIntentWriteRepository: {
+          async createDonationIntent(input) {
+            return {
+              id: "intent_created_route_test",
+              userId: input.userId,
+              fundraiserId: input.fundraiserId,
+              amount: input.amount,
+              status: "started",
+              createdAt: new Date("2026-03-16T15:10:00.000Z"),
             };
           },
         },
@@ -315,6 +338,68 @@ describe("API route handlers", () => {
       },
       meta: {
         sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns unauthorized for donation intent commands without a session token header", async () => {
+    const response = await handlePostStartDonationIntentRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          fundraiserSlug: "warm-meals-2026",
+          amount: 2500,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "unauthorized",
+      message:
+        "Authentication is required to start donation intents. Send the x-session-token header to continue.",
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns 201 for an authenticated mocked donation intent start", async () => {
+    const response = await handlePostStartDonationIntentRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-session-token": "demo-supporter-session",
+        },
+        body: JSON.stringify({
+          fundraiserSlug: "warm-meals-2026",
+          amount: 2500,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_supporter_jordan",
+        role: "supporter",
+      },
+      fundraiser: {
+        slug: "warm-meals-2026",
+      },
+      donationIntent: {
+        id: "intent_created_route_test",
+        amount: 2500,
+        status: "started",
+        createdAt: "2026-03-16T15:10:00.000Z",
+      },
+      meta: {
+        sessionTokenHeader: "x-session-token",
+        mockedCheckout: true,
       },
     });
   });

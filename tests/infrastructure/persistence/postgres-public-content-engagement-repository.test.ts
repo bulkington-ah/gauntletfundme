@@ -159,6 +159,38 @@ describe("PostgresPublicContentEngagementRepository", () => {
       id: post.id,
     });
   });
+
+  it("persists donation intents and increments fundraiser engagement counts", async () => {
+    const repository = createRepository();
+
+    const fundraiserTarget =
+      await repository.findFundraiserBySlugForDonationIntent("warm-meals-2026");
+
+    expect(fundraiserTarget).not.toBeNull();
+    if (!fundraiserTarget) {
+      throw new Error("Expected fundraiser target to be found.");
+    }
+
+    const createdIntent = await repository.createDonationIntent({
+      userId: "user_moderator_morgan",
+      fundraiserId: fundraiserTarget.id,
+      amount: 4200,
+    });
+
+    expect(createdIntent.status).toBe("started");
+    expect(createdIntent.amount).toBe(4200);
+
+    const fundraiserSnapshot = await repository.findFundraiserBySlug(
+      "warm-meals-2026",
+    );
+
+    expect(fundraiserSnapshot).not.toBeNull();
+    if (!fundraiserSnapshot) {
+      throw new Error("Expected fundraiser snapshot to be found.");
+    }
+
+    expect(fundraiserSnapshot.donationIntentCount).toBe(3);
+  });
 });
 
 const createRepository = () => {

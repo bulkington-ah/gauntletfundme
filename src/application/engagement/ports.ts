@@ -1,4 +1,9 @@
-import type { Follow, FollowTargetType, UserRole } from "@/domain";
+import type {
+  DonationIntent,
+  Follow,
+  FollowTargetType,
+  UserRole,
+} from "@/domain";
 
 export type AuthenticatedViewer = {
   userId: string;
@@ -53,4 +58,23 @@ export interface FollowWriteRepository {
     targetType: FollowTargetType;
     targetId: string;
   }): Promise<number>;
+}
+
+export type DonationIntentFundraiserReference = {
+  id: string;
+  slug: string;
+};
+
+export interface DonationIntentTargetLookup {
+  findFundraiserBySlugForDonationIntent(
+    fundraiserSlug: string,
+  ): Promise<DonationIntentFundraiserReference | null>;
+}
+
+export interface DonationIntentWriteRepository {
+  createDonationIntent(input: {
+    userId: string;
+    fundraiserId: string;
+    amount: number;
+  }): Promise<DonationIntent>;
 }

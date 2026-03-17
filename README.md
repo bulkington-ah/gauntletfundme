@@ -19,6 +19,7 @@ Implemented foundations currently include:
 - centralized authorization policies for owner/member/moderator/anonymous checks
 - follow and unfollow commands with auth checks, self-follow protection, idempotent persistence semantics, and follower count state in API responses
 - post and comment creation commands with authenticated route handlers and owner-aware post authorization
+- mocked donation intent start command with authenticated API flow and tracked `started` intent persistence
 - public profile page route with slug-based lookup and connected fundraiser/community links
 - public fundraiser page route with organizer context, story rendering, and mocked donation entry
 - public community page route with discussion feed, comment visibility, and connected links
