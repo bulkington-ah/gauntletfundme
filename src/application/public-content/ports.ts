@@ -1,26 +1,62 @@
 import type {
   Comment,
   Community,
+  DonationIntent,
   Fundraiser,
   Post,
   User,
   UserProfile,
 } from "@/domain";
 
-export type PublicProfileSnapshot = {
+export type PublicActorSnapshot = {
   user: User;
-  profile: UserProfile;
-  followerCount: number;
-  featuredFundraisers: Fundraiser[];
-  ownedCommunities: Community[];
+  profile: UserProfile | null;
 };
 
-export type PublicFundraiserSnapshot = {
+export type PublicFundraiserSummarySnapshot = {
   fundraiser: Fundraiser;
   owner: User;
   ownerProfile: UserProfile | null;
   relatedCommunity: Community | null;
   donationIntentCount: number;
+  supporterCount: number;
+  supportAmount: number;
+};
+
+export type PublicFundraiserSupporterSnapshot = {
+  actor: PublicActorSnapshot;
+  donationIntent: DonationIntent;
+};
+
+export type PublicProfileActivitySnapshot =
+  | {
+      type: "fundraiser_support";
+      actor: PublicActorSnapshot;
+      fundraiser: PublicFundraiserSummarySnapshot;
+      community: Community | null;
+      donationIntent: DonationIntent;
+    }
+  | {
+      type: "community_post";
+      actor: PublicActorSnapshot;
+      community: Community;
+      post: Post;
+    };
+
+export type PublicProfileSnapshot = {
+  user: User;
+  profile: UserProfile;
+  followerCount: number;
+  followingCount: number;
+  inspiredSupporterCount: number;
+  featuredFundraisers: PublicFundraiserSummarySnapshot[];
+  ownedCommunities: Community[];
+  recentActivity: PublicProfileActivitySnapshot[];
+};
+
+export type PublicFundraiserSnapshot = {
+  summary: PublicFundraiserSummarySnapshot;
+  recentSupporters: PublicFundraiserSupporterSnapshot[];
 };
 
 export type CommunityDiscussionSnapshot = {
@@ -36,8 +72,11 @@ export type PublicCommunitySnapshot = {
   community: Community;
   owner: User;
   ownerProfile: UserProfile | null;
-  featuredFundraiser: Fundraiser | null;
+  featuredFundraiser: PublicFundraiserSummarySnapshot | null;
+  fundraisers: PublicFundraiserSummarySnapshot[];
   followerCount: number;
+  supportAmount: number;
+  donationIntentCount: number;
   discussion: CommunityDiscussionSnapshot[];
 };
 

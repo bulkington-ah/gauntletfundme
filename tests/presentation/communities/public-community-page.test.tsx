@@ -19,18 +19,27 @@ describe("PublicCommunityPage", () => {
             description: "A public space for updates and volunteer coordination.",
             visibility: "public",
             followerCount: 12,
+            fundraiserCount: 2,
+            supportAmount: 18700,
+            donationIntentCount: 6,
           },
           owner: {
             displayName: "Avery Johnson",
             role: "organizer",
             profileSlug: "avery-johnson",
+            avatarUrl: null,
           },
           featuredFundraiser: {
             slug: "warm-meals-2026",
             title: "Warm Meals 2026",
             status: "active",
             goalAmount: 250000,
+            supportAmount: 12600,
+            supporterCount: 3,
+            donationIntentCount: 4,
           },
+          leaderboard: [],
+          fundraisers: [],
           discussion: [
             {
               id: "post_123",
@@ -73,17 +82,24 @@ describe("PublicCommunityPage", () => {
         description: "A public space for updates and volunteer coordination.",
         visibility: "public",
         followerCount: 12,
+        fundraiserCount: 2,
+        supportAmount: 18700,
+        donationIntentCount: 6,
       },
       owner: {
         displayName: "Avery Johnson",
         role: "organizer",
         profileSlug: "avery-johnson",
+        avatarUrl: null,
       },
       featuredFundraiser: {
         slug: "warm-meals-2026",
         title: "Warm Meals 2026",
         status: "active",
         goalAmount: 250000,
+        supportAmount: 12600,
+        supporterCount: 3,
+        donationIntentCount: 4,
       },
       discussion: [
         {

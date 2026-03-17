@@ -1,5 +1,6 @@
 import type {
   CommunityVisibility,
+  DonationIntentStatus,
   FundraiserStatus,
   ModerationStatus,
   PostStatus,
@@ -9,6 +10,46 @@ import type {
 
 export type LookupBySlugRequest = {
   slug: string;
+};
+
+export type PublicActorSummary = {
+  displayName: string;
+  profileSlug: string | null;
+  avatarUrl: string | null;
+};
+
+export type PublicCommunityReference = {
+  slug: string;
+  name: string;
+  visibility: CommunityVisibility;
+};
+
+export type PublicFundraiserSummary = {
+  slug: string;
+  title: string;
+  status: FundraiserStatus;
+  goalAmount: number;
+  supportAmount: number;
+  supporterCount: number;
+  donationIntentCount: number;
+};
+
+export type PublicFundraiserSupporter = PublicActorSummary & {
+  amount: number;
+  status: DonationIntentStatus;
+  createdAt: string;
+};
+
+export type PublicProfileActivity = {
+  id: string;
+  type: "fundraiser_support" | "community_post";
+  actor: PublicActorSummary;
+  createdAt: string;
+  summary: string;
+  detail: string | null;
+  fundraiser: PublicFundraiserSummary | null;
+  community: PublicCommunityReference | null;
+  amount: number | null;
 };
 
 export type PublicProfileResponse = {
@@ -21,42 +62,26 @@ export type PublicProfileResponse = {
     bio: string;
     avatarUrl: string | null;
     followerCount: number;
+    followingCount: number;
+    inspiredSupporterCount: number;
   };
   connections: {
-    fundraisers: Array<{
-      slug: string;
-      title: string;
-      status: FundraiserStatus;
-      goalAmount: number;
-    }>;
-    communities: Array<{
-      slug: string;
-      name: string;
-      visibility: CommunityVisibility;
-    }>;
+    fundraisers: PublicFundraiserSummary[];
+    communities: PublicCommunityReference[];
   };
+  recentActivity: PublicProfileActivity[];
 };
 
 export type PublicFundraiserResponse = {
   kind: "fundraiser";
-  fundraiser: {
-    slug: string;
-    title: string;
+  fundraiser: PublicFundraiserSummary & {
     story: string;
-    status: FundraiserStatus;
-    goalAmount: number;
-    donationIntentCount: number;
   };
-  organizer: {
-    displayName: string;
+  organizer: PublicActorSummary & {
     role: UserRole;
-    profileSlug: string | null;
   };
-  community: {
-    slug: string;
-    name: string;
-    visibility: CommunityVisibility;
-  } | null;
+  community: PublicCommunityReference | null;
+  recentSupporters: PublicFundraiserSupporter[];
 };
 
 export type PublicCommunityResponse = {
@@ -67,18 +92,19 @@ export type PublicCommunityResponse = {
     description: string;
     visibility: CommunityVisibility;
     followerCount: number;
+    fundraiserCount: number;
+    supportAmount: number;
+    donationIntentCount: number;
   };
-  owner: {
-    displayName: string;
+  owner: PublicActorSummary & {
     role: UserRole;
-    profileSlug: string | null;
   };
-  featuredFundraiser: {
-    slug: string;
-    title: string;
-    status: FundraiserStatus;
-    goalAmount: number;
-  } | null;
+  featuredFundraiser: PublicFundraiserSummary | null;
+  leaderboard: Array<{
+    rank: number;
+    fundraiser: PublicFundraiserSummary;
+  }>;
+  fundraisers: PublicFundraiserSummary[];
   discussion: Array<{
     id: string;
     title: string;

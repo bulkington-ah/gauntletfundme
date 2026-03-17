@@ -9,6 +9,11 @@ import type {
   PublicProfileResponse,
   PublicQueryResult,
 } from "./contracts";
+import {
+  toPublicActorSummary,
+  toPublicCommunityReference,
+  toPublicFundraiserSummary,
+} from "./mappers";
 import type { PublicContentReadRepository } from "./ports";
 
 type Dependencies = {
@@ -55,20 +60,46 @@ export const getPublicProfileBySlug = async (
         bio: snapshot.profile.bio,
         avatarUrl: snapshot.profile.avatarUrl,
         followerCount: snapshot.followerCount,
+        followingCount: snapshot.followingCount,
+        inspiredSupporterCount: snapshot.inspiredSupporterCount,
       },
       connections: {
-        fundraisers: snapshot.featuredFundraisers.map((fundraiser) => ({
-          slug: fundraiser.slug,
-          title: fundraiser.title,
-          status: fundraiser.status,
-          goalAmount: fundraiser.goalAmount,
-        })),
-        communities: snapshot.ownedCommunities.map((community) => ({
-          slug: community.slug,
-          name: community.name,
-          visibility: community.visibility,
-        })),
+        fundraisers: snapshot.featuredFundraisers.map(toPublicFundraiserSummary),
+        communities: snapshot.ownedCommunities.map(toPublicCommunityReference),
       },
+      recentActivity: snapshot.recentActivity.map((entry) => {
+        switch (entry.type) {
+          case "fundraiser_support":
+            return {
+              id: entry.donationIntent.id,
+              type: entry.type,
+              actor: toPublicActorSummary(entry.actor),
+              createdAt: entry.donationIntent.createdAt.toISOString(),
+              summary:
+                entry.donationIntent.status === "completed"
+                  ? `${entry.actor.user.displayName} completed a mocked donation`
+                  : `${entry.actor.user.displayName} started a mocked donation`,
+              detail: entry.fundraiser.fundraiser.title,
+              fundraiser: toPublicFundraiserSummary(entry.fundraiser),
+              community: entry.community
+                ? toPublicCommunityReference(entry.community)
+                : null,
+              amount: entry.donationIntent.amount,
+            };
+          case "community_post":
+            return {
+              id: entry.post.id,
+              type: entry.type,
+              actor: toPublicActorSummary(entry.actor),
+              createdAt: entry.post.createdAt.toISOString(),
+              summary: entry.post.title,
+              detail: entry.post.body,
+              fundraiser: null,
+              community: toPublicCommunityReference(entry.community),
+              amount: null,
+            };
+        }
+      }),
     },
   };
 };

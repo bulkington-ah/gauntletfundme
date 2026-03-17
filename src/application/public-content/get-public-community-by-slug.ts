@@ -9,6 +9,7 @@ import type {
   PublicCommunityResponse,
   PublicQueryResult,
 } from "./contracts";
+import { toPublicFundraiserSummary } from "./mappers";
 import type { PublicContentReadRepository } from "./ports";
 
 type Dependencies = {
@@ -43,6 +44,20 @@ export const getPublicCommunityBySlug = async (
     }),
   );
 
+  const sortedFundraisers = [...snapshot.fundraisers].sort((left, right) => {
+    if (right.supportAmount !== left.supportAmount) {
+      return right.supportAmount - left.supportAmount;
+    }
+
+    if (right.donationIntentCount !== left.donationIntentCount) {
+      return right.donationIntentCount - left.donationIntentCount;
+    }
+
+    return (
+      right.fundraiser.createdAt.getTime() - left.fundraiser.createdAt.getTime()
+    );
+  });
+
   return {
     status: "success",
     data: {
@@ -53,20 +68,24 @@ export const getPublicCommunityBySlug = async (
         description: snapshot.community.description,
         visibility: snapshot.community.visibility,
         followerCount: snapshot.followerCount,
+        fundraiserCount: snapshot.fundraisers.length,
+        supportAmount: snapshot.supportAmount,
+        donationIntentCount: snapshot.donationIntentCount,
       },
       owner: {
         displayName: snapshot.owner.displayName,
         role: snapshot.owner.role,
         profileSlug: snapshot.ownerProfile?.slug ?? null,
+        avatarUrl: snapshot.ownerProfile?.avatarUrl ?? null,
       },
       featuredFundraiser: snapshot.featuredFundraiser
-        ? {
-            slug: snapshot.featuredFundraiser.slug,
-            title: snapshot.featuredFundraiser.title,
-            status: snapshot.featuredFundraiser.status,
-            goalAmount: snapshot.featuredFundraiser.goalAmount,
-          }
+        ? toPublicFundraiserSummary(snapshot.featuredFundraiser)
         : null,
+      leaderboard: sortedFundraisers.slice(0, 3).map((fundraiser, index) => ({
+        rank: index + 1,
+        fundraiser: toPublicFundraiserSummary(fundraiser),
+      })),
+      fundraisers: sortedFundraisers.map(toPublicFundraiserSummary),
       discussion: snapshot.discussion.map(({ post, author, comments }) => ({
         id: post.id,
         title: post.title,

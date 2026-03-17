@@ -3,11 +3,14 @@ import type {
   FollowTargetReference,
 } from "@/application/engagement";
 import type {
+  PublicActorSnapshot,
   CommunityDiscussionSnapshot,
   PublicCommunitySnapshot,
   PublicContentReadRepository,
   PublicFundraiserSnapshot,
+  PublicFundraiserSummarySnapshot,
   PublicProfileSnapshot,
+  PublicProfileActivitySnapshot,
 } from "@/application/public-content";
 import type {
   Comment,
@@ -26,6 +29,21 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
 
   const findUserProfileByUserId = (userId: string): UserProfile | null =>
     catalog.userProfiles.find((profile) => profile.userId === userId) ?? null;
+
+  const buildActorSnapshotByUserId = (
+    userId: string,
+  ): PublicActorSnapshot | null => {
+    const user = findUserById(userId);
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      user,
+      profile: findUserProfileByUserId(userId),
+    };
+  };
 
   const findVisibleCommentsForPost = (
     postId: string,
@@ -67,10 +85,196 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
           : [];
       });
 
+  const findCommunitiesByOwnerUserId = (ownerUserId: string) =>
+    catalog.communities
+      .filter((community) => community.ownerUserId === ownerUserId)
+      .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+
+  const findFundraisersByOwnerUserId = (ownerUserId: string) =>
+    catalog.fundraisers
+      .filter((fundraiser) => fundraiser.ownerUserId === ownerUserId)
+      .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+
+  const findDonationIntentsForFundraiser = (fundraiserId: string) =>
+    catalog.donationIntents
+      .filter((intent) => intent.fundraiserId === fundraiserId)
+      .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+
   const countFollowers = (targetType: FollowTargetType, targetId: string): number =>
     catalog.follows.filter(
       (follow) => follow.targetType === targetType && follow.targetId === targetId,
     ).length;
+
+  const countFollowing = (userId: string): number =>
+    catalog.follows.filter((follow) => follow.userId === userId).length;
+
+  const buildFundraiserSummarySnapshot = (
+    fundraiserId: string,
+  ): PublicFundraiserSummarySnapshot | null => {
+    const fundraiser =
+      catalog.fundraisers.find((entry) => entry.id === fundraiserId) ?? null;
+
+    if (!fundraiser) {
+      return null;
+    }
+
+    const owner = findUserById(fundraiser.ownerUserId);
+
+    if (!owner) {
+      return null;
+    }
+
+    const donationIntents = findDonationIntentsForFundraiser(fundraiser.id);
+
+    return {
+      fundraiser,
+      owner,
+      ownerProfile: findUserProfileByUserId(owner.id),
+      relatedCommunity: findCommunitiesByOwnerUserId(owner.id)[0] ?? null,
+      donationIntentCount: donationIntents.length,
+      supporterCount: new Set(donationIntents.map((intent) => intent.userId)).size,
+      supportAmount: donationIntents.reduce((sum, intent) => sum + intent.amount, 0),
+    };
+  };
+
+  const compareFundraiserSummaries = (
+    left: PublicFundraiserSummarySnapshot,
+    right: PublicFundraiserSummarySnapshot,
+  ): number => {
+    if (right.supportAmount !== left.supportAmount) {
+      return right.supportAmount - left.supportAmount;
+    }
+
+    if (right.donationIntentCount !== left.donationIntentCount) {
+      return right.donationIntentCount - left.donationIntentCount;
+    }
+
+    return (
+      right.fundraiser.createdAt.getTime() - left.fundraiser.createdAt.getTime()
+    );
+  };
+
+  const findFundraiserSummariesByOwnerUserId = (
+    ownerUserId: string,
+  ): PublicFundraiserSummarySnapshot[] =>
+    findFundraisersByOwnerUserId(ownerUserId)
+      .flatMap((fundraiser) => {
+        const summary = buildFundraiserSummarySnapshot(fundraiser.id);
+
+        return summary ? [summary] : [];
+      })
+      .sort(compareFundraiserSummaries);
+
+  const buildProfileRecentActivity = (
+    ownerUserId: string,
+    fundraiserSummaries: PublicFundraiserSummarySnapshot[],
+    ownedCommunities: ReturnType<typeof findCommunitiesByOwnerUserId>,
+  ): PublicProfileActivitySnapshot[] => {
+    const donationActivity = fundraiserSummaries.flatMap((fundraiserSummary) =>
+      findDonationIntentsForFundraiser(fundraiserSummary.fundraiser.id).flatMap(
+        (donationIntent) => {
+          const actor = buildActorSnapshotByUserId(donationIntent.userId);
+
+          return actor
+            ? [
+                {
+                  type: "fundraiser_support" as const,
+                  actor,
+                  fundraiser: fundraiserSummary,
+                  community: fundraiserSummary.relatedCommunity,
+                  donationIntent,
+                },
+              ]
+            : [];
+        },
+      ),
+    );
+
+    const communityPostActivity = ownedCommunities.flatMap((community) =>
+      catalog.posts
+        .filter(
+          (post) =>
+            post.communityId === community.id &&
+            post.status === "published" &&
+            post.moderationStatus === "visible",
+        )
+        .flatMap((post) => {
+          const actor = buildActorSnapshotByUserId(post.authorUserId);
+
+          return actor
+            ? [
+                {
+                  type: "community_post" as const,
+                  actor,
+                  community,
+                  post,
+                },
+              ]
+            : [];
+        }),
+    );
+
+    return [...donationActivity, ...communityPostActivity]
+      .sort((left, right) => {
+        const leftCreatedAt =
+          left.type === "fundraiser_support"
+            ? left.donationIntent.createdAt
+            : left.post.createdAt;
+        const rightCreatedAt =
+          right.type === "fundraiser_support"
+            ? right.donationIntent.createdAt
+            : right.post.createdAt;
+
+        return rightCreatedAt.getTime() - leftCreatedAt.getTime();
+      })
+      .slice(0, 8);
+  };
+
+  const countInspiredSupporters = (
+    ownerUserId: string,
+    fundraiserSummaries: PublicFundraiserSummarySnapshot[],
+    ownedCommunities: ReturnType<typeof findCommunitiesByOwnerUserId>,
+  ): number => {
+    const engagedUserIds = new Set<string>();
+
+    fundraiserSummaries.forEach((fundraiserSummary) => {
+      findDonationIntentsForFundraiser(fundraiserSummary.fundraiser.id).forEach(
+        (donationIntent) => {
+          if (donationIntent.userId !== ownerUserId) {
+            engagedUserIds.add(donationIntent.userId);
+          }
+        },
+      );
+    });
+
+    ownedCommunities.forEach((community) => {
+      const posts = catalog.posts.filter(
+        (post) =>
+          post.communityId === community.id &&
+          post.status === "published" &&
+          post.moderationStatus === "visible",
+      );
+
+      posts.forEach((post) => {
+        if (post.authorUserId !== ownerUserId) {
+          engagedUserIds.add(post.authorUserId);
+        }
+
+        catalog.comments
+          .filter(
+            (comment) =>
+              comment.postId === post.id && comment.moderationStatus === "visible",
+          )
+          .forEach((comment) => {
+            if (comment.authorUserId !== ownerUserId) {
+              engagedUserIds.add(comment.authorUserId);
+            }
+          });
+      });
+    });
+
+    return engagedUserIds.size;
+  };
 
   return {
     async findProfileBySlug(slug: string): Promise<PublicProfileSnapshot | null> {
@@ -86,15 +290,25 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
         return null;
       }
 
+      const fundraiserSummaries = findFundraiserSummariesByOwnerUserId(user.id);
+      const ownedCommunities = findCommunitiesByOwnerUserId(user.id);
+
       return {
         user,
         profile,
         followerCount: countFollowers("profile", profile.id),
-        featuredFundraisers: catalog.fundraisers.filter(
-          (fundraiser) => fundraiser.ownerUserId === user.id,
+        followingCount: countFollowing(user.id),
+        inspiredSupporterCount: countInspiredSupporters(
+          user.id,
+          fundraiserSummaries,
+          ownedCommunities,
         ),
-        ownedCommunities: catalog.communities.filter(
-          (community) => community.ownerUserId === user.id,
+        featuredFundraisers: fundraiserSummaries,
+        ownedCommunities,
+        recentActivity: buildProfileRecentActivity(
+          user.id,
+          fundraiserSummaries,
+          ownedCommunities,
         ),
       };
     },
@@ -113,17 +327,21 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
         return null;
       }
 
+      const summary = buildFundraiserSummarySnapshot(fundraiser.id);
+
+      if (!summary) {
+        return null;
+      }
+
       return {
-        fundraiser,
-        owner,
-        ownerProfile: findUserProfileByUserId(owner.id),
-        relatedCommunity:
-          catalog.communities.find(
-            (community) => community.ownerUserId === fundraiser.ownerUserId,
-          ) ?? null,
-        donationIntentCount: catalog.donationIntents.filter(
-          (intent) => intent.fundraiserId === fundraiser.id,
-        ).length,
+        summary,
+        recentSupporters: findDonationIntentsForFundraiser(fundraiser.id).flatMap(
+          (donationIntent) => {
+            const actor = buildActorSnapshotByUserId(donationIntent.userId);
+
+            return actor ? [{ actor, donationIntent }] : [];
+          },
+        ),
       };
     },
     async findCommunityBySlug(slug: string): Promise<PublicCommunitySnapshot | null> {
@@ -139,15 +357,23 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
         return null;
       }
 
+      const fundraisers = findFundraiserSummariesByOwnerUserId(community.ownerUserId);
+
       return {
         community,
         owner,
         ownerProfile: findUserProfileByUserId(owner.id),
-        featuredFundraiser:
-          catalog.fundraisers.find(
-            (fundraiser) => fundraiser.ownerUserId === community.ownerUserId,
-          ) ?? null,
+        featuredFundraiser: fundraisers[0] ?? null,
+        fundraisers,
         followerCount: countFollowers("community", community.id),
+        supportAmount: fundraisers.reduce(
+          (sum, fundraiserSummary) => sum + fundraiserSummary.supportAmount,
+          0,
+        ),
+        donationIntentCount: fundraisers.reduce(
+          (sum, fundraiserSummary) => sum + fundraiserSummary.donationIntentCount,
+          0,
+        ),
         discussion: findVisibleDiscussionForCommunity(community.id),
       };
     },

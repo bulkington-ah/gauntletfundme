@@ -9,6 +9,10 @@ import type {
   PublicFundraiserResponse,
   PublicQueryResult,
 } from "./contracts";
+import {
+  toPublicCommunityReference,
+  toPublicFundraiserSummary,
+} from "./mappers";
 import type { PublicContentReadRepository } from "./ports";
 
 type Dependencies = {
@@ -38,7 +42,7 @@ export const getPublicFundraiserBySlug = async (
 
   await dependencies.analyticsEventPublisher?.publish(
     buildFundraiserPageViewedEvent({
-      fundraiserSlug: snapshot.fundraiser.slug,
+      fundraiserSlug: snapshot.summary.fundraiser.slug,
     }),
   );
 
@@ -47,25 +51,26 @@ export const getPublicFundraiserBySlug = async (
     data: {
       kind: "fundraiser",
       fundraiser: {
-        slug: snapshot.fundraiser.slug,
-        title: snapshot.fundraiser.title,
-        story: snapshot.fundraiser.story,
-        status: snapshot.fundraiser.status,
-        goalAmount: snapshot.fundraiser.goalAmount,
-        donationIntentCount: snapshot.donationIntentCount,
+        ...toPublicFundraiserSummary(snapshot.summary),
+        story: snapshot.summary.fundraiser.story,
       },
       organizer: {
-        displayName: snapshot.owner.displayName,
-        role: snapshot.owner.role,
-        profileSlug: snapshot.ownerProfile?.slug ?? null,
+        displayName: snapshot.summary.owner.displayName,
+        role: snapshot.summary.owner.role,
+        profileSlug: snapshot.summary.ownerProfile?.slug ?? null,
+        avatarUrl: snapshot.summary.ownerProfile?.avatarUrl ?? null,
       },
-      community: snapshot.relatedCommunity
-        ? {
-            slug: snapshot.relatedCommunity.slug,
-            name: snapshot.relatedCommunity.name,
-            visibility: snapshot.relatedCommunity.visibility,
-          }
+      community: snapshot.summary.relatedCommunity
+        ? toPublicCommunityReference(snapshot.summary.relatedCommunity)
         : null,
+      recentSupporters: snapshot.recentSupporters.map((supporter) => ({
+        displayName: supporter.actor.user.displayName,
+        profileSlug: supporter.actor.profile?.slug ?? null,
+        avatarUrl: supporter.actor.profile?.avatarUrl ?? null,
+        amount: supporter.donationIntent.amount,
+        status: supporter.donationIntent.status,
+        createdAt: supporter.donationIntent.createdAt.toISOString(),
+      })),
     },
   };
 };

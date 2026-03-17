@@ -16,9 +16,14 @@ describe("PostgresPublicContentEngagementRepository", () => {
     }
 
     expect(snapshot.user.displayName).toBe("Avery Johnson");
-    expect(snapshot.followerCount).toBe(1);
-    expect(snapshot.featuredFundraisers).toHaveLength(1);
+    expect(snapshot.followerCount).toBe(5);
+    expect(snapshot.followingCount).toBe(2);
+    expect(snapshot.inspiredSupporterCount).toBe(6);
+    expect(snapshot.featuredFundraisers).toHaveLength(4);
+    expect(snapshot.featuredFundraisers[0]?.fundraiser.slug).toBe("warm-meals-2026");
+    expect(snapshot.featuredFundraisers[0]?.supportAmount).toBe(22000);
     expect(snapshot.ownedCommunities).toHaveLength(1);
+    expect(snapshot.recentActivity).not.toHaveLength(0);
   });
 
   it("creates follows idempotently", async () => {
@@ -53,7 +58,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
         targetType: "community",
         targetId: target.id,
       }),
-    ).toBe(2);
+    ).toBe(5);
   });
 
   it("removes follows idempotently and returns the latest follower count", async () => {
@@ -87,7 +92,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
         targetType: "community",
         targetId: target.id,
       }),
-    ).toBe(0);
+    ).toBe(3);
   });
 
   it("resolves target owners for self-follow checks", async () => {
@@ -189,7 +194,36 @@ describe("PostgresPublicContentEngagementRepository", () => {
       throw new Error("Expected fundraiser snapshot to be found.");
     }
 
-    expect(fundraiserSnapshot.donationIntentCount).toBe(3);
+    expect(fundraiserSnapshot.summary.donationIntentCount).toBe(6);
+    expect(fundraiserSnapshot.summary.supportAmount).toBe(26200);
+    expect(fundraiserSnapshot.summary.supporterCount).toBe(5);
+  });
+
+  it("returns derived fundraiser and community engagement summaries for seeded content", async () => {
+    const repository = createRepository();
+
+    const fundraiserSnapshot = await repository.findFundraiserBySlug(
+      "warm-meals-2026",
+    );
+    const communitySnapshot = await repository.findCommunityBySlug(
+      "neighbors-helping-neighbors",
+    );
+
+    expect(fundraiserSnapshot).not.toBeNull();
+    expect(communitySnapshot).not.toBeNull();
+
+    expect(fundraiserSnapshot?.summary.supportAmount).toBe(22000);
+    expect(fundraiserSnapshot?.summary.supporterCount).toBe(5);
+    expect(fundraiserSnapshot?.recentSupporters[0]?.actor.user.displayName).toBe(
+      "Noah Kim",
+    );
+    expect(communitySnapshot?.followerCount).toBe(4);
+    expect(communitySnapshot?.fundraisers).toHaveLength(4);
+    expect(communitySnapshot?.featuredFundraiser?.fundraiser.slug).toBe(
+      "warm-meals-2026",
+    );
+    expect(communitySnapshot?.supportAmount).toBe(50500);
+    expect(communitySnapshot?.donationIntentCount).toBe(11);
   });
 
   it("resolves report targets and writes reports idempotently", async () => {

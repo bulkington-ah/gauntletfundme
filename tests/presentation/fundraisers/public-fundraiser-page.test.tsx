@@ -19,18 +19,22 @@ describe("PublicFundraiserPage", () => {
             story: "Funding hot meals for families all winter.",
             status: "active",
             goalAmount: 250000,
+            supportAmount: 7800,
+            supporterCount: 2,
             donationIntentCount: 2,
           },
           organizer: {
             displayName: "Avery Johnson",
             role: "organizer",
             profileSlug: "avery-johnson",
+            avatarUrl: null,
           },
           community: {
             slug: "neighbors-helping-neighbors",
             name: "Neighbors Helping Neighbors",
             visibility: "public",
           },
+          recentSupporters: [],
         },
       },
     });
@@ -53,12 +57,15 @@ describe("PublicFundraiserPage", () => {
         story: "Funding hot meals for families all winter.",
         status: "active",
         goalAmount: 250000,
+        supportAmount: 7800,
+        supporterCount: 2,
         donationIntentCount: 2,
       },
       organizer: {
         displayName: "Avery Johnson",
         role: "organizer",
         profileSlug: "avery-johnson",
+        avatarUrl: null,
       },
       community: {
         slug: "neighbors-helping-neighbors",

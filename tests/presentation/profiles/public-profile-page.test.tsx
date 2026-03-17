@@ -21,6 +21,8 @@ describe("PublicProfilePage", () => {
             bio: "Organizer building long-term community support.",
             avatarUrl: null,
             followerCount: 8,
+            followingCount: 2,
+            inspiredSupporterCount: 5,
           },
           connections: {
             fundraisers: [
@@ -29,6 +31,9 @@ describe("PublicProfilePage", () => {
                 title: "Warm Meals 2026",
                 status: "active",
                 goalAmount: 250000,
+                supportAmount: 22000,
+                supporterCount: 5,
+                donationIntentCount: 5,
               },
             ],
             communities: [
@@ -39,6 +44,7 @@ describe("PublicProfilePage", () => {
               },
             ],
           },
+          recentActivity: [],
         },
       },
     });
@@ -63,6 +69,8 @@ describe("PublicProfilePage", () => {
         bio: "Organizer building long-term community support.",
         avatarUrl: null,
         followerCount: 8,
+        followingCount: 2,
+        inspiredSupporterCount: 5,
       },
       connections: {
         fundraisers: [
@@ -71,6 +79,9 @@ describe("PublicProfilePage", () => {
             title: "Warm Meals 2026",
             status: "active",
             goalAmount: 250000,
+            supportAmount: 22000,
+            supporterCount: 5,
+            donationIntentCount: 5,
           },
         ],
         communities: [

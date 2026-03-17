@@ -195,19 +195,18 @@ describe("API route handlers", () => {
     });
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({
+    const body = await response.json();
+
+    expect(body).toMatchObject({
       kind: "profile",
       profile: {
         slug: "avery-johnson",
         displayName: "Avery Johnson",
-        followerCount: 1,
+        followerCount: 5,
+        followingCount: 2,
+        inspiredSupporterCount: 6,
       },
       connections: {
-        fundraisers: [
-          {
-            slug: "warm-meals-2026",
-          },
-        ],
         communities: [
           {
             slug: "neighbors-helping-neighbors",
@@ -215,6 +214,14 @@ describe("API route handlers", () => {
         ],
       },
     });
+    expect(body.connections.fundraisers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          slug: "warm-meals-2026",
+          supportAmount: 22000,
+        }),
+      ]),
+    );
   });
 
   it("returns a 404 for an unknown fundraiser slug", async () => {
@@ -242,7 +249,13 @@ describe("API route handlers", () => {
       kind: "community",
       community: {
         slug: "neighbors-helping-neighbors",
-        followerCount: 1,
+        followerCount: 4,
+        fundraiserCount: 4,
+        supportAmount: 50500,
+        donationIntentCount: 11,
+      },
+      featuredFundraiser: {
+        slug: "warm-meals-2026",
       },
       discussion: [
         {

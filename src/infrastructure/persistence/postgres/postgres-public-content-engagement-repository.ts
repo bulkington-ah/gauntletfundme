@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import type {
+  CommunityDiscussionSnapshot,
   DonationIntentTargetLookup,
   DonationIntentWriteRepository,
   DiscussionTargetLookup,
@@ -9,9 +10,12 @@ import type {
   FollowTargetLookup,
   FollowWriteRepository,
   FollowWriteResult,
+  PublicActorSnapshot,
   PublicContentReadRepository,
   PublicFundraiserSnapshot,
+  PublicFundraiserSummarySnapshot,
   PublicProfileSnapshot,
+  PublicProfileActivitySnapshot,
   ReportReviewLookup,
   ReportReviewWriteRepository,
   ReportTargetLookup,
@@ -70,6 +74,363 @@ export const createPostgresPublicContentEngagementRepository = (
     return sqlClient.query<TRow>(text, values);
   };
 
+  const findUserById = async (userId: string): Promise<User | null> => {
+    const result = await query<UserRow>(
+      `SELECT id, email, display_name, role, created_at AS user_created_at
+       FROM users
+       WHERE id = $1
+       LIMIT 1`,
+      [userId],
+    );
+    const row = result.rows[0];
+
+    return row ? mapUser(row) : null;
+  };
+
+  const findUserProfileByUserId = async (userId: string) => {
+    const result = await query<UserProfileRow>(
+      `SELECT id, user_id, slug, bio, avatar_url, profile_type, created_at
+       FROM user_profiles
+       WHERE user_id = $1
+       LIMIT 1`,
+      [userId],
+    );
+    const row = result.rows[0];
+
+    return row ? mapUserProfile(row) : null;
+  };
+
+  const buildActorSnapshotByUserId = async (
+    userId: string,
+  ): Promise<PublicActorSnapshot | null> => {
+    const user = await findUserById(userId);
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      user,
+      profile: await findUserProfileByUserId(userId),
+    };
+  };
+
+  const findFundraiserRowsByOwnerUserId = async (ownerUserId: string) => {
+    const result = await query<FundraiserRow>(
+      `SELECT id, owner_user_id, slug, title, story, status, goal_amount, created_at
+       FROM fundraisers
+       WHERE owner_user_id = $1
+       ORDER BY created_at DESC`,
+      [ownerUserId],
+    );
+
+    return result.rows;
+  };
+
+  const findCommunityRowsByOwnerUserId = async (ownerUserId: string) => {
+    const result = await query<CommunityRow>(
+      `SELECT id, owner_user_id, slug, name, description, visibility, created_at
+       FROM communities
+       WHERE owner_user_id = $1
+       ORDER BY created_at DESC`,
+      [ownerUserId],
+    );
+
+    return result.rows;
+  };
+
+  const findLatestCommunityByOwnerUserId = async (ownerUserId: string) => {
+    const communityRows = await findCommunityRowsByOwnerUserId(ownerUserId);
+    const row = communityRows[0];
+
+    return row ? mapCommunity(row) : null;
+  };
+
+  const findDonationIntentRowsByFundraiserId = async (fundraiserId: string) => {
+    const result = await query<DonationIntentRow>(
+      `SELECT id, user_id, fundraiser_id, amount, status, created_at
+       FROM donation_intents
+       WHERE fundraiser_id = $1
+       ORDER BY created_at DESC`,
+      [fundraiserId],
+    );
+
+    return result.rows;
+  };
+
+  const countFollowersByTarget = async (
+    targetType: "profile" | "community" | "fundraiser",
+    targetId: string,
+  ) => {
+    const result = await query<{ follower_count: string }>(
+      `SELECT COUNT(*)::text AS follower_count
+       FROM follows
+       WHERE target_type = $1 AND target_id = $2`,
+      [targetType, targetId],
+    );
+
+    return Number(result.rows[0]?.follower_count ?? "0");
+  };
+
+  const countFollowingByUserId = async (userId: string) => {
+    const result = await query<{ following_count: string }>(
+      `SELECT COUNT(*)::text AS following_count
+       FROM follows
+       WHERE user_id = $1`,
+      [userId],
+    );
+
+    return Number(result.rows[0]?.following_count ?? "0");
+  };
+
+  const buildFundraiserSummarySnapshotFromRow = async (
+    fundraiserRow: FundraiserRow,
+    owner: User,
+    ownerProfile: PublicActorSnapshot["profile"],
+    relatedCommunity: PublicFundraiserSummarySnapshot["relatedCommunity"],
+  ): Promise<PublicFundraiserSummarySnapshot> => {
+    const donationMetricsResult = await query<{
+      intent_count: string;
+      supporter_count: string;
+      support_amount: string;
+    }>(
+      `SELECT
+         COUNT(*)::text AS intent_count,
+         COUNT(DISTINCT user_id)::text AS supporter_count,
+         COALESCE(SUM(amount), 0)::text AS support_amount
+       FROM donation_intents
+       WHERE fundraiser_id = $1`,
+      [fundraiserRow.id],
+    );
+
+    return {
+      fundraiser: mapFundraiser(fundraiserRow),
+      owner,
+      ownerProfile,
+      relatedCommunity,
+      donationIntentCount: Number(
+        donationMetricsResult.rows[0]?.intent_count ?? "0",
+      ),
+      supporterCount: Number(donationMetricsResult.rows[0]?.supporter_count ?? "0"),
+      supportAmount: Number(donationMetricsResult.rows[0]?.support_amount ?? "0"),
+    };
+  };
+
+  const findFundraiserSummariesByOwnerUserId = async (ownerUserId: string) => {
+    const owner = await findUserById(ownerUserId);
+
+    if (!owner) {
+      return [];
+    }
+
+    const ownerProfile = await findUserProfileByUserId(ownerUserId);
+    const relatedCommunity = await findLatestCommunityByOwnerUserId(ownerUserId);
+    const fundraiserRows = await findFundraiserRowsByOwnerUserId(ownerUserId);
+
+    const summaries = await Promise.all(
+      fundraiserRows.map((fundraiserRow) =>
+        buildFundraiserSummarySnapshotFromRow(
+          fundraiserRow,
+          owner,
+          ownerProfile,
+          relatedCommunity,
+        ),
+      ),
+    );
+
+    return summaries.sort(compareFundraiserSummaries);
+  };
+
+  const findVisibleDiscussionForCommunityId = async (
+    communityId: string,
+  ): Promise<CommunityDiscussionSnapshot[]> => {
+    const postsResult = await query<PostWithAuthorRow>(
+      `SELECT
+         p.id,
+         p.community_id,
+         p.author_user_id,
+         p.title,
+         p.body,
+         p.status,
+         p.moderation_status,
+         p.created_at,
+         u.id AS joined_user_id,
+         u.email,
+         u.display_name,
+         u.role,
+         u.created_at AS user_created_at
+       FROM posts p
+       INNER JOIN users u ON u.id = p.author_user_id
+       WHERE p.community_id = $1
+         AND p.status = 'published'
+         AND p.moderation_status = 'visible'
+       ORDER BY p.created_at DESC`,
+      [communityId],
+    );
+
+    return Promise.all(
+      postsResult.rows.map(async (postRow) => {
+        const commentsResult = await query<CommentWithAuthorRow>(
+          `SELECT
+             c.id,
+             c.post_id,
+             c.author_user_id,
+             c.body,
+             c.status,
+             c.moderation_status,
+             c.created_at,
+             u.id AS joined_user_id,
+             u.email,
+             u.display_name,
+             u.role,
+             u.created_at AS user_created_at
+           FROM comments c
+           INNER JOIN users u ON u.id = c.author_user_id
+           WHERE c.post_id = $1
+             AND c.moderation_status = 'visible'
+           ORDER BY c.created_at ASC`,
+          [postRow.id],
+        );
+
+        return {
+          post: mapPost(postRow),
+          author: mapJoinedUser(postRow),
+          comments: commentsResult.rows.map((commentRow) => ({
+            comment: mapComment(commentRow),
+            author: mapJoinedUser(commentRow),
+          })),
+        };
+      }),
+    );
+  };
+
+  const buildProfileRecentActivity = async (
+    fundraiserSummaries: PublicFundraiserSummarySnapshot[],
+    ownedCommunities: ReturnType<typeof mapCommunity>[],
+  ): Promise<PublicProfileActivitySnapshot[]> => {
+    const donationActivity = (
+      await Promise.all(
+        fundraiserSummaries.map(async (fundraiserSummary) => {
+          const donationIntentRows = await findDonationIntentRowsByFundraiserId(
+            fundraiserSummary.fundraiser.id,
+          );
+
+          return Promise.all(
+            donationIntentRows.map(async (donationIntentRow) => {
+              const actor = await buildActorSnapshotByUserId(
+                donationIntentRow.user_id,
+              );
+
+              return actor
+                ? {
+                    type: "fundraiser_support" as const,
+                    actor,
+                    fundraiser: fundraiserSummary,
+                    community: fundraiserSummary.relatedCommunity,
+                    donationIntent: mapDonationIntent(donationIntentRow),
+                  }
+                : null;
+            }),
+          );
+        }),
+      )
+    )
+      .flat()
+      .filter(
+        (
+          entry,
+        ): entry is Extract<
+          PublicProfileActivitySnapshot,
+          { type: "fundraiser_support" }
+        > => entry !== null,
+      );
+
+    const communityPostActivity = (
+      await Promise.all(
+        ownedCommunities.map(async (community) => {
+          const discussion = await findVisibleDiscussionForCommunityId(community.id);
+
+          return Promise.all(
+            discussion.map(async (entry) => {
+              const actor = await buildActorSnapshotByUserId(entry.author.id);
+
+              return actor
+                ? {
+                    type: "community_post" as const,
+                    actor,
+                    community,
+                    post: entry.post,
+                  }
+                : null;
+            }),
+          );
+        }),
+      )
+    )
+      .flat()
+      .filter(
+        (
+          entry,
+        ): entry is Extract<
+          PublicProfileActivitySnapshot,
+          { type: "community_post" }
+        > => entry !== null,
+      );
+
+    return [...donationActivity, ...communityPostActivity]
+      .sort((left, right) => {
+        const leftCreatedAt =
+          left.type === "fundraiser_support"
+            ? left.donationIntent.createdAt
+            : left.post.createdAt;
+        const rightCreatedAt =
+          right.type === "fundraiser_support"
+            ? right.donationIntent.createdAt
+            : right.post.createdAt;
+
+        return rightCreatedAt.getTime() - leftCreatedAt.getTime();
+      })
+      .slice(0, 8);
+  };
+
+  const countInspiredSupporters = async (
+    ownerUserId: string,
+    fundraiserSummaries: PublicFundraiserSummarySnapshot[],
+    ownedCommunities: ReturnType<typeof mapCommunity>[],
+  ) => {
+    const engagedUserIds = new Set<string>();
+
+    for (const fundraiserSummary of fundraiserSummaries) {
+      const donationIntentRows = await findDonationIntentRowsByFundraiserId(
+        fundraiserSummary.fundraiser.id,
+      );
+
+      donationIntentRows.forEach((donationIntentRow) => {
+        if (donationIntentRow.user_id !== ownerUserId) {
+          engagedUserIds.add(donationIntentRow.user_id);
+        }
+      });
+    }
+
+    for (const community of ownedCommunities) {
+      const discussion = await findVisibleDiscussionForCommunityId(community.id);
+
+      discussion.forEach((entry) => {
+        if (entry.author.id !== ownerUserId) {
+          engagedUserIds.add(entry.author.id);
+        }
+
+        entry.comments.forEach((commentEntry) => {
+          if (commentEntry.author.id !== ownerUserId) {
+            engagedUserIds.add(commentEntry.author.id);
+          }
+        });
+      });
+    }
+
+    return engagedUserIds.size;
+  };
+
   return {
     async findProfileBySlug(slug) {
       const profileResult = await query<UserProfileWithUserRow>(
@@ -81,6 +442,7 @@ export const createPostgresPublicContentEngagementRepository = (
            p.avatar_url,
            p.profile_type,
            p.created_at,
+           u.id AS joined_user_id,
            u.email,
            u.display_name,
            u.role,
@@ -98,38 +460,30 @@ export const createPostgresPublicContentEngagementRepository = (
         return null;
       }
 
-      const followerCountResult = await query<{ follower_count: string }>(
-        `SELECT COUNT(*)::text AS follower_count
-         FROM follows
-         WHERE target_type = 'profile' AND target_id = $1`,
-        [profileRow.id],
-      );
-
-      const fundraisersResult = await query<FundraiserRow>(
-        `SELECT id, owner_user_id, slug, title, story, status, goal_amount, created_at
-         FROM fundraisers
-         WHERE owner_user_id = $1
-         ORDER BY created_at DESC`,
-        [profileRow.user_id],
-      );
-
-      const communitiesResult = await query<CommunityRow>(
-        `SELECT id, owner_user_id, slug, name, description, visibility, created_at
-         FROM communities
-         WHERE owner_user_id = $1
-         ORDER BY created_at DESC`,
-        [profileRow.user_id],
-      );
-
-      const user = mapUser(profileRow);
+      const user = mapJoinedUser(profileRow);
       const profile = mapUserProfile(profileRow);
+      const ownedCommunities = (await findCommunityRowsByOwnerUserId(profileRow.user_id))
+        .map(mapCommunity);
+      const featuredFundraisers = await findFundraiserSummariesByOwnerUserId(
+        profileRow.user_id,
+      );
 
       return {
         user,
         profile,
-        followerCount: Number(followerCountResult.rows[0]?.follower_count ?? "0"),
-        featuredFundraisers: fundraisersResult.rows.map(mapFundraiser),
-        ownedCommunities: communitiesResult.rows.map(mapCommunity),
+        followerCount: await countFollowersByTarget("profile", profileRow.id),
+        followingCount: await countFollowingByUserId(profileRow.user_id),
+        inspiredSupporterCount: await countInspiredSupporters(
+          profileRow.user_id,
+          featuredFundraisers,
+          ownedCommunities,
+        ),
+        featuredFundraisers,
+        ownedCommunities,
+        recentActivity: await buildProfileRecentActivity(
+          featuredFundraisers,
+          ownedCommunities,
+        ),
       } satisfies PublicProfileSnapshot;
     },
 
@@ -144,6 +498,7 @@ export const createPostgresPublicContentEngagementRepository = (
            f.status,
            f.goal_amount,
            f.created_at,
+           u.id AS joined_user_id,
            u.email,
            u.display_name,
            u.role,
@@ -160,43 +515,38 @@ export const createPostgresPublicContentEngagementRepository = (
       if (!fundraiserRow) {
         return null;
       }
-
-      const ownerProfileResult = await query<UserProfileRow>(
-        `SELECT id, user_id, slug, bio, avatar_url, profile_type, created_at
-         FROM user_profiles
-         WHERE user_id = $1
-         LIMIT 1`,
-        [fundraiserRow.owner_user_id],
+      const owner = mapJoinedUser(fundraiserRow);
+      const ownerProfile = await findUserProfileByUserId(fundraiserRow.owner_user_id);
+      const relatedCommunity = await findLatestCommunityByOwnerUserId(
+        fundraiserRow.owner_user_id,
       );
-
-      const relatedCommunityResult = await query<CommunityRow>(
-        `SELECT id, owner_user_id, slug, name, description, visibility, created_at
-         FROM communities
-         WHERE owner_user_id = $1
-         ORDER BY created_at DESC
-         LIMIT 1`,
-        [fundraiserRow.owner_user_id],
-      );
-
-      const donationIntentCountResult = await query<{ intent_count: string }>(
-        `SELECT COUNT(*)::text AS intent_count
-         FROM donation_intents
-         WHERE fundraiser_id = $1`,
-        [fundraiserRow.id],
+      const donationIntentRows = await findDonationIntentRowsByFundraiserId(
+        fundraiserRow.id,
       );
 
       return {
-        fundraiser: mapFundraiser(fundraiserRow),
-        owner: mapUser(fundraiserRow),
-        ownerProfile: ownerProfileResult.rows[0]
-          ? mapUserProfile(ownerProfileResult.rows[0])
-          : null,
-        relatedCommunity: relatedCommunityResult.rows[0]
-          ? mapCommunity(relatedCommunityResult.rows[0])
-          : null,
-        donationIntentCount: Number(
-          donationIntentCountResult.rows[0]?.intent_count ?? "0",
+        summary: await buildFundraiserSummarySnapshotFromRow(
+          fundraiserRow,
+          owner,
+          ownerProfile,
+          relatedCommunity,
         ),
+        recentSupporters: (
+          await Promise.all(
+            donationIntentRows.map(async (donationIntentRow) => {
+              const actor = await buildActorSnapshotByUserId(
+                donationIntentRow.user_id,
+              );
+
+              return actor
+                ? {
+                    actor,
+                    donationIntent: mapDonationIntent(donationIntentRow),
+                  }
+                : null;
+            }),
+          )
+        ).filter((entry): entry is PublicFundraiserSnapshot["recentSupporters"][number] => entry !== null),
       } satisfies PublicFundraiserSnapshot;
     },
 
@@ -210,6 +560,7 @@ export const createPostgresPublicContentEngagementRepository = (
            c.description,
            c.visibility,
            c.created_at,
+           u.id AS joined_user_id,
            u.email,
            u.display_name,
            u.role,
@@ -226,99 +577,26 @@ export const createPostgresPublicContentEngagementRepository = (
       if (!communityRow) {
         return null;
       }
-
-      const ownerProfileResult = await query<UserProfileRow>(
-        `SELECT id, user_id, slug, bio, avatar_url, profile_type, created_at
-         FROM user_profiles
-         WHERE user_id = $1
-         LIMIT 1`,
-        [communityRow.owner_user_id],
-      );
-
-      const featuredFundraiserResult = await query<FundraiserRow>(
-        `SELECT id, owner_user_id, slug, title, story, status, goal_amount, created_at
-         FROM fundraisers
-         WHERE owner_user_id = $1
-         ORDER BY created_at DESC
-         LIMIT 1`,
-        [communityRow.owner_user_id],
-      );
-
-      const followerCountResult = await query<{ follower_count: string }>(
-        `SELECT COUNT(*)::text AS follower_count
-         FROM follows
-         WHERE target_type = 'community' AND target_id = $1`,
-        [communityRow.id],
-      );
-
-      const postsResult = await query<PostWithAuthorRow>(
-        `SELECT
-           p.id,
-           p.community_id,
-           p.author_user_id,
-           p.title,
-           p.body,
-           p.status,
-           p.moderation_status,
-           p.created_at,
-           u.email,
-           u.display_name,
-           u.role,
-           u.created_at AS user_created_at
-         FROM posts p
-         INNER JOIN users u ON u.id = p.author_user_id
-         WHERE p.community_id = $1
-           AND p.status = 'published'
-           AND p.moderation_status = 'visible'
-         ORDER BY p.created_at DESC`,
-        [communityRow.id],
-      );
-
-      const discussion = await Promise.all(
-        postsResult.rows.map(async (postRow) => {
-          const commentsResult = await query<CommentWithAuthorRow>(
-            `SELECT
-               c.id,
-               c.post_id,
-               c.author_user_id,
-               c.body,
-               c.status,
-               c.moderation_status,
-               c.created_at,
-               u.email,
-               u.display_name,
-               u.role,
-               u.created_at AS user_created_at
-             FROM comments c
-             INNER JOIN users u ON u.id = c.author_user_id
-             WHERE c.post_id = $1
-               AND c.moderation_status = 'visible'
-             ORDER BY c.created_at ASC`,
-            [postRow.id],
-          );
-
-          return {
-            post: mapPost(postRow),
-            author: mapUser(postRow),
-            comments: commentsResult.rows.map((commentRow) => ({
-              comment: mapComment(commentRow),
-              author: mapUser(commentRow),
-            })),
-          };
-        }),
+      const fundraisers = await findFundraiserSummariesByOwnerUserId(
+        communityRow.owner_user_id,
       );
 
       return {
         community: mapCommunity(communityRow),
-        owner: mapUser(communityRow),
-        ownerProfile: ownerProfileResult.rows[0]
-          ? mapUserProfile(ownerProfileResult.rows[0])
-          : null,
-        featuredFundraiser: featuredFundraiserResult.rows[0]
-          ? mapFundraiser(featuredFundraiserResult.rows[0])
-          : null,
-        followerCount: Number(followerCountResult.rows[0]?.follower_count ?? "0"),
-        discussion,
+        owner: mapJoinedUser(communityRow),
+        ownerProfile: await findUserProfileByUserId(communityRow.owner_user_id),
+        featuredFundraiser: fundraisers[0] ?? null,
+        fundraisers,
+        followerCount: await countFollowersByTarget("community", communityRow.id),
+        supportAmount: fundraisers.reduce(
+          (sum, fundraiserSummary) => sum + fundraiserSummary.supportAmount,
+          0,
+        ),
+        donationIntentCount: fundraisers.reduce(
+          (sum, fundraiserSummary) => sum + fundraiserSummary.donationIntentCount,
+          0,
+        ),
+        discussion: await findVisibleDiscussionForCommunityId(communityRow.id),
       };
     },
 
@@ -872,19 +1150,54 @@ type ReportRow = {
   created_at: Date | string;
 };
 
-type UserProfileWithUserRow = UserProfileRow & UserRow & { created_at: Date | string };
-type FundraiserWithOwnerRow = FundraiserRow & UserRow;
-type CommunityWithOwnerRow = CommunityRow & UserRow;
-type PostWithAuthorRow = PostRow & UserRow;
-type CommentWithAuthorRow = CommentRow & UserRow;
+type JoinedUserRow = {
+  joined_user_id: string;
+  email: string;
+  display_name: string;
+  role: User["role"];
+  user_created_at: Date | string;
+};
+
+type UserProfileWithUserRow = UserProfileRow &
+  JoinedUserRow & { created_at: Date | string };
+type FundraiserWithOwnerRow = FundraiserRow & JoinedUserRow;
+type CommunityWithOwnerRow = CommunityRow & JoinedUserRow;
+type PostWithAuthorRow = PostRow & JoinedUserRow;
+type CommentWithAuthorRow = CommentRow & JoinedUserRow;
 type IdAndSlugRow = {
   id: string;
   slug: string;
 };
 
+const compareFundraiserSummaries = (
+  left: PublicFundraiserSummarySnapshot,
+  right: PublicFundraiserSummarySnapshot,
+): number => {
+  if (right.supportAmount !== left.supportAmount) {
+    return right.supportAmount - left.supportAmount;
+  }
+
+  if (right.donationIntentCount !== left.donationIntentCount) {
+    return right.donationIntentCount - left.donationIntentCount;
+  }
+
+  return (
+    right.fundraiser.createdAt.getTime() - left.fundraiser.createdAt.getTime()
+  );
+};
+
 const mapUser = (row: UserRow) =>
   createUser({
     id: row.id,
+    email: row.email,
+    displayName: row.display_name,
+    role: row.role,
+    createdAt: asDate(row.user_created_at, "user_created_at"),
+  });
+
+const mapJoinedUser = (row: JoinedUserRow) =>
+  createUser({
+    id: row.joined_user_id,
     email: row.email,
     displayName: row.display_name,
     role: row.role,
