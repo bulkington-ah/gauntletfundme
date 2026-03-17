@@ -37,6 +37,43 @@ The persistence layer bootstraps schema and seeds prototype data from `src/infra
 
 Auth routes and protected commands use the `x-session-token` request header.
 
+## Local Development Quickstart
+- Recommended workflow:
+  - run PostgreSQL in Docker
+  - run the Next.js app natively with Node.js for the fastest edit/reload loop
+- Prerequisites:
+  - Node.js 22
+  - Docker Desktop
+  - local port `5432` available for PostgreSQL
+  - local port `3000` available for the app
+- Start a local PostgreSQL instance:
+  ```bash
+  docker run --name gofundme-v2-postgres \
+    -e POSTGRES_DB=gofundme_v2 \
+    -e POSTGRES_USER=postgres \
+    -e POSTGRES_PASSWORD=postgres \
+    -p 5432:5432 \
+    -d postgres:16
+  ```
+- Create `.env.local` from `.env.example`:
+  ```env
+  DATABASE_URL=postgres://postgres:postgres@localhost:5432/gofundme_v2
+  PORT=3000
+  HOSTNAME=0.0.0.0
+  ```
+- Install dependencies and start the app:
+  ```bash
+  npm install
+  npm run dev
+  ```
+- On first database connection, the app bootstraps its schema and seeds the prototype catalog automatically.
+- Verify the app locally:
+  - `http://localhost:3000/api/health`
+  - `http://localhost:3000/profiles/avery-johnson`
+  - `http://localhost:3000/fundraisers/warm-meals-2026`
+  - `http://localhost:3000/communities/neighbors-helping-neighbors`
+- This workflow is local-only and does not change production deployment, which remains the existing Docker image plus AWS App Runner and private RDS path.
+
 ## Common Commands
 - `npm install`
 - `npm run dev`
