@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 import type {
+  DiscussionTargetLookup,
+  DiscussionWriteRepository,
   FollowOwnerLookup,
   FollowTargetLookup,
   FollowWriteRepository,
@@ -35,6 +37,8 @@ type Dependencies = {
 export const createPostgresPublicContentEngagementRepository = (
   dependencies: Dependencies = {},
 ): PublicContentReadRepository &
+  DiscussionTargetLookup &
+  DiscussionWriteRepository &
   FollowTargetLookup &
   FollowOwnerLookup &
   FollowWriteRepository => {
@@ -301,6 +305,48 @@ export const createPostgresPublicContentEngagementRepository = (
       };
     },
 
+    async findCommunityBySlugForPostCreation(slug) {
+      const result = await query<{
+        id: string;
+        slug: string;
+        owner_user_id: string;
+      }>(
+        `SELECT id, slug, owner_user_id
+         FROM communities
+         WHERE slug = $1
+         LIMIT 1`,
+        [slug],
+      );
+      const community = result.rows[0];
+
+      return community
+        ? {
+            id: community.id,
+            slug: community.slug,
+            ownerUserId: community.owner_user_id,
+          }
+        : null;
+    },
+
+    async findPostByIdForCommentCreation(postId) {
+      const result = await query<{ id: string }>(
+        `SELECT id
+         FROM posts
+         WHERE id = $1
+           AND status = 'published'
+           AND moderation_status = 'visible'
+         LIMIT 1`,
+        [postId],
+      );
+      const post = result.rows[0];
+
+      return post
+        ? {
+            id: post.id,
+          }
+        : null;
+    },
+
     async findTargetBySlug(targetType, slug) {
       switch (targetType) {
         case "profile": {
@@ -418,6 +464,50 @@ export const createPostgresPublicContentEngagementRepository = (
         follow: mapFollow(insertedRow),
         created: true,
       } satisfies FollowWriteResult;
+    },
+
+    async createPost(input) {
+      const postId = `post_${randomUUID()}`;
+      const now = new Date();
+      const result = await query<PostRow>(
+        `INSERT INTO posts
+           (id, community_id, author_user_id, title, body, status, moderation_status, created_at)
+         VALUES
+           ($1, $2, $3, $4, $5, 'published', 'visible', $6)
+         RETURNING id, community_id, author_user_id, title, body, status, moderation_status, created_at`,
+        [postId, input.communityId, input.authorUserId, input.title, input.body, now],
+      );
+      const row = result.rows[0];
+
+      if (!row) {
+        throw new Error(
+          "Expected the created post row to be returned after insert.",
+        );
+      }
+
+      return mapPost(row);
+    },
+
+    async createComment(input) {
+      const commentId = `comment_${randomUUID()}`;
+      const now = new Date();
+      const result = await query<CommentRow>(
+        `INSERT INTO comments
+           (id, post_id, author_user_id, body, status, moderation_status, created_at)
+         VALUES
+           ($1, $2, $3, $4, 'published', 'visible', $5)
+         RETURNING id, post_id, author_user_id, body, status, moderation_status, created_at`,
+        [commentId, input.postId, input.authorUserId, input.body, now],
+      );
+      const row = result.rows[0];
+
+      if (!row) {
+        throw new Error(
+          "Expected the created comment row to be returned after insert.",
+        );
+      }
+
+      return mapComment(row);
     },
 
     async removeFollowIfPresent(input) {

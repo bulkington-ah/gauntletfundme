@@ -117,6 +117,48 @@ describe("PostgresPublicContentEngagementRepository", () => {
       await repository.findOwnerUserIdByTarget("community", communityTarget!.id),
     ).toBe("user_organizer_avery");
   });
+
+  it("persists created posts and comments for public discussion reads", async () => {
+    const repository = createRepository();
+
+    const communityTarget = await repository.findCommunityBySlugForPostCreation(
+      "neighbors-helping-neighbors",
+    );
+
+    expect(communityTarget).not.toBeNull();
+    if (!communityTarget) {
+      throw new Error("Expected community target to be found.");
+    }
+
+    const post = await repository.createPost({
+      communityId: communityTarget.id,
+      authorUserId: "user_organizer_avery",
+      title: "Evening prep shift",
+      body: "We added an evening prep shift for Wednesday.",
+    });
+    const comment = await repository.createComment({
+      postId: post.id,
+      authorUserId: "user_supporter_jordan",
+      body: "I can help cover that shift.",
+    });
+
+    const communitySnapshot = await repository.findCommunityBySlug(
+      "neighbors-helping-neighbors",
+    );
+
+    expect(communitySnapshot).not.toBeNull();
+    if (!communitySnapshot) {
+      throw new Error("Expected community snapshot to be found.");
+    }
+
+    expect(communitySnapshot.discussion[0]?.post.id).toBe(post.id);
+    expect(communitySnapshot.discussion[0]?.comments[0]?.comment.id).toBe(comment.id);
+    expect(
+      await repository.findPostByIdForCommentCreation(post.id),
+    ).toEqual({
+      id: post.id,
+    });
+  });
 });
 
 const createRepository = () => {

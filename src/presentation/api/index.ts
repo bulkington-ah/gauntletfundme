@@ -4,6 +4,8 @@ export * from "./auth/post-login-route";
 export * from "./auth/post-logout-route";
 export * from "./auth/post-sign-up-route";
 export * from "./auth/session-header";
+export * from "./discussion/post-create-comment-route";
+export * from "./discussion/post-create-post-route";
 export * from "./engagement/post-follow-target-route";
 export * from "./engagement/post-unfollow-target-route";
 export * from "./http";

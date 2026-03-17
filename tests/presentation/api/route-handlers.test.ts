@@ -5,6 +5,8 @@ import {
   handleGetPublicCommunityRoute,
   handleGetPublicFundraiserRoute,
   handleGetPublicProfileRoute,
+  handlePostCreateCommentRoute,
+  handlePostCreatePostRoute,
   handlePostFollowTargetRoute,
   handlePostUnfollowTargetRoute,
   setApplicationApiForTesting,
@@ -22,6 +24,49 @@ describe("API route handlers", () => {
         followOwnerLookup: {
           async findOwnerUserIdByTarget() {
             return "user_organizer_avery";
+          },
+        },
+        discussionTargetLookup: {
+          async findCommunityBySlugForPostCreation(communitySlug) {
+            return communitySlug === "neighbors-helping-neighbors"
+              ? {
+                  id: "community_neighbors_helping_neighbors",
+                  slug: "neighbors-helping-neighbors",
+                  ownerUserId: "user_organizer_avery",
+                }
+              : null;
+          },
+          async findPostByIdForCommentCreation(postId) {
+            return postId === "post_kickoff_update"
+              ? {
+                  id: "post_kickoff_update",
+                }
+              : null;
+          },
+        },
+        discussionWriteRepository: {
+          async createPost(input) {
+            return {
+              id: "post_created_route_test",
+              communityId: input.communityId,
+              authorUserId: input.authorUserId,
+              title: input.title,
+              body: input.body,
+              status: "published",
+              moderationStatus: "visible",
+              createdAt: new Date("2026-03-16T15:00:00.000Z"),
+            };
+          },
+          async createComment(input) {
+            return {
+              id: "comment_created_route_test",
+              postId: input.postId,
+              authorUserId: input.authorUserId,
+              body: input.body,
+              status: "published",
+              moderationStatus: "visible",
+              createdAt: new Date("2026-03-16T15:05:00.000Z"),
+            };
           },
         },
         followWriteRepository: {
@@ -123,6 +168,154 @@ describe("API route handlers", () => {
           ],
         },
       ],
+    });
+  });
+
+  it("returns unauthorized for create post commands without a session token header", async () => {
+    const response = await handlePostCreatePostRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          communitySlug: "neighbors-helping-neighbors",
+          title: "Kitchen update",
+          body: "Saturday prep is still on schedule.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "unauthorized",
+      message:
+        "Authentication is required to create posts. Send the x-session-token header to continue.",
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns 201 for an organizer creating a post", async () => {
+    const response = await handlePostCreatePostRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-session-token": "demo-organizer-session",
+        },
+        body: JSON.stringify({
+          communitySlug: "neighbors-helping-neighbors",
+          title: "Kitchen update",
+          body: "Saturday prep is still on schedule.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_organizer_avery",
+        role: "organizer",
+      },
+      community: {
+        slug: "neighbors-helping-neighbors",
+      },
+      post: {
+        id: "post_created_route_test",
+        title: "Kitchen update",
+        body: "Saturday prep is still on schedule.",
+        status: "published",
+        moderationStatus: "visible",
+        createdAt: "2026-03-16T15:00:00.000Z",
+      },
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns 403 when a supporter attempts to create a community post", async () => {
+    const response = await handlePostCreatePostRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-session-token": "demo-supporter-session",
+        },
+        body: JSON.stringify({
+          communitySlug: "neighbors-helping-neighbors",
+          title: "Kitchen update",
+          body: "Saturday prep is still on schedule.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      error: "forbidden",
+      message: "Only an authorized owner, moderator, or admin can create posts.",
+    });
+  });
+
+  it("returns unauthorized for create comment commands without a session token header", async () => {
+    const response = await handlePostCreateCommentRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          postId: "post_kickoff_update",
+          body: "I can help with prep and delivery.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "unauthorized",
+      message:
+        "Authentication is required to create comments. Send the x-session-token header to continue.",
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns 201 for an authenticated comment creation command", async () => {
+    const response = await handlePostCreateCommentRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-session-token": "demo-supporter-session",
+        },
+        body: JSON.stringify({
+          postId: "post_kickoff_update",
+          body: "I can help with prep and delivery.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_supporter_jordan",
+        role: "supporter",
+      },
+      comment: {
+        id: "comment_created_route_test",
+        postId: "post_kickoff_update",
+        body: "I can help with prep and delivery.",
+        status: "published",
+        moderationStatus: "visible",
+        createdAt: "2026-03-16T15:05:00.000Z",
+      },
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
     });
   });
 

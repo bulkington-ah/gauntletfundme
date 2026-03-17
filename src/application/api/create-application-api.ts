@@ -13,6 +13,14 @@ import {
   type AccountAuthRepository,
 } from "../accounts";
 import {
+  createCommentCommand,
+  createPostCommand,
+  type CreateCommentRequest,
+  type CreatePostRequest,
+  type DiscussionTargetLookup,
+  type DiscussionWriteRepository,
+} from "../discussion";
+import {
   followTarget,
   unfollowTarget,
   type FollowTargetRequest,
@@ -34,6 +42,8 @@ import type {
 
 type Dependencies = {
   publicContentReadRepository?: PublicContentReadRepository;
+  discussionTargetLookup?: DiscussionTargetLookup;
+  discussionWriteRepository?: DiscussionWriteRepository;
   followTargetLookup?: FollowTargetLookup;
   followOwnerLookup?: FollowOwnerLookup;
   followWriteRepository?: FollowWriteRepository;
@@ -64,6 +74,10 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
 
   const publicContentReadRepository =
     dependencies.publicContentReadRepository ?? resolvePersistenceAdapter();
+  const getDiscussionTargetLookup = () =>
+    dependencies.discussionTargetLookup ?? resolvePersistenceAdapter();
+  const getDiscussionWriteRepository = () =>
+    dependencies.discussionWriteRepository ?? resolvePersistenceAdapter();
   const followTargetLookup =
     dependencies.followTargetLookup ?? resolvePersistenceAdapter();
   const followOwnerLookup =
@@ -93,6 +107,24 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
       getPublicFundraiserBySlug({ publicContentReadRepository }, request),
     getPublicCommunityBySlug: (request: LookupBySlugRequest) =>
       getPublicCommunityBySlug({ publicContentReadRepository }, request),
+    createPost: (request: CreatePostRequest) =>
+      createPostCommand(
+        {
+          sessionViewerGateway,
+          discussionTargetLookup: getDiscussionTargetLookup(),
+          discussionWriteRepository: getDiscussionWriteRepository(),
+        },
+        request,
+      ),
+    createComment: (request: CreateCommentRequest) =>
+      createCommentCommand(
+        {
+          sessionViewerGateway,
+          discussionTargetLookup: getDiscussionTargetLookup(),
+          discussionWriteRepository: getDiscussionWriteRepository(),
+        },
+        request,
+      ),
     followTarget: (request: FollowTargetRequest) =>
       followTarget(
         {

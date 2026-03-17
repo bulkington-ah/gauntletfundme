@@ -191,6 +191,14 @@ const createApplicationApiStub = ({
     status: "not_found",
     message: "not configured for this test",
   }),
+  createPost: vi.fn().mockResolvedValue({
+    status: "unauthorized",
+    message: "not configured for this test",
+  }),
+  createComment: vi.fn().mockResolvedValue({
+    status: "unauthorized",
+    message: "not configured for this test",
+  }),
   followTarget: vi.fn().mockResolvedValue({
     status: "unauthorized",
     message: "not configured for this test",
