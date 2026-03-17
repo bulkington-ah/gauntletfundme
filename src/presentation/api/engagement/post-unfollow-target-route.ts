@@ -1,3 +1,5 @@
+import { readSessionTokenFromRequest } from "@/presentation/auth";
+
 import { sessionTokenHeader } from "../auth/session-header";
 import { getApplicationApi } from "../application-api";
 import { jsonResponse, parseJsonBody } from "../http";
@@ -23,7 +25,7 @@ export const handlePostUnfollowTargetRoute = async (
   }
 
   const result = await getApplicationApi().unfollowTarget({
-    sessionToken: request.headers.get(sessionTokenHeader),
+    sessionToken: readSessionTokenFromRequest(request),
     targetType: body.targetType,
     targetSlug: body.targetSlug,
   });

@@ -1,3 +1,5 @@
+import { readSessionTokenFromRequest } from "@/presentation/auth";
+
 import { getApplicationApi } from "../application-api";
 import { jsonResponse, parseJsonBody } from "../http";
 import { sessionTokenHeader } from "../auth/session-header";
@@ -23,7 +25,7 @@ export const handlePostFollowTargetRoute = async (
   }
 
   const result = await getApplicationApi().followTarget({
-    sessionToken: request.headers.get(sessionTokenHeader),
+    sessionToken: readSessionTokenFromRequest(request),
     targetType: body.targetType,
     targetSlug: body.targetSlug,
   });

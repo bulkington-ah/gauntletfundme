@@ -1,5 +1,10 @@
 import { createApplicationApi } from "@/application";
 import {
+  browserSessionCookieName,
+  clearSessionCookieHeader,
+  createSessionCookieHeader,
+} from "@/presentation/auth";
+import {
   handleGetSessionRoute,
   handlePostLoginRoute,
   handlePostLogoutRoute,
@@ -57,12 +62,47 @@ describe("auth API route handlers", () => {
     );
 
     expect(response.status).toBe(201);
+    expect(response.headers.get("set-cookie")).toBe(
+      createSessionCookieHeader("session_created_123"),
+    );
     await expect(response.json()).resolves.toEqual({
       viewer: {
         userId: "user_123",
         role: "supporter",
       },
       sessionToken: "session_created_123",
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns 200 and sets a browser session cookie on login success", async () => {
+    setApplicationApiForTesting(createApplicationApiStub());
+
+    const response = await handlePostLoginRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          email: "new.user@example.com",
+          password: "password123",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("set-cookie")).toBe(
+      createSessionCookieHeader("session_123"),
+    );
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_123",
+        role: "supporter",
+      },
+      sessionToken: "session_123",
       meta: {
         sessionTokenHeader: "x-session-token",
       },
@@ -99,21 +139,63 @@ describe("auth API route handlers", () => {
     });
   });
 
-  it("returns 200 for logout when a session token header is provided", async () => {
-    setApplicationApiForTesting(createApplicationApiStub());
+  it("returns 200 for logout when a session cookie is provided and clears it", async () => {
+    const applicationApi = createApplicationApiStub();
+    setApplicationApiForTesting(applicationApi);
 
     const response = await handlePostLogoutRoute(
       new Request("http://test", {
         method: "POST",
         headers: {
-          "x-session-token": "session_123",
+          cookie: `${browserSessionCookieName}=session_cookie_123`,
         },
       }),
     );
 
     expect(response.status).toBe(200);
+    expect(response.headers.get("set-cookie")).toBe(clearSessionCookieHeader());
+    expect(applicationApi.logout).toHaveBeenCalledWith({
+      sessionToken: "session_cookie_123",
+    });
     await expect(response.json()).resolves.toEqual({
       message: "Session ended.",
+    });
+  });
+
+  it("prefers the session cookie over the header during session lookup", async () => {
+    const applicationApi = createApplicationApiStub();
+    setApplicationApiForTesting(applicationApi);
+
+    const response = await handleGetSessionRoute(
+      new Request("http://test", {
+        headers: {
+          cookie: `${browserSessionCookieName}=session_cookie_123`,
+          "x-session-token": "session_header_123",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(applicationApi.getSession).toHaveBeenCalledWith({
+      sessionToken: "session_cookie_123",
+    });
+  });
+
+  it("falls back to the session header when no browser session cookie exists", async () => {
+    const applicationApi = createApplicationApiStub();
+    setApplicationApiForTesting(applicationApi);
+
+    const response = await handleGetSessionRoute(
+      new Request("http://test", {
+        headers: {
+          "x-session-token": "session_header_123",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(applicationApi.getSession).toHaveBeenCalledWith({
+      sessionToken: "session_header_123",
     });
   });
 

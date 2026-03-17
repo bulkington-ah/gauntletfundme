@@ -1,3 +1,5 @@
+import { readSessionTokenFromRequest } from "@/presentation/auth";
+
 import { sessionTokenHeader } from "../auth/session-header";
 import { getApplicationApi } from "../application-api";
 import { jsonResponse, parseJsonBody } from "../http";
@@ -24,7 +26,7 @@ export const handlePostSubmitReportRoute = async (
   }
 
   const result = await getApplicationApi().submitReport({
-    sessionToken: request.headers.get(sessionTokenHeader),
+    sessionToken: readSessionTokenFromRequest(request),
     targetType: body.targetType,
     targetId: body.targetId,
     reason: body.reason,

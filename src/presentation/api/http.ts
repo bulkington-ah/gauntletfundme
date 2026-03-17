@@ -1,5 +1,8 @@
-export const jsonResponse = (body: unknown, status = 200): Response =>
-  Response.json(body, { status });
+export const jsonResponse = (
+  body: unknown,
+  init: number | ResponseInit = 200,
+): Response =>
+  Response.json(body, typeof init === "number" ? { status: init } : init);
 
 export const parseJsonBody = async <TBody>(
   request: Request,

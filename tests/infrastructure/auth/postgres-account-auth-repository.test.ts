@@ -2,7 +2,10 @@
 
 import { newDb } from "pg-mem";
 
-import { createPostgresAccountAuthRepository } from "@/infrastructure";
+import {
+  createPostgresAccountAuthRepository,
+  prototypeLoginPassword,
+} from "@/infrastructure";
 import { createUser } from "@/domain";
 
 describe("PostgresAccountAuthRepository", () => {
@@ -69,6 +72,60 @@ describe("PostgresAccountAuthRepository", () => {
     await repository.invalidateSession(sessionToken);
     const afterLogout = await repository.findViewerBySessionToken(sessionToken);
     expect(afterLogout).toBeNull();
+  });
+
+  it("seeds prototype login credentials for the public demo accounts", async () => {
+    const repository = createRepository();
+
+    const avery = await repository.findUserByEmail("avery.organizer@example.com");
+    const jordan = await repository.findUserByEmail("jordan.supporter@example.com");
+    const morgan = await repository.findUserByEmail("morgan.moderator@example.com");
+
+    expect(avery?.id).toBe("user_organizer_avery");
+    expect(jordan?.id).toBe("user_supporter_jordan");
+    expect(morgan?.id).toBe("user_moderator_morgan");
+
+    await expect(
+      repository.verifyPasswordCredential(
+        "user_organizer_avery",
+        prototypeLoginPassword,
+      ),
+    ).resolves.toBe(true);
+    await expect(
+      repository.verifyPasswordCredential(
+        "user_supporter_jordan",
+        prototypeLoginPassword,
+      ),
+    ).resolves.toBe(true);
+    await expect(
+      repository.verifyPasswordCredential(
+        "user_moderator_morgan",
+        prototypeLoginPassword,
+      ),
+    ).resolves.toBe(true);
+  });
+
+  it("seeds prototype login credentials idempotently", async () => {
+    const db = newDb({ autoCreateForeignKeyIndices: true });
+    const pg = db.adapters.createPg();
+    const pool = new pg.Pool();
+
+    const firstRepository = createPostgresAccountAuthRepository({
+      sqlClient: pool,
+    });
+    const secondRepository = createPostgresAccountAuthRepository({
+      sqlClient: pool,
+    });
+
+    await firstRepository.findUserByEmail("avery.organizer@example.com");
+    await secondRepository.findUserByEmail("avery.organizer@example.com");
+
+    await expect(
+      secondRepository.verifyPasswordCredential(
+        "user_organizer_avery",
+        prototypeLoginPassword,
+      ),
+    ).resolves.toBe(true);
   });
 });
 

@@ -1,6 +1,7 @@
 import { createApplicationApi } from "@/application";
 import { createStaticSessionViewerGateway } from "@/infrastructure/auth";
 import { createStaticPublicContentRepository } from "@/infrastructure/public-content";
+import { browserSessionCookieName } from "@/presentation/auth";
 import {
   handleGetPublicCommunityRoute,
   handleGetPublicFundraiserRoute,
@@ -343,6 +344,45 @@ describe("API route handlers", () => {
     });
   });
 
+  it("accepts a browser session cookie when an organizer creates a post", async () => {
+    const response = await handlePostCreatePostRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie: createBrowserSessionCookieHeader("demo-organizer-session"),
+        },
+        body: JSON.stringify({
+          communitySlug: "neighbors-helping-neighbors",
+          title: "Kitchen update",
+          body: "Saturday prep is still on schedule.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_organizer_avery",
+        role: "organizer",
+      },
+      community: {
+        slug: "neighbors-helping-neighbors",
+      },
+      post: {
+        id: "post_created_route_test",
+        title: "Kitchen update",
+        body: "Saturday prep is still on schedule.",
+        status: "published",
+        moderationStatus: "visible",
+        createdAt: "2026-03-16T15:00:00.000Z",
+      },
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
   it("returns 403 when a supporter attempts to create a community post", async () => {
     const response = await handlePostCreatePostRoute(
       new Request("http://test", {
@@ -426,6 +466,41 @@ describe("API route handlers", () => {
     });
   });
 
+  it("accepts a browser session cookie for comment creation", async () => {
+    const response = await handlePostCreateCommentRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie: createBrowserSessionCookieHeader("demo-supporter-session"),
+        },
+        body: JSON.stringify({
+          postId: "post_kickoff_update",
+          body: "I can help with prep and delivery.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_supporter_jordan",
+        role: "supporter",
+      },
+      comment: {
+        id: "comment_created_route_test",
+        postId: "post_kickoff_update",
+        body: "I can help with prep and delivery.",
+        status: "published",
+        moderationStatus: "visible",
+        createdAt: "2026-03-16T15:05:00.000Z",
+      },
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
   it("returns unauthorized for donation intent commands without a session token header", async () => {
     const response = await handlePostStartDonationIntentRoute(
       new Request("http://test", {
@@ -458,6 +533,43 @@ describe("API route handlers", () => {
         headers: {
           "content-type": "application/json",
           "x-session-token": "demo-supporter-session",
+        },
+        body: JSON.stringify({
+          fundraiserSlug: "warm-meals-2026",
+          amount: 2500,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_supporter_jordan",
+        role: "supporter",
+      },
+      fundraiser: {
+        slug: "warm-meals-2026",
+      },
+      donationIntent: {
+        id: "intent_created_route_test",
+        amount: 2500,
+        status: "started",
+        createdAt: "2026-03-16T15:10:00.000Z",
+      },
+      meta: {
+        sessionTokenHeader: "x-session-token",
+        mockedCheckout: true,
+      },
+    });
+  });
+
+  it("accepts a browser session cookie for mocked donation intent start", async () => {
+    const response = await handlePostStartDonationIntentRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie: createBrowserSessionCookieHeader("demo-supporter-session"),
         },
         body: JSON.stringify({
           fundraiserSlug: "warm-meals-2026",
@@ -551,6 +663,43 @@ describe("API route handlers", () => {
     });
   });
 
+  it("accepts a browser session cookie for report submission", async () => {
+    const response = await handlePostSubmitReportRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie: createBrowserSessionCookieHeader("demo-supporter-session"),
+        },
+        body: JSON.stringify({
+          targetType: "comment",
+          targetId: "comment_container_followup",
+          reason: "Harassment",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_supporter_jordan",
+        role: "supporter",
+      },
+      report: {
+        id: "report_created_route_test",
+        targetType: "comment",
+        targetId: "comment_container_followup",
+        reason: "Harassment",
+        status: "submitted",
+        createdAt: "2026-03-16T15:15:00.000Z",
+      },
+      created: true,
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
   it("returns unauthorized for report resolution without a session token header", async () => {
     const response = await handlePostResolveReportRoute(
       new Request("http://test", {
@@ -613,6 +762,43 @@ describe("API route handlers", () => {
     });
   });
 
+  it("accepts a browser session cookie for report resolution", async () => {
+    const response = await handlePostResolveReportRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie: createBrowserSessionCookieHeader("demo-moderator-session"),
+        },
+        body: JSON.stringify({
+          reportId: "report_resolve_route_test",
+          action: "remove",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_moderator_morgan",
+        role: "moderator",
+      },
+      resolution: {
+        reportId: "report_resolve_route_test",
+        action: "remove",
+        reportStatus: "actioned",
+      },
+      target: {
+        type: "comment",
+        id: "comment_container_followup",
+        moderationStatus: "removed",
+      },
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
   it("returns unauthorized for follow commands without a session token header", async () => {
     const response = await handlePostFollowTargetRoute(
       new Request("http://test", {
@@ -645,6 +831,43 @@ describe("API route handlers", () => {
         headers: {
           "content-type": "application/json",
           "x-session-token": "demo-supporter-session",
+        },
+        body: JSON.stringify({
+          targetType: "community",
+          targetSlug: "neighbors-helping-neighbors",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toMatchObject({
+      viewer: {
+        userId: "user_supporter_jordan",
+        role: "supporter",
+      },
+      target: {
+        type: "community",
+        slug: "neighbors-helping-neighbors",
+      },
+      follow: {
+        id: "follow_created_test",
+        created: true,
+        followerCount: 2,
+        following: true,
+      },
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("accepts a browser session cookie for follow commands", async () => {
+    const response = await handlePostFollowTargetRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie: createBrowserSessionCookieHeader("demo-supporter-session"),
         },
         body: JSON.stringify({
           targetType: "community",
@@ -855,4 +1078,43 @@ describe("API route handlers", () => {
       },
     });
   });
+
+  it("accepts a browser session cookie for unfollow commands", async () => {
+    const response = await handlePostUnfollowTargetRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie: createBrowserSessionCookieHeader("demo-supporter-session"),
+        },
+        body: JSON.stringify({
+          targetType: "community",
+          targetSlug: "neighbors-helping-neighbors",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_supporter_jordan",
+        role: "supporter",
+      },
+      target: {
+        type: "community",
+        slug: "neighbors-helping-neighbors",
+      },
+      follow: {
+        removed: true,
+        followerCount: 2,
+        following: false,
+      },
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
 });
+
+const createBrowserSessionCookieHeader = (sessionToken: string): string =>
+  `${browserSessionCookieName}=${encodeURIComponent(sessionToken)}`;

@@ -1,5 +1,6 @@
 import { getApplicationApi } from "../application-api";
 import { jsonResponse, parseJsonBody } from "../http";
+import { createSessionCookieHeader } from "@/presentation/auth";
 
 import { sessionTokenHeader } from "./session-header";
 
@@ -46,7 +47,12 @@ export const handlePostSignUpRoute = async (
             sessionTokenHeader,
           },
         },
-        201,
+        {
+          status: 201,
+          headers: {
+            "set-cookie": createSessionCookieHeader(result.sessionToken),
+          },
+        },
       );
   }
 };

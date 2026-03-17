@@ -1,3 +1,5 @@
+import { readSessionTokenFromRequest } from "@/presentation/auth";
+
 import { sessionTokenHeader } from "../auth/session-header";
 import { getApplicationApi } from "../application-api";
 import { jsonResponse, parseJsonBody } from "../http";
@@ -23,7 +25,7 @@ export const handlePostCreateCommentRoute = async (
   }
 
   const result = await getApplicationApi().createComment({
-    sessionToken: request.headers.get(sessionTokenHeader),
+    sessionToken: readSessionTokenFromRequest(request),
     postId: body.postId,
     body: body.body,
   });

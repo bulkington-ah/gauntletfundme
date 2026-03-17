@@ -1,13 +1,12 @@
 import { getApplicationApi } from "../application-api";
 import { jsonResponse } from "../http";
-
-import { sessionTokenHeader } from "./session-header";
+import { readSessionTokenFromRequest } from "@/presentation/auth";
 
 export const handleGetSessionRoute = async (
   request: Request,
 ): Promise<Response> => {
   const result = await getApplicationApi().getSession({
-    sessionToken: request.headers.get(sessionTokenHeader),
+    sessionToken: readSessionTokenFromRequest(request),
   });
 
   switch (result.status) {

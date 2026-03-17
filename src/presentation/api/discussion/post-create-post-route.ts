@@ -1,3 +1,5 @@
+import { readSessionTokenFromRequest } from "@/presentation/auth";
+
 import { sessionTokenHeader } from "../auth/session-header";
 import { getApplicationApi } from "../application-api";
 import { jsonResponse, parseJsonBody } from "../http";
@@ -24,7 +26,7 @@ export const handlePostCreatePostRoute = async (
   }
 
   const result = await getApplicationApi().createPost({
-    sessionToken: request.headers.get(sessionTokenHeader),
+    sessionToken: readSessionTokenFromRequest(request),
     communitySlug: body.communitySlug,
     title: body.title,
     body: body.body,
