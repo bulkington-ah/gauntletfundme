@@ -4,6 +4,7 @@ import {
   getPublicProfileBySlug,
   type PublicCommunitySnapshot,
   type PublicContentReadRepository,
+  type PublicFundraiserSnapshot,
   type PublicProfileSnapshot,
 } from "@/application";
 import {
@@ -121,6 +122,88 @@ describe("public content queries", () => {
     expect(result).toEqual({
       status: "invalid_request",
       message: "slug is required.",
+    });
+  });
+
+  it("maps fundraiser organizer and community context from the repository snapshot", async () => {
+    const findFundraiserBySlug = vi.fn<
+      PublicContentReadRepository["findFundraiserBySlug"]
+    >();
+    const repository = createRepositoryStub({
+      findFundraiserBySlug,
+    });
+    const owner = createUser({
+      id: "user_123",
+      email: "avery@example.com",
+      displayName: "Avery Johnson",
+      role: "organizer",
+      createdAt,
+    });
+    const fundraiser = createFundraiser({
+      id: "fundraiser_123",
+      ownerUserId: owner.id,
+      slug: "warm-meals-2026",
+      title: "Warm Meals 2026",
+      story: "Funding hot meals.",
+      status: "active",
+      goalAmount: 250000,
+      createdAt,
+    });
+    const snapshot: PublicFundraiserSnapshot = {
+      fundraiser,
+      owner,
+      ownerProfile: createUserProfile({
+        id: "profile_123",
+        userId: owner.id,
+        slug: "avery-johnson",
+        bio: "Organizer building community support.",
+        avatarUrl: null,
+        profileType: "organizer",
+        createdAt,
+      }),
+      relatedCommunity: createCommunity({
+        id: "community_123",
+        ownerUserId: owner.id,
+        slug: "neighbors-helping-neighbors",
+        name: "Neighbors Helping Neighbors",
+        description: "Volunteer coordination and updates.",
+        visibility: "public",
+        createdAt,
+      }),
+      donationIntentCount: 2,
+    };
+
+    findFundraiserBySlug.mockResolvedValue(snapshot);
+
+    const result = await getPublicFundraiserBySlug(
+      { publicContentReadRepository: repository },
+      { slug: " warm meals 2026 " },
+    );
+
+    expect(findFundraiserBySlug).toHaveBeenCalledWith("warm-meals-2026");
+    expect(result).toEqual({
+      status: "success",
+      data: {
+        kind: "fundraiser",
+        fundraiser: {
+          slug: "warm-meals-2026",
+          title: "Warm Meals 2026",
+          story: "Funding hot meals.",
+          status: "active",
+          goalAmount: 250000,
+          donationIntentCount: 2,
+        },
+        organizer: {
+          displayName: "Avery Johnson",
+          role: "organizer",
+          profileSlug: "avery-johnson",
+        },
+        community: {
+          slug: "neighbors-helping-neighbors",
+          name: "Neighbors Helping Neighbors",
+          visibility: "public",
+        },
+      },
     });
   });
 

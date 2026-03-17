@@ -19,6 +19,7 @@ Implemented foundations currently include:
 - centralized authorization policies for owner/member/moderator/anonymous checks
 - follow command with auth checks, self-follow protection, and idempotent persistence semantics
 - public profile page route with slug-based lookup and connected fundraiser/community links
+- public fundraiser page route with organizer context, story rendering, and mocked donation entry
 
 ## Environment
 Copy `.env.example` to your local environment config and set:
