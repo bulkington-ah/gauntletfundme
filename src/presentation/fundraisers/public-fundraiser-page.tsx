@@ -1,32 +1,24 @@
-import type { CSSProperties } from "react";
-
-import type { ApplicationApi } from "@/application";
+import type {
+  ApplicationApi,
+  PublicFundraiserResponse,
+  PublicFundraiserSupporter,
+} from "@/application";
 import { PublicSiteShell } from "@/presentation/shared";
+
+import styles from "./public-fundraiser-page.module.css";
 
 type PublicFundraiserQuery = Pick<ApplicationApi, "getPublicFundraiserBySlug">;
 
+type SuccessfulFundraiserPageModel = {
+  status: "success";
+  fundraiser: PublicFundraiserResponse["fundraiser"];
+  organizer: PublicFundraiserResponse["organizer"];
+  community: PublicFundraiserResponse["community"];
+  recentSupporters: PublicFundraiserSupporter[];
+};
+
 export type PublicFundraiserPageModel =
-  | {
-      status: "success";
-      fundraiser: {
-        slug: string;
-        title: string;
-        story: string;
-        status: string;
-        goalAmount: number;
-        donationIntentCount: number;
-      };
-      organizer: {
-        displayName: string;
-        role: string;
-        profileSlug: string | null;
-      };
-      community: {
-        slug: string;
-        name: string;
-        visibility: string;
-      } | null;
-    }
+  | SuccessfulFundraiserPageModel
   | {
       status: "invalid_request";
       message: string;
@@ -40,6 +32,8 @@ export type PublicFundraiserPageModel =
 type BuildDependencies = {
   publicFundraiserQuery: PublicFundraiserQuery;
 };
+
+const fundraiserHeroImagePath = "/fundraiser-hero-warm-meals.svg";
 
 export const buildPublicFundraiserPageModel = async (
   dependencies: BuildDependencies,
@@ -56,6 +50,7 @@ export const buildPublicFundraiserPageModel = async (
         fundraiser: result.data.fundraiser,
         organizer: result.data.organizer,
         community: result.data.community,
+        recentSupporters: result.data.recentSupporters,
       };
     case "invalid_request":
       return {
@@ -79,10 +74,22 @@ export const PublicFundraiserPage = ({ model }: PublicFundraiserPageProps) => {
   if (model.status === "invalid_request") {
     return (
       <PublicSiteShell>
-        <main style={pageContainerStyle}>
-          <section style={cardStyle}>
-            <h1 style={headingStyle}>Invalid fundraiser request</h1>
-            <p style={bodyTextStyle}>{model.message}</p>
+        <main className={styles.errorPage}>
+          <section className={styles.errorCard}>
+            <p className={styles.errorEyebrow}>Public fundraiser</p>
+            <h1 className={styles.errorHeading}>Invalid fundraiser request</h1>
+            <p className={styles.errorBody}>{model.message}</p>
+            <div className={styles.errorActions}>
+              <a className={styles.primaryAction} href="/">
+                Back home
+              </a>
+              <a
+                className={styles.secondaryAction}
+                href="/fundraisers/warm-meals-2026"
+              >
+                View seeded fundraiser
+              </a>
+            </div>
           </section>
         </main>
       </PublicSiteShell>
@@ -92,12 +99,24 @@ export const PublicFundraiserPage = ({ model }: PublicFundraiserPageProps) => {
   if (model.status === "not_found") {
     return (
       <PublicSiteShell>
-        <main style={pageContainerStyle}>
-          <section style={cardStyle}>
-            <h1 style={headingStyle}>Fundraiser not found</h1>
-            <p style={bodyTextStyle}>
+        <main className={styles.errorPage}>
+          <section className={styles.errorCard}>
+            <p className={styles.errorEyebrow}>Public fundraiser</p>
+            <h1 className={styles.errorHeading}>Fundraiser not found</h1>
+            <p className={styles.errorBody}>
               {model.message} Tried slug: <strong>{model.slug}</strong>
             </p>
+            <div className={styles.errorActions}>
+              <a className={styles.primaryAction} href="/">
+                Back home
+              </a>
+              <a
+                className={styles.secondaryAction}
+                href="/fundraisers/warm-meals-2026"
+              >
+                View seeded fundraiser
+              </a>
+            </div>
           </section>
         </main>
       </PublicSiteShell>
@@ -106,181 +125,326 @@ export const PublicFundraiserPage = ({ model }: PublicFundraiserPageProps) => {
 
   const fundraiserStatus = toTitleCase(model.fundraiser.status);
   const organizerRole = toTitleCase(model.organizer.role);
+  const goalProgress = toGoalProgressPercentage(
+    model.fundraiser.supportAmount,
+    model.fundraiser.goalAmount,
+  );
+  const storyParagraphs = buildStoryParagraphs(model);
+  const organizerFirstName = getFirstName(model.organizer.displayName);
 
   return (
     <PublicSiteShell>
-      <main style={pageContainerStyle}>
-        <section style={heroCardStyle}>
-          <p style={eyebrowStyle}>Public fundraiser</p>
-          <h1 style={headingStyle}>{model.fundraiser.title}</h1>
-          <p style={metaStyle}>
-            Status: {fundraiserStatus} · Goal:{" "}
-            {formatCurrency(model.fundraiser.goalAmount)}
-          </p>
-          <p style={bodyTextStyle}>{model.fundraiser.story}</p>
-        </section>
-
-        <section style={cardStyle}>
-          <h2 style={sectionHeadingStyle}>Organizer context</h2>
-          <p style={bodyTextStyle}>
-            {model.organizer.displayName} · {organizerRole}
-          </p>
-          {model.organizer.profileSlug ? (
-            <a href={`/profiles/${model.organizer.profileSlug}`} style={linkStyle}>
-              View organizer profile
-            </a>
-          ) : (
-            <p style={bodyTextStyle}>Organizer profile link not available.</p>
-          )}
-        </section>
-
-        <section style={cardStyle}>
-          <h2 style={sectionHeadingStyle}>Prototype progress</h2>
-          <p style={bodyTextStyle}>
-            Mock donation intents started:{" "}
-            <strong>{model.fundraiser.donationIntentCount}</strong>
-          </p>
-          <div style={progressTrackStyle}>
-            <div
-              style={{
-                ...progressFillStyle,
-                width: `${toProgressWidth(model.fundraiser.donationIntentCount)}%`,
-              }}
-            />
+      <main className={styles.page}>
+        <section className={styles.headline}>
+          <div className={styles.headlineCopy}>
+            <p className={styles.eyebrow}>Community fundraiser</p>
+            <h1 className={styles.headlineTitle}>{model.fundraiser.title}</h1>
+            <p className={styles.headlineMeta}>
+              Organized by {model.organizer.displayName}
+              {model.community ? ` for ${model.community.name}` : ""} · {fundraiserStatus}
+            </p>
           </div>
-          <p style={helperTextStyle}>
-            Progress reflects mocked intent starts, not real payment volume.
-          </p>
+
+          <div className={styles.headlineBadges}>
+            <wa-badge
+              className={styles.statusBadge}
+              appearance="filled"
+              pill
+              variant="brand"
+            >
+              Prototype fundraiser
+            </wa-badge>
+            {model.community ? (
+              <wa-badge className={styles.contextBadge} appearance="outlined" pill>
+                {toTitleCase(model.community.visibility)} community
+              </wa-badge>
+            ) : null}
+          </div>
         </section>
 
-        <section style={cardStyle}>
-          <h2 style={sectionHeadingStyle}>Mocked donation entry</h2>
-          <a
-            href={`/fundraisers/${model.fundraiser.slug}?checkout=mock`}
-            style={mockDonateCtaStyle}
-          >
-            Start mocked donation
-          </a>
-          <p style={helperTextStyle}>
-            This CTA is intentionally mocked and does not collect payment details.
-          </p>
-        </section>
+        <div className={styles.layout}>
+          <div className={styles.mainColumn}>
+            <section className={styles.mediaCard}>
+              <div className={styles.mediaFrame}>
+                <img
+                  alt="Warm meal deliveries staged for neighborhood pickup"
+                  className={styles.mediaImage}
+                  src={fundraiserHeroImagePath}
+                />
 
-        <section style={cardStyle}>
-          <h2 style={sectionHeadingStyle}>Connected community</h2>
-          {model.community ? (
-            <>
-              <a href={`/communities/${model.community.slug}`} style={linkStyle}>
-                {model.community.name}
-              </a>
-              <p style={bodyTextStyle}>{toTitleCase(model.community.visibility)}</p>
-            </>
-          ) : (
-            <p style={bodyTextStyle}>No community connected yet.</p>
-          )}
-        </section>
+                <div className={styles.mediaDots} aria-hidden="true">
+                  <span className={`${styles.mediaDot} ${styles.mediaDotActive}`} />
+                  <span className={styles.mediaDot} />
+                  <span className={styles.mediaDot} />
+                </div>
+
+                <div className={styles.mediaControls} aria-hidden="true">
+                  <button className={styles.mediaControl} disabled type="button">
+                    ←
+                  </button>
+                  <button className={styles.mediaControl} disabled type="button">
+                    →
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section className={styles.organizerCard}>
+              <div className={styles.organizerHeader}>
+                <div className={styles.organizerAvatar} aria-hidden="true">
+                  {toInitials(model.organizer.displayName)}
+                </div>
+
+                <div className={styles.organizerCopy}>
+                  <p className={styles.organizerLine}>
+                    {model.organizer.profileSlug ? (
+                      <a
+                        className={styles.organizerLink}
+                        href={`/profiles/${model.organizer.profileSlug}`}
+                      >
+                        {model.organizer.displayName}
+                      </a>
+                    ) : (
+                      <span className={styles.organizerName}>
+                        {model.organizer.displayName}
+                      </span>
+                    )}{" "}
+                    is organizing this fundraiser
+                    {model.community ? (
+                      <>
+                        {" "}
+                        for{" "}
+                        <a
+                          className={styles.organizerLink}
+                          href={`/communities/${model.community.slug}`}
+                        >
+                          {model.community.name}
+                        </a>
+                      </>
+                    ) : null}
+                  </p>
+                  <p className={styles.organizerMeta}>
+                    {organizerRole} · Goal {formatCompactCurrency(model.fundraiser.goalAmount)}
+                  </p>
+                </div>
+              </div>
+
+              <div className={styles.organizerBadges}>
+                <wa-badge className={styles.supportBadge} appearance="outlined" pill>
+                  {model.fundraiser.supporterCount} supporters
+                </wa-badge>
+                <wa-badge className={styles.supportBadge} appearance="outlined" pill>
+                  {model.fundraiser.donationIntentCount} mock donations
+                </wa-badge>
+              </div>
+            </section>
+
+            <section className={styles.storyCard}>
+              <div className={styles.storyHeader}>
+                <h2 className={styles.storyTitle}>Story</h2>
+                <p className={styles.storyLead}>
+                  A focused public fundraiser experience built for clarity,
+                  momentum, and community trust.
+                </p>
+              </div>
+
+              <div className={styles.storyBody}>
+                {storyParagraphs.map((paragraph) => (
+                  <p className={styles.storyParagraph} key={paragraph}>
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+
+              <wa-divider className={styles.divider} />
+
+              <div className={styles.reactionRow}>
+                <div className={styles.reaction}>
+                  <span className={styles.reactionIcon} aria-hidden="true">
+                    ♡
+                  </span>
+                  <span>React</span>
+                </div>
+                <div className={styles.reactionCount}>
+                  <span aria-hidden="true">✦</span>
+                  <span>{model.fundraiser.supporterCount}</span>
+                </div>
+              </div>
+
+              <div className={styles.actionRow}>
+                <a
+                  className={styles.primaryAction}
+                  href={`/fundraisers/${model.fundraiser.slug}?checkout=mock`}
+                >
+                  Donate now
+                </a>
+                <button className={styles.secondaryAction} type="button">
+                  Share
+                </button>
+              </div>
+            </section>
+
+            <section className={styles.promoBand}>
+              <p className={styles.promoEyebrow}>Keep the response moving</p>
+              <h2 className={styles.promoTitle}>
+                Help {organizerFirstName} grow neighborhood support beyond a single
+                campaign.
+              </h2>
+              <p className={styles.promoBody}>
+                The shared public shell makes it easy to move from this fundraiser
+                into the connected community and organizer profile without losing
+                context.
+              </p>
+              <div className={styles.promoActions}>
+                {model.community ? (
+                  <a
+                    className={styles.primaryAction}
+                    href={`/communities/${model.community.slug}`}
+                  >
+                    View community
+                  </a>
+                ) : null}
+                {model.organizer.profileSlug ? (
+                  <a
+                    className={styles.secondaryAction}
+                    href={`/profiles/${model.organizer.profileSlug}`}
+                  >
+                    View organizer
+                  </a>
+                ) : null}
+              </div>
+            </section>
+          </div>
+
+          <aside className={styles.sidebarColumn}>
+            <section className={styles.sidebarCard}>
+              <div className={styles.sidebarBanner}>
+                Help {organizerFirstName} keep meals moving this week.
+              </div>
+
+              <div className={styles.sidebarStats}>
+                <div className={styles.progressCluster}>
+                  <wa-progress-ring
+                    className={styles.progressRing}
+                    label={`${goalProgress}% of goal represented by prototype support`}
+                    value={goalProgress}
+                  >
+                    <span className={styles.progressValue}>{goalProgress}%</span>
+                  </wa-progress-ring>
+                </div>
+
+                <div className={styles.supportSummary}>
+                  <p className={styles.supportAmount}>
+                    {formatCurrency(model.fundraiser.supportAmount)} in prototype
+                    support
+                  </p>
+                  <p className={styles.supportMeta}>
+                    Goal {formatCompactCurrency(model.fundraiser.goalAmount)} ·{" "}
+                    {model.fundraiser.supporterCount} supporters ·{" "}
+                    {model.fundraiser.donationIntentCount} support actions
+                  </p>
+                </div>
+              </div>
+
+              <div className={styles.sidebarActions}>
+                <a
+                  className={styles.primaryAction}
+                  href={`/fundraisers/${model.fundraiser.slug}?checkout=mock`}
+                >
+                  Donate now
+                </a>
+                <button className={styles.sidebarSecondaryAction} type="button">
+                  Share
+                </button>
+              </div>
+
+              <div className={styles.supportersHeader}>
+                <h2 className={styles.supportersTitle}>Recent supporters</h2>
+                <p className={styles.supportersCount}>
+                  {model.recentSupporters.length} visible in the prototype feed
+                </p>
+              </div>
+
+              <ul className={styles.supportersList}>
+                {model.recentSupporters.map((supporter) => (
+                  <SupporterListItem key={`${supporter.displayName}-${supporter.createdAt}`} supporter={supporter} />
+                ))}
+              </ul>
+
+              <div className={styles.sidebarFooter}>
+                <button className={styles.footerButton} type="button">
+                  See all
+                </button>
+                <button className={styles.footerButton} type="button">
+                  See top
+                </button>
+              </div>
+            </section>
+          </aside>
+        </div>
       </main>
     </PublicSiteShell>
   );
 };
 
-const pageContainerStyle: CSSProperties = {
-  display: "grid",
-  gap: "20px",
-  margin: "0 auto",
-  maxWidth: "920px",
-  minHeight: "100vh",
-  padding: "40px 20px 64px",
+type SupporterListItemProps = {
+  supporter: PublicFundraiserSupporter;
 };
 
-const cardStyle: CSSProperties = {
-  backgroundColor: "#ffffff",
-  border: "1px solid rgba(16, 24, 40, 0.08)",
-  borderRadius: "18px",
-  boxShadow: "0 12px 30px rgba(16, 24, 40, 0.05)",
-  padding: "24px",
+const SupporterListItem = ({ supporter }: SupporterListItemProps) => (
+  <li className={styles.supporterItem}>
+    <div className={styles.supporterAvatar} aria-hidden="true">
+      {toInitials(supporter.displayName)}
+    </div>
+
+    <div className={styles.supporterDetails}>
+      <div className={styles.supporterNameRow}>
+        <span className={styles.supporterName}>{supporter.displayName}</span>
+        <span className={styles.supporterDate}>
+          {formatSupporterDate(supporter.createdAt)}
+        </span>
+      </div>
+      <p className={styles.supporterMeta}>
+        {formatCurrency(supporter.amount)} ·{" "}
+        <span
+          className={
+            supporter.status === "completed"
+              ? styles.supporterStatusComplete
+              : styles.supporterStatusStarted
+          }
+        >
+          {toTitleCase(supporter.status)}
+        </span>
+      </p>
+    </div>
+  </li>
+);
+
+const buildStoryParagraphs = (model: SuccessfulFundraiserPageModel): string[] => {
+  const paragraphs = [model.fundraiser.story];
+
+  if (model.community) {
+    paragraphs.push(
+      `Every support action in this prototype helps ${model.community.name} stay stocked, scheduled, and ready for the next round of neighborhood meal deliveries.`,
+    );
+  }
+
+  paragraphs.push(
+    `${model.fundraiser.supporterCount} supporters have already started or completed ${model.fundraiser.donationIntentCount} mocked donation flows toward the ${formatCurrency(model.fundraiser.goalAmount)} goal. This public route keeps that momentum visible without implying real payment processing.`,
+  );
+
+  return paragraphs;
 };
 
-const heroCardStyle: CSSProperties = {
-  ...cardStyle,
-  background:
-    "linear-gradient(145deg, rgba(16, 185, 129, 0.10), rgba(59, 130, 246, 0.08))",
-};
+const getFirstName = (displayName: string): string => displayName.split(" ")[0] ?? displayName;
 
-const eyebrowStyle: CSSProperties = {
-  color: "#146a56",
-  fontSize: "0.8rem",
-  fontWeight: 700,
-  letterSpacing: "0.08em",
-  margin: 0,
-  textTransform: "uppercase",
-};
-
-const headingStyle: CSSProperties = {
-  fontSize: "clamp(2rem, 6vw, 3rem)",
-  lineHeight: 1.05,
-  margin: "8px 0 10px",
-};
-
-const sectionHeadingStyle: CSSProperties = {
-  fontSize: "1.3rem",
-  margin: 0,
-};
-
-const metaStyle: CSSProperties = {
-  color: "#344054",
-  fontSize: "0.95rem",
-  margin: "0 0 16px",
-};
-
-const bodyTextStyle: CSSProperties = {
-  color: "#1f2937",
-  lineHeight: 1.55,
-  margin: "8px 0 0",
-};
-
-const helperTextStyle: CSSProperties = {
-  color: "#475467",
-  fontSize: "0.92rem",
-  lineHeight: 1.5,
-  margin: "10px 0 0",
-};
-
-const linkStyle: CSSProperties = {
-  color: "#1d4ed8",
-  display: "inline-block",
-  fontSize: "1rem",
-  fontWeight: 600,
-  marginTop: "10px",
-  textDecoration: "none",
-};
-
-const mockDonateCtaStyle: CSSProperties = {
-  backgroundColor: "#111827",
-  borderRadius: "10px",
-  color: "#ffffff",
-  display: "inline-block",
-  fontWeight: 700,
-  marginTop: "10px",
-  padding: "12px 16px",
-  textDecoration: "none",
-};
-
-const progressTrackStyle: CSSProperties = {
-  backgroundColor: "#e5e7eb",
-  borderRadius: "999px",
-  height: "12px",
-  marginTop: "12px",
-  overflow: "hidden",
-  width: "100%",
-};
-
-const progressFillStyle: CSSProperties = {
-  background:
-    "linear-gradient(90deg, rgba(16, 185, 129, 0.9), rgba(59, 130, 246, 0.9))",
-  height: "100%",
-  transition: "width 180ms ease",
-};
+const toInitials = (value: string): string =>
+  value
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 
 const toTitleCase = (value: string): string =>
   value
@@ -297,8 +461,25 @@ const formatCurrency = (value: number): string =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const toProgressWidth = (donationIntentCount: number): number => {
-  const maxVisibleIntents = 20;
-  const normalized = Math.max(0, Math.min(donationIntentCount, maxVisibleIntents));
-  return (normalized / maxVisibleIntents) * 100;
+const formatCompactCurrency = (value: number): string =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    notation: "compact",
+    maximumFractionDigits: 0,
+  }).format(value);
+
+const formatSupporterDate = (value: string): string =>
+  new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(value));
+
+const toGoalProgressPercentage = (supportAmount: number, goalAmount: number): number => {
+  if (goalAmount <= 0) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round((supportAmount / goalAmount) * 100)));
 };

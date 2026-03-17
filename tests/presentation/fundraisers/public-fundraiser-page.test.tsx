@@ -34,7 +34,16 @@ describe("PublicFundraiserPage", () => {
             name: "Neighbors Helping Neighbors",
             visibility: "public",
           },
-          recentSupporters: [],
+          recentSupporters: [
+            {
+              displayName: "Noah Kim",
+              profileSlug: "noah-kim",
+              avatarUrl: null,
+              amount: 4000,
+              status: "completed",
+              createdAt: "2026-03-16T12:55:00.000Z",
+            },
+          ],
         },
       },
     });
@@ -72,10 +81,20 @@ describe("PublicFundraiserPage", () => {
         name: "Neighbors Helping Neighbors",
         visibility: "public",
       },
+      recentSupporters: [
+        {
+          displayName: "Noah Kim",
+          profileSlug: "noah-kim",
+          avatarUrl: null,
+          amount: 4000,
+          status: "completed",
+          createdAt: "2026-03-16T12:55:00.000Z",
+        },
+      ],
     });
   });
 
-  it("renders fundraiser story, organizer context, connected community, and mocked donation CTA", () => {
+  it("renders fundraiser media, story, organizer context, supporter rail, and mocked donation CTA", () => {
     render(
       <PublicFundraiserPage
         model={{
@@ -86,18 +105,39 @@ describe("PublicFundraiserPage", () => {
             story: "Funding hot meals for families all winter.",
             status: "active",
             goalAmount: 250000,
+            supportAmount: 7800,
+            supporterCount: 2,
             donationIntentCount: 2,
           },
           organizer: {
             displayName: "Avery Johnson",
             role: "organizer",
             profileSlug: "avery-johnson",
+            avatarUrl: null,
           },
           community: {
             slug: "neighbors-helping-neighbors",
             name: "Neighbors Helping Neighbors",
             visibility: "public",
           },
+          recentSupporters: [
+            {
+              displayName: "Noah Kim",
+              profileSlug: "noah-kim",
+              avatarUrl: null,
+              amount: 4000,
+              status: "completed",
+              createdAt: "2026-03-16T12:55:00.000Z",
+            },
+            {
+              displayName: "Sam Rivera",
+              profileSlug: "sam-rivera",
+              avatarUrl: null,
+              amount: 3800,
+              status: "started",
+              createdAt: "2026-03-16T12:40:00.000Z",
+            },
+          ],
         }}
       />,
     );
@@ -109,26 +149,29 @@ describe("PublicFundraiserPage", () => {
       screen.getByText("Funding hot meals for families all winter."),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Avery Johnson · Organizer"),
+      screen.getByRole("img", {
+        name: "Warm meal deliveries staged for neighborhood pickup",
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Mock donation intents started:"),
+      screen.getByRole("link", { name: "Avery Johnson" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "This CTA is intentionally mocked and does not collect payment details.",
-      ),
+      screen.getByText("Recent supporters"),
     ).toBeInTheDocument();
+    expect(screen.getByText("Noah Kim")).toBeInTheDocument();
+    expect(screen.getByText("Sam Rivera")).toBeInTheDocument();
+    expect(screen.getByText("$7,800 in prototype support")).toBeInTheDocument();
     expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
-    const donateLink = screen.getByRole("link", { name: "Start mocked donation" });
+    const donateLink = screen.getAllByRole("link", { name: "Donate now" })[0];
     expect(donateLink).toHaveAttribute(
       "href",
       "/fundraisers/warm-meals-2026?checkout=mock",
     );
 
     const organizerProfileLink = screen.getByRole("link", {
-      name: "View organizer profile",
+      name: "Avery Johnson",
     });
     expect(organizerProfileLink).toHaveAttribute("href", "/profiles/avery-johnson");
 
@@ -156,6 +199,9 @@ describe("PublicFundraiserPage", () => {
       screen.getByRole("heading", { name: "Fundraiser not found" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Tried slug:/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "View seeded fundraiser" }),
+    ).toHaveAttribute("href", "/fundraisers/warm-meals-2026");
     expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     rerender(
@@ -171,6 +217,10 @@ describe("PublicFundraiserPage", () => {
       screen.getByRole("heading", { name: "Invalid fundraiser request" }),
     ).toBeInTheDocument();
     expect(screen.getByText("slug is required.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back home" })).toHaveAttribute(
+      "href",
+      "/",
+    );
     expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
   });
 });
