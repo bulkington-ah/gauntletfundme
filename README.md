@@ -16,6 +16,7 @@ Implemented foundations currently include:
 - application and presentation API boundaries for public read routes
 - Postgres-backed repository adapters for public reads and follow persistence
 - account and session auth foundations (sign up, login, logout, session lookup)
+- centralized authorization policies for owner/member/moderator/anonymous checks
 - follow command with auth checks, self-follow protection, and idempotent persistence semantics
 
 ## Environment

@@ -4,6 +4,7 @@ import {
   normalizeSlug,
   type FollowTargetType,
 } from "@/domain";
+import { authorizeProtectedAction } from "@/application/authorization";
 
 import type {
   AuthenticatedViewer,
@@ -68,11 +69,18 @@ export const followTarget = async (
     request.sessionToken,
   );
 
-  if (!viewer) {
+  const authorization = authorizeProtectedAction({
+    action: "follow_target",
+    viewer,
+  });
+
+  if (authorization.status !== "authorized") {
     return {
-      status: "unauthorized",
+      status: authorization.status,
       message:
-        "Authentication is required for follow commands. Send the x-session-token header to continue.",
+        authorization.status === "unauthorized"
+          ? `${authorization.message} Send the x-session-token header to continue.`
+          : authorization.message,
     };
   }
 
@@ -95,16 +103,22 @@ export const followTarget = async (
     target.id,
   );
 
-  if (targetOwnerUserId === viewer.userId) {
+  const ownershipAuthorization = authorizeProtectedAction({
+    action: "follow_target",
+    viewer: authorization.viewer,
+    ownerUserId: targetOwnerUserId,
+  });
+
+  if (ownershipAuthorization.status !== "authorized") {
     return {
-      status: "forbidden",
-      message: "You cannot follow your own profile, fundraiser, or community.",
+      status: ownershipAuthorization.status,
+      message: ownershipAuthorization.message,
     };
   }
 
   const persistedFollow = await dependencies.followWriteRepository.createFollowIfAbsent(
     {
-      userId: viewer.userId,
+      userId: authorization.viewer.userId,
       targetType: target.targetType,
       targetId: target.id,
     },
@@ -112,7 +126,7 @@ export const followTarget = async (
 
   return {
     status: "success",
-    viewer,
+    viewer: authorization.viewer,
     target: {
       type: target.targetType,
       slug: target.slug,

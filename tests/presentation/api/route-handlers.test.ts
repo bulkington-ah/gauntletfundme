@@ -228,4 +228,54 @@ describe("API route handlers", () => {
       },
     });
   });
+
+  it("returns 403 when attempting to follow a self-owned target", async () => {
+    const staticRepository = createStaticPublicContentRepository();
+    setApplicationApiForTesting(
+      createApplicationApi({
+        publicContentReadRepository: staticRepository,
+        followTargetLookup: staticRepository,
+        sessionViewerGateway: createStaticSessionViewerGateway(),
+        followOwnerLookup: {
+          async findOwnerUserIdByTarget() {
+            return "user_supporter_jordan";
+          },
+        },
+        followWriteRepository: {
+          async createFollowIfAbsent() {
+            return {
+              follow: {
+                id: "follow_not_expected",
+                userId: "user_supporter_jordan",
+                targetType: "community",
+                targetId: "community_neighbors_helping_neighbors",
+                createdAt: new Date("2026-03-16T13:00:00.000Z"),
+              },
+              created: true,
+            };
+          },
+        },
+      }),
+    );
+
+    const response = await handlePostFollowTargetRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-session-token": "demo-supporter-session",
+        },
+        body: JSON.stringify({
+          targetType: "community",
+          targetSlug: "neighbors-helping-neighbors",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      error: "forbidden",
+      message: "You cannot follow your own profile, fundraiser, or community.",
+    });
+  });
 });

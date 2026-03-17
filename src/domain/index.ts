@@ -1,4 +1,5 @@
 export * from "./accounts";
+export * from "./authorization";
 export * from "./profiles";
 export * from "./fundraisers";
 export * from "./communities";
