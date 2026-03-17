@@ -55,6 +55,12 @@ Auth routes and protected commands use the `x-session-token` request header.
 - Secrets guidance:
   - keep secrets in managed environment configuration (AWS ECS task definition / App Runner / Parameter Store / Secrets Manager), never in source files.
 
+## Known Limitations
+- Authenticated API actions currently rely on `x-session-token` request headers and are not yet integrated with browser cookie/session middleware.
+- Donation flow is intentionally mocked and does not process real payments.
+- Analytics publisher is currently wired to a no-op provider by default; production event delivery requires a concrete adapter implementation.
+- Moderation actions update current statuses but do not yet persist a separate historical moderation event log.
+
 ## Workflow
 Work is organized into one scoped task at a time under `tasks/`, with completion expectations defined in:
 - [AGENTS.md](/Users/jasonallen/Documents/Gauntlet/hiring_projects/gofundme_v2/AGENTS.md)
