@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { JSX } from "react";
 
 import { PublicSiteShell } from "@/presentation/shared";
@@ -47,7 +48,7 @@ export function PlaceholderHomePage(): JSX.Element {
         </section>
 
         <section className={styles.routeGrid}>
-          <a className={styles.routeCard} href="/fundraisers/warm-meals-2026">
+          <Link className={styles.routeCard} href="/fundraisers/warm-meals-2026">
             <p className={styles.routeEyebrow}>Fundraiser</p>
             <h2 className={styles.routeTitle}>Warm Meals 2026</h2>
             <p className={styles.routeBody}>
@@ -55,9 +56,9 @@ export function PlaceholderHomePage(): JSX.Element {
               organizer/community context.
             </p>
             <span className={styles.routeFooter}>Open route</span>
-          </a>
+          </Link>
 
-          <a
+          <Link
             className={styles.routeCard}
             href="/communities/neighbors-helping-neighbors"
           >
@@ -68,9 +69,9 @@ export function PlaceholderHomePage(): JSX.Element {
               fundraiser.
             </p>
             <span className={styles.routeFooter}>Open route</span>
-          </a>
+          </Link>
 
-          <a className={styles.routeCard} href="/profiles/avery-johnson">
+          <Link className={styles.routeCard} href="/profiles/avery-johnson">
             <p className={styles.routeEyebrow}>Profile</p>
             <h2 className={styles.routeTitle}>Avery Johnson</h2>
             <p className={styles.routeBody}>
@@ -78,7 +79,7 @@ export function PlaceholderHomePage(): JSX.Element {
               shared public shell.
             </p>
             <span className={styles.routeFooter}>Open route</span>
-          </a>
+          </Link>
         </section>
       </main>
     </PublicSiteShell>

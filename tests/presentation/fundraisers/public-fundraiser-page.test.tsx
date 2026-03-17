@@ -161,7 +161,9 @@ describe("PublicFundraiserPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Noah Kim")).toBeInTheDocument();
     expect(screen.getByText("Sam Rivera")).toBeInTheDocument();
-    expect(screen.getByText("$7,800 in prototype support")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("$7,800 in prototype support"),
+    ).toHaveLength(2);
     expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     const donateLink = screen.getAllByRole("link", { name: "Donate now" })[0];

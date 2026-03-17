@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type {
   ApplicationApi,
   PublicCommunityResponse,
@@ -81,15 +82,15 @@ export const PublicCommunityPage = ({ model }: PublicCommunityPageProps) => {
             <h1 className={styles.errorHeading}>Invalid community request</h1>
             <p className={styles.errorBody}>{model.message}</p>
             <div className={styles.errorActions}>
-              <a className={styles.primaryAction} href="/">
+              <Link className={styles.primaryAction} href="/">
                 Back home
-              </a>
-              <a
+              </Link>
+              <Link
                 className={styles.secondaryAction}
                 href="/communities/neighbors-helping-neighbors"
               >
                 View seeded community
-              </a>
+              </Link>
             </div>
           </section>
         </main>
@@ -108,15 +109,15 @@ export const PublicCommunityPage = ({ model }: PublicCommunityPageProps) => {
               {model.message} Tried slug: <strong>{model.slug}</strong>
             </p>
             <div className={styles.errorActions}>
-              <a className={styles.primaryAction} href="/">
+              <Link className={styles.primaryAction} href="/">
                 Back home
-              </a>
-              <a
+              </Link>
+              <Link
                 className={styles.secondaryAction}
                 href="/communities/neighbors-helping-neighbors"
               >
                 View seeded community
-              </a>
+              </Link>
             </div>
           </section>
         </main>

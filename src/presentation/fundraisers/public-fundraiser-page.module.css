@@ -88,6 +88,7 @@
 }
 
 .mediaCard,
+.mobileSupportCard,
 .organizerCard,
 .storyCard,
 .sidebarCard,
@@ -101,6 +102,12 @@
 
 .mediaCard {
   padding: 0.5rem;
+}
+
+.mobileSupportCard {
+  display: none;
+  gap: 1rem;
+  padding: clamp(1.2rem, 3vw, 1.5rem);
 }
 
 .mediaFrame {
@@ -410,7 +417,25 @@
   text-align: center;
 }
 
+.mobileSupportBanner {
+  background: linear-gradient(180deg, #c7f56f 0%, #d8ff8a 100%);
+  border-radius: 1.35rem;
+  color: #285238;
+  font-size: 1.02rem;
+  font-weight: 800;
+  line-height: 1.4;
+  margin: -0.1rem 0 0;
+  padding: 0.95rem 1.05rem;
+  text-align: center;
+}
+
 .sidebarStats {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.mobileSupportStats {
   align-items: center;
   display: flex;
   gap: 1rem;
@@ -455,8 +480,15 @@
   gap: 0.75rem;
 }
 
+.mobileSupportActions {
+  display: grid;
+  gap: 0.75rem;
+}
+
 .sidebarActions .primaryAction,
-.sidebarActions .sidebarSecondaryAction {
+.sidebarActions .sidebarSecondaryAction,
+.mobileSupportActions .primaryAction,
+.mobileSupportActions .secondaryAction {
   width: 100%;
 }
 
@@ -597,6 +629,11 @@
     flex-direction: column;
   }
 
+  .mobileSupportStats {
+    align-items: start;
+    flex-direction: column;
+  }
+
   .supportAmount {
     max-width: 10ch;
   }
@@ -619,8 +656,22 @@
     aspect-ratio: 1.06;
   }
 
+  .mobileSupportCard {
+    display: grid;
+  }
+
   .sidebarFooter {
     grid-template-columns: 1fr;
+  }
+
+  .sidebarCard {
+    gap: 1rem;
+  }
+
+  .sidebarBanner,
+  .sidebarStats,
+  .sidebarActions {
+    display: none;
   }
 
   .actionRow,

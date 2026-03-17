@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type {
   ApplicationApi,
   PublicProfileResponse,
@@ -93,12 +94,12 @@ export const PublicProfilePage = ({ model }: PublicProfilePageProps) => {
             <h1 className={styles.errorHeading}>Invalid profile request</h1>
             <p className={styles.errorBody}>{model.message}</p>
             <div className={styles.errorActions}>
-              <a className={styles.primaryAction} href="/">
+              <Link className={styles.primaryAction} href="/">
                 Back home
-              </a>
-              <a className={styles.secondaryAction} href="/profiles/avery-johnson">
+              </Link>
+              <Link className={styles.secondaryAction} href="/profiles/avery-johnson">
                 View seeded profile
-              </a>
+              </Link>
             </div>
           </section>
         </main>
@@ -117,12 +118,12 @@ export const PublicProfilePage = ({ model }: PublicProfilePageProps) => {
               {model.message} Tried slug: <strong>{model.slug}</strong>
             </p>
             <div className={styles.errorActions}>
-              <a className={styles.primaryAction} href="/">
+              <Link className={styles.primaryAction} href="/">
                 Back home
-              </a>
-              <a className={styles.secondaryAction} href="/profiles/avery-johnson">
+              </Link>
+              <Link className={styles.secondaryAction} href="/profiles/avery-johnson">
                 View seeded profile
-              </a>
+              </Link>
             </div>
           </section>
         </main>

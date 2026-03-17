@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import styles from "./public-site-shell.module.css";
@@ -45,9 +46,9 @@ export function PublicSiteShell({
             </wa-badge>
           </div>
 
-          <a className={styles.brand} href="/">
+          <Link className={styles.brand} href="/">
             gofundme <span className={styles.brandAccent}>v2</span>
-          </a>
+          </Link>
 
           <div
             className={`${styles.navCluster} ${styles.navClusterEnd} ${styles.desktopOnly}`}
@@ -86,21 +87,24 @@ export function PublicSiteShell({
             summary="Explore"
           >
             <div className={styles.mobileMenuLinks}>
-              <a className={styles.mobileMenuLink} href="/fundraisers/warm-meals-2026">
+              <Link className={styles.mobileMenuLink} href="/fundraisers/warm-meals-2026">
                 Donate
-              </a>
-              <a
+              </Link>
+              <Link
                 className={styles.mobileMenuLink}
                 href="/communities/neighbors-helping-neighbors"
               >
                 Fundraise
-              </a>
-              <a className={styles.mobileMenuLink} href="/profiles/avery-johnson">
+              </Link>
+              <Link className={styles.mobileMenuLink} href="/profiles/avery-johnson">
                 Giving Funds
-              </a>
-              <a className={styles.mobileMenuLink} href="/fundraisers/warm-meals-2026?checkout=mock">
+              </Link>
+              <Link
+                className={styles.mobileMenuLink}
+                href="/fundraisers/warm-meals-2026?checkout=mock"
+              >
                 Start a GoFundMe
-              </a>
+              </Link>
             </div>
           </wa-details>
         </div>

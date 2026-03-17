@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type {
   ApplicationApi,
   PublicFundraiserResponse,
@@ -80,15 +81,15 @@ export const PublicFundraiserPage = ({ model }: PublicFundraiserPageProps) => {
             <h1 className={styles.errorHeading}>Invalid fundraiser request</h1>
             <p className={styles.errorBody}>{model.message}</p>
             <div className={styles.errorActions}>
-              <a className={styles.primaryAction} href="/">
+              <Link className={styles.primaryAction} href="/">
                 Back home
-              </a>
-              <a
+              </Link>
+              <Link
                 className={styles.secondaryAction}
                 href="/fundraisers/warm-meals-2026"
               >
                 View seeded fundraiser
-              </a>
+              </Link>
             </div>
           </section>
         </main>
@@ -107,15 +108,15 @@ export const PublicFundraiserPage = ({ model }: PublicFundraiserPageProps) => {
               {model.message} Tried slug: <strong>{model.slug}</strong>
             </p>
             <div className={styles.errorActions}>
-              <a className={styles.primaryAction} href="/">
+              <Link className={styles.primaryAction} href="/">
                 Back home
-              </a>
-              <a
+              </Link>
+              <Link
                 className={styles.secondaryAction}
                 href="/fundraisers/warm-meals-2026"
               >
                 View seeded fundraiser
-              </a>
+              </Link>
             </div>
           </section>
         </main>
@@ -186,6 +187,48 @@ export const PublicFundraiserPage = ({ model }: PublicFundraiserPageProps) => {
                     →
                   </button>
                 </div>
+              </div>
+            </section>
+
+            <section className={styles.mobileSupportCard}>
+              <div className={styles.mobileSupportBanner}>
+                Help {organizerFirstName} keep meals moving this week.
+              </div>
+
+              <div className={styles.mobileSupportStats}>
+                <div className={styles.progressCluster}>
+                  <wa-progress-ring
+                    className={styles.progressRing}
+                    label={`${goalProgress}% of goal represented by prototype support`}
+                    value={goalProgress}
+                  >
+                    <span className={styles.progressValue}>{goalProgress}%</span>
+                  </wa-progress-ring>
+                </div>
+
+                <div className={styles.supportSummary}>
+                  <p className={styles.supportAmount}>
+                    {formatCurrency(model.fundraiser.supportAmount)} in prototype
+                    support
+                  </p>
+                  <p className={styles.supportMeta}>
+                    Goal {formatCompactCurrency(model.fundraiser.goalAmount)} ·{" "}
+                    {model.fundraiser.supporterCount} supporters ·{" "}
+                    {model.fundraiser.donationIntentCount} support actions
+                  </p>
+                </div>
+              </div>
+
+              <div className={styles.mobileSupportActions}>
+                <a
+                  className={styles.primaryAction}
+                  href={`/fundraisers/${model.fundraiser.slug}?checkout=mock`}
+                >
+                  Donate now
+                </a>
+                <button className={styles.secondaryAction} type="button">
+                  Share
+                </button>
               </div>
             </section>
 
