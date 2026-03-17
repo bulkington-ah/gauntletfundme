@@ -18,6 +18,7 @@ Implemented foundations currently include:
 - account and session auth foundations (sign up, login, logout, session lookup)
 - centralized authorization policies for owner/member/moderator/anonymous checks
 - follow command with auth checks, self-follow protection, and idempotent persistence semantics
+- public profile page route with slug-based lookup and connected fundraiser/community links
 
 ## Environment
 Copy `.env.example` to your local environment config and set:
