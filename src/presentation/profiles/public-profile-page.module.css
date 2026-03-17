@@ -1,0 +1,505 @@
+.page {
+  display: grid;
+  gap: 2rem;
+  margin: 0 auto;
+  max-width: 980px;
+  padding: clamp(2rem, 4vw, 3rem) 0 4rem;
+}
+
+.profileHero,
+.discoverStrip,
+.highlightCard,
+.activityCard,
+.communityPill,
+.errorCard {
+  background: var(--wa-color-surface-default);
+  border: 1px solid var(--wa-color-surface-border);
+  border-radius: 2rem;
+  box-shadow: 0 20px 56px color-mix(in srgb, var(--wa-color-shadow) 7%, transparent);
+}
+
+.profileHero {
+  overflow: hidden;
+}
+
+.coverArt {
+  background: linear-gradient(180deg, #e6fdb8 0%, #d4f58f 100%);
+  height: 11rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.coverShapePrimary,
+.coverShapeSecondary,
+.coverShapeTertiary {
+  border-radius: 999px;
+  position: absolute;
+}
+
+.coverShapePrimary {
+  background: rgba(255, 255, 255, 0.72);
+  height: 12rem;
+  left: -3rem;
+  top: -3rem;
+  width: 12rem;
+}
+
+.coverShapeSecondary {
+  background: rgba(191, 242, 113, 0.85);
+  height: 18rem;
+  right: -4rem;
+  top: -2rem;
+  width: 18rem;
+}
+
+.coverShapeTertiary {
+  background: rgba(255, 255, 255, 0.5);
+  height: 13rem;
+  left: 38%;
+  top: -5rem;
+  width: 13rem;
+}
+
+.heroContent {
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+  margin-top: -3.75rem;
+  padding: 0 1.5rem 2rem;
+  position: relative;
+}
+
+.avatarWrap {
+  align-items: center;
+  background: var(--wa-color-surface-default);
+  border: 4px solid var(--wa-color-surface-default);
+  border-radius: 999px;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.avatar,
+.discoverAvatar,
+.activityAvatar {
+  align-items: center;
+  background: linear-gradient(145deg, #274d39, #82d48c);
+  border-radius: 999px;
+  color: white;
+  display: inline-flex;
+  font-weight: 800;
+  justify-content: center;
+}
+
+.avatar {
+  font-size: 1.55rem;
+  height: 6.3rem;
+  width: 6.3rem;
+}
+
+.heroCopy {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  text-align: center;
+}
+
+.eyebrow,
+.sectionEyebrow,
+.errorEyebrow {
+  color: var(--wa-color-success-fill-loud);
+  font-size: var(--wa-font-size-s);
+  font-weight: var(--wa-font-weight-semibold);
+  letter-spacing: 0.1em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.profileName,
+.sectionTitle,
+.errorHeading {
+  font-family: var(--wa-font-family-heading);
+  letter-spacing: -0.04em;
+  margin: 0;
+}
+
+.profileName {
+  font-size: clamp(2.4rem, 5vw, 3.5rem);
+  line-height: 0.98;
+}
+
+.profileMeta,
+.profileBio,
+.counter,
+.highlightMeta,
+.activityDate,
+.activityDetail,
+.errorBody {
+  color: var(--wa-color-text-quiet);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.profileMeta {
+  font-weight: var(--wa-font-weight-semibold);
+}
+
+.profileBio {
+  max-width: 42rem;
+}
+
+.impactBadge::part(base) {
+  font-weight: var(--wa-font-weight-semibold);
+}
+
+.counterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.counter {
+  font-size: 1.1rem;
+  font-weight: var(--wa-font-weight-semibold);
+}
+
+.counterValue {
+  color: var(--wa-color-text-normal);
+  font-weight: var(--wa-font-weight-bold);
+}
+
+.heroActions,
+.errorActions {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.followButton,
+.moreButton,
+.primaryAction,
+.secondaryAction,
+.discoverToggle,
+.activityMoreButton {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-weight: var(--wa-font-weight-semibold);
+  justify-content: center;
+}
+
+.followButton,
+.primaryAction {
+  background: #1f5d3a;
+  border: 1px solid #1f5d3a;
+  color: white;
+}
+
+.followButton,
+.primaryAction,
+.secondaryAction {
+  min-height: 3.1rem;
+  padding: 0.8rem 1.4rem;
+  text-decoration: none;
+}
+
+.moreButton,
+.discoverToggle,
+.activityMoreButton,
+.secondaryAction {
+  background: var(--wa-color-surface-default);
+  border: 1px solid var(--wa-color-surface-border);
+  color: var(--wa-color-text-normal);
+}
+
+.moreButton {
+  cursor: pointer;
+  min-width: 3.1rem;
+}
+
+.discoverStrip {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+}
+
+.sectionTitle {
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+}
+
+.discoverPreview {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.discoverAvatars {
+  display: flex;
+  padding-left: 0.8rem;
+}
+
+.discoverAvatar {
+  border: 3px solid var(--wa-color-surface-default);
+  font-size: 0.92rem;
+  height: 3rem;
+  margin-left: -0.8rem;
+  width: 3rem;
+}
+
+.discoverToggle {
+  cursor: pointer;
+  height: 2.75rem;
+  width: 2.75rem;
+}
+
+.causesSection,
+.highlightsSection,
+.communitiesSection,
+.activitySection,
+.errorCard {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.centeredHeader {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+  text-align: center;
+}
+
+.causesGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-items: center;
+}
+
+.causeCard {
+  display: grid;
+  gap: 0.7rem;
+  justify-items: center;
+  text-align: center;
+}
+
+.causeIcon {
+  align-items: center;
+  border-radius: 1.75rem;
+  display: inline-flex;
+  font-size: 2rem;
+  height: 5.4rem;
+  justify-content: center;
+  width: 5.4rem;
+}
+
+.causeFood {
+  background: #ffd96f;
+  color: #6a4b00;
+}
+
+.causeCare {
+  background: #e1c0fb;
+  color: #6e2d8d;
+}
+
+.causeAid {
+  background: #d8f795;
+  color: #205a34;
+}
+
+.causeTitle {
+  font-size: 1.05rem;
+  font-weight: var(--wa-font-weight-semibold);
+  margin: 0;
+}
+
+.sectionHeader {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.sectionBadge::part(base) {
+  font-weight: var(--wa-font-weight-semibold);
+}
+
+.highlightGrid,
+.activityFeed {
+  display: grid;
+  gap: 1rem;
+}
+
+.highlightCard {
+  align-items: center;
+  color: var(--wa-color-text-normal);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 5.4rem 1fr;
+  padding: 1rem;
+  text-decoration: none;
+}
+
+.highlightMedia {
+  align-items: center;
+  background: linear-gradient(145deg, #b8edf1, #9cdae2);
+  border-radius: 1rem;
+  color: #224d5a;
+  display: inline-flex;
+  font-weight: 800;
+  height: 5.4rem;
+  justify-content: center;
+  width: 5.4rem;
+}
+
+.highlightContent {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.highlightTitle,
+.highlightRaised,
+.activityActor,
+.activitySummary {
+  font-weight: var(--wa-font-weight-bold);
+  margin: 0;
+}
+
+.highlightTitle,
+.activitySummary {
+  font-size: 1.15rem;
+}
+
+.highlightProgress {
+  background: #ebeee6;
+  border-radius: 999px;
+  height: 0.55rem;
+  overflow: hidden;
+}
+
+.highlightProgressFill {
+  background: linear-gradient(90deg, #77d04c, #3daa57);
+  border-radius: inherit;
+  height: 100%;
+}
+
+.highlightRaised {
+  font-size: 1.05rem;
+}
+
+.communityLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.communityPill {
+  align-items: center;
+  color: var(--wa-color-text-normal);
+  display: inline-flex;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  text-decoration: none;
+}
+
+.activityCard {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.activityHeader {
+  align-items: center;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: auto 1fr auto;
+}
+
+.activityAvatar {
+  font-size: 0.95rem;
+  height: 3rem;
+  width: 3rem;
+}
+
+.activityMeta,
+.activityContent {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.activityAmount {
+  color: var(--wa-color-text-normal);
+  font-weight: var(--wa-font-weight-semibold);
+  margin: 0;
+}
+
+.activityLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.inlineLink {
+  color: var(--wa-color-success-fill-loud);
+  font-weight: var(--wa-font-weight-semibold);
+  text-decoration: none;
+}
+
+.emptyState {
+  color: var(--wa-color-text-quiet);
+  margin: 0;
+}
+
+.errorPage {
+  display: grid;
+  margin: 0 auto;
+  max-width: 780px;
+  min-height: calc(100vh - 10rem);
+  padding: 3rem 0 4rem;
+  place-items: center;
+}
+
+.errorCard {
+  padding: clamp(1.6rem, 3vw, 2.2rem);
+  width: 100%;
+}
+
+.errorHeading {
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding-top: 1.6rem;
+  }
+
+  .discoverStrip,
+  .sectionHeader,
+  .activityHeader,
+  .heroActions,
+  .errorActions {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .highlightCard {
+    grid-template-columns: 1fr;
+  }
+
+  .causesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .counterRow,
+  .communityLinks,
+  .activityLinks {
+    justify-content: center;
+  }
+
+  .followButton,
+  .primaryAction,
+  .secondaryAction {
+    width: 100%;
+  }
+}
