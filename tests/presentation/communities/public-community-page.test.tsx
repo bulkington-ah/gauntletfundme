@@ -38,8 +38,31 @@ describe("PublicCommunityPage", () => {
             supporterCount: 3,
             donationIntentCount: 4,
           },
-          leaderboard: [],
-          fundraisers: [],
+          leaderboard: [
+            {
+              rank: 1,
+              fundraiser: {
+                slug: "warm-meals-2026",
+                title: "Warm Meals 2026",
+                status: "active",
+                goalAmount: 250000,
+                supportAmount: 12600,
+                supporterCount: 3,
+                donationIntentCount: 4,
+              },
+            },
+          ],
+          fundraisers: [
+            {
+              slug: "warm-meals-2026",
+              title: "Warm Meals 2026",
+              status: "active",
+              goalAmount: 250000,
+              supportAmount: 12600,
+              supporterCount: 3,
+              donationIntentCount: 4,
+            },
+          ],
           discussion: [
             {
               id: "post_123",
@@ -101,6 +124,31 @@ describe("PublicCommunityPage", () => {
         supporterCount: 3,
         donationIntentCount: 4,
       },
+      leaderboard: [
+        {
+          rank: 1,
+          fundraiser: {
+            slug: "warm-meals-2026",
+            title: "Warm Meals 2026",
+            status: "active",
+            goalAmount: 250000,
+            supportAmount: 12600,
+            supporterCount: 3,
+            donationIntentCount: 4,
+          },
+        },
+      ],
+      fundraisers: [
+        {
+          slug: "warm-meals-2026",
+          title: "Warm Meals 2026",
+          status: "active",
+          goalAmount: 250000,
+          supportAmount: 12600,
+          supporterCount: 3,
+          donationIntentCount: 4,
+        },
+      ],
       discussion: [
         {
           id: "post_123",
@@ -124,7 +172,7 @@ describe("PublicCommunityPage", () => {
     });
   });
 
-  it("renders community details, discussion posts, and nested comments", () => {
+  it("renders hero details, leaderboard, tabs, discussion posts, and fundraiser cards", () => {
     render(
       <PublicCommunityPage
         model={{
@@ -135,18 +183,71 @@ describe("PublicCommunityPage", () => {
             description: "A public space for updates and volunteer coordination.",
             visibility: "public",
             followerCount: 12,
+            fundraiserCount: 2,
+            supportAmount: 18700,
+            donationIntentCount: 6,
           },
           owner: {
             displayName: "Avery Johnson",
             role: "organizer",
             profileSlug: "avery-johnson",
+            avatarUrl: null,
           },
           featuredFundraiser: {
             slug: "warm-meals-2026",
             title: "Warm Meals 2026",
             status: "active",
             goalAmount: 250000,
+            supportAmount: 12600,
+            supporterCount: 3,
+            donationIntentCount: 4,
           },
+          leaderboard: [
+            {
+              rank: 1,
+              fundraiser: {
+                slug: "warm-meals-2026",
+                title: "Warm Meals 2026",
+                status: "active",
+                goalAmount: 250000,
+                supportAmount: 12600,
+                supporterCount: 3,
+                donationIntentCount: 4,
+              },
+            },
+            {
+              rank: 2,
+              fundraiser: {
+                slug: "winter-coat-drive-2026",
+                title: "Winter Coat Drive 2026",
+                status: "active",
+                goalAmount: 180000,
+                supportAmount: 8200,
+                supporterCount: 2,
+                donationIntentCount: 3,
+              },
+            },
+          ],
+          fundraisers: [
+            {
+              slug: "warm-meals-2026",
+              title: "Warm Meals 2026",
+              status: "active",
+              goalAmount: 250000,
+              supportAmount: 12600,
+              supporterCount: 3,
+              donationIntentCount: 4,
+            },
+            {
+              slug: "winter-coat-drive-2026",
+              title: "Winter Coat Drive 2026",
+              status: "active",
+              goalAmount: 180000,
+              supportAmount: 8200,
+              supporterCount: 2,
+              donationIntentCount: 3,
+            },
+          ],
           discussion: [
             {
               id: "post_123",
@@ -172,26 +273,48 @@ describe("PublicCommunityPage", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Neighbors Helping Neighbors" }),
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Neighbors Helping Neighbors",
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("A public space for updates and volunteer coordination."),
+      screen.getAllByText("A public space for updates and volunteer coordination.")
+        .length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByText("12 followers"),
     ).toBeInTheDocument();
+    for (const ownerLink of screen.getAllByRole("link", {
+      name: "View owner profile",
+    })) {
+      expect(ownerLink).toHaveAttribute("href", "/profiles/avery-johnson");
+    }
     expect(
-      screen.getByText("Avery Johnson · Organizer"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "View owner profile" }),
-    ).toHaveAttribute("href", "/profiles/avery-johnson");
-    expect(
-      screen.getByRole("link", { name: "Warm Meals 2026" }),
+      screen.getByRole("link", { name: "View featured fundraiser" }),
     ).toHaveAttribute("href", "/fundraisers/warm-meals-2026");
+    expect(screen.getByText("Top fundraiser momentum")).toBeInTheDocument();
+    expect(screen.getByText("$12,600")).toBeInTheDocument();
+    expect(screen.getAllByText("Activity").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Fundraisers").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("About").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
-    expect(screen.getByRole("heading", { name: "Discussion feed" })).toBeInTheDocument();
+    expect(screen.getByText("Community updates")).toBeInTheDocument();
     expect(screen.getByText("Kitchen kickoff update")).toBeInTheDocument();
     expect(screen.getByText("Our first prep day starts this Saturday.")).toBeInTheDocument();
     expect(screen.getByText("I can help with setup.")).toBeInTheDocument();
+    expect(screen.getByText("Campaigns in this community")).toBeInTheDocument();
+    expect(
+      screen
+        .getAllByText("Winter Coat Drive 2026")
+        .some(
+          (element) =>
+            element.closest("a")?.getAttribute("href") ===
+            "/fundraisers/winter-coat-drive-2026",
+        ),
+    ).toBe(true);
+    expect(screen.getByText("What this community supports")).toBeInTheDocument();
   });
 
   it("renders community-not-found and invalid-request states", () => {
@@ -209,6 +332,9 @@ describe("PublicCommunityPage", () => {
       screen.getByRole("heading", { name: "Community not found" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Tried slug:/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "View seeded community" }),
+    ).toHaveAttribute("href", "/communities/neighbors-helping-neighbors");
     expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     rerender(
@@ -224,6 +350,10 @@ describe("PublicCommunityPage", () => {
       screen.getByRole("heading", { name: "Invalid community request" }),
     ).toBeInTheDocument();
     expect(screen.getByText("slug is required.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Back home" })).toHaveAttribute(
+      "href",
+      "/",
+    );
     expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
   });
 });

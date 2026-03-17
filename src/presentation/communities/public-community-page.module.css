@@ -1,0 +1,584 @@
+.page {
+  display: grid;
+  gap: 2rem;
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: clamp(2rem, 4vw, 3rem) 0 4rem;
+}
+
+.hero {
+  align-items: stretch;
+  background: linear-gradient(180deg, #f8faf6 0%, #f4f4f2 100%);
+  border-radius: 2.25rem;
+  display: grid;
+  gap: 1.75rem;
+  grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.heroCopy {
+  display: grid;
+  gap: 1rem;
+}
+
+.eyebrow,
+.sectionEyebrow,
+.errorEyebrow {
+  color: var(--wa-color-success-fill-loud);
+  font-size: var(--wa-font-size-s);
+  font-weight: var(--wa-font-weight-semibold);
+  letter-spacing: 0.1em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.heroTitle,
+.sectionTitle,
+.panelTitle,
+.errorHeading {
+  font-family: var(--wa-font-family-heading);
+  letter-spacing: -0.04em;
+  margin: 0;
+}
+
+.heroTitle {
+  font-size: clamp(2.9rem, 6vw, 4.8rem);
+  line-height: 0.96;
+  max-width: 12ch;
+}
+
+.heroLead,
+.heroBody,
+.metaPrimary,
+.metaSecondary,
+.statLabel,
+.leaderboardMeta,
+.postDate,
+.postBody,
+.commentMeta,
+.fundraiserMeta,
+.aboutBody,
+.aboutMeta,
+.ownerRole,
+.errorBody {
+  line-height: 1.6;
+  margin: 0;
+}
+
+.heroLead {
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  font-weight: var(--wa-font-weight-semibold);
+  max-width: 42rem;
+}
+
+.heroBody {
+  color: var(--wa-color-text-quiet);
+  max-width: 38rem;
+}
+
+.communityMeta {
+  align-items: center;
+  display: flex;
+  gap: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.communityIcon,
+.ownerAvatar,
+.postAvatar {
+  align-items: center;
+  border-radius: 999px;
+  color: #244233;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-weight: 800;
+  justify-content: center;
+}
+
+.communityIcon {
+  background: linear-gradient(145deg, #d2f67b, #b9ef6f);
+  height: 3rem;
+  width: 3rem;
+}
+
+.metaCopy {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.metaPrimary {
+  font-weight: var(--wa-font-weight-bold);
+}
+
+.metaSecondary,
+.statLabel,
+.leaderboardMeta,
+.postDate,
+.commentMeta,
+.fundraiserMeta,
+.aboutMeta,
+.ownerRole {
+  color: var(--wa-color-text-quiet);
+}
+
+.ctaRow,
+.errorActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.primaryAction,
+.secondaryAction,
+.followButton {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 1rem;
+  font-weight: var(--wa-font-weight-semibold);
+  justify-content: center;
+  min-height: 3.2rem;
+  padding: 0.8rem 1.4rem;
+  text-decoration: none;
+}
+
+.primaryAction {
+  background: #1f5d3a;
+  border: 1px solid #1f5d3a;
+  color: white;
+}
+
+.secondaryAction,
+.followButton {
+  background: var(--wa-color-surface-default);
+  border: 1px solid var(--wa-color-surface-border);
+  color: var(--wa-color-text-normal);
+}
+
+.followButton {
+  cursor: pointer;
+}
+
+.statsRow {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0.75rem;
+}
+
+.stat {
+  border-left: 1px solid var(--wa-color-surface-border);
+  display: grid;
+  gap: 0.25rem;
+  padding-left: 1rem;
+}
+
+.stat:first-child {
+  border-left: none;
+  padding-left: 0;
+}
+
+.statValue,
+.leaderboardRaised,
+.fundraiserRaised,
+.ownerName,
+.postAuthor,
+.leaderboardName,
+.fundraiserTitle,
+.aboutCardTitle {
+  font-weight: var(--wa-font-weight-bold);
+  margin: 0;
+}
+
+.statValue {
+  font-family: var(--wa-font-family-heading);
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.heroArtwork {
+  display: grid;
+}
+
+.heroArtworkCard {
+  background:
+    radial-gradient(circle at top left, rgba(255, 237, 138, 0.4), transparent 30%),
+    linear-gradient(180deg, #ffc537 0%, #ffb307 56%, #ef9810 100%);
+  border-radius: 2rem;
+  min-height: 100%;
+  overflow: hidden;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  position: relative;
+}
+
+.heroArtworkLabel {
+  color: rgba(38, 31, 18, 0.75);
+  font-size: 0.95rem;
+  font-weight: var(--wa-font-weight-semibold);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.heroArtworkTitle {
+  color: #151515;
+  font-family: var(--wa-font-family-heading);
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  letter-spacing: -0.05em;
+  margin: 1.5rem 0 0;
+  max-width: 9ch;
+  position: relative;
+  z-index: 1;
+}
+
+.heroArtworkBody {
+  color: rgba(21, 21, 21, 0.82);
+  line-height: 1.6;
+  margin: 0.75rem 0 0;
+  max-width: 18rem;
+  position: relative;
+  z-index: 1;
+}
+
+.heroArtworkGlow {
+  background: radial-gradient(circle, rgba(255, 251, 220, 0.8) 0%, rgba(255, 251, 220, 0) 70%);
+  height: 18rem;
+  position: absolute;
+  right: -2rem;
+  top: -3rem;
+  width: 18rem;
+}
+
+.heroArtworkTerrain {
+  background:
+    linear-gradient(180deg, rgba(255, 200, 82, 0) 0%, rgba(197, 125, 0, 0.38) 100%),
+    radial-gradient(circle at 0% 100%, rgba(117, 72, 11, 0.28) 0%, rgba(117, 72, 11, 0) 54%),
+    radial-gradient(circle at 100% 100%, rgba(73, 47, 6, 0.3) 0%, rgba(73, 47, 6, 0) 58%);
+  bottom: 0;
+  inset-inline: 0;
+  position: absolute;
+  top: 42%;
+}
+
+.leaderboardSection,
+.tabsSection,
+.errorCard {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.sectionHeader,
+.panelHeader,
+.activityHeader {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.sectionTitle,
+.panelTitle {
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+}
+
+.sectionBadge::part(base) {
+  font-weight: var(--wa-font-weight-semibold);
+}
+
+.leaderboardGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.leaderboardCard {
+  border-radius: 1.8rem;
+  color: var(--wa-color-text-normal);
+  display: grid;
+  gap: 0.85rem;
+  min-height: 15rem;
+  padding: 1.4rem;
+  position: relative;
+  text-decoration: none;
+}
+
+.rankOne {
+  background: linear-gradient(180deg, #cef783 0%, #d9fa94 100%);
+}
+
+.rankTwo {
+  background: linear-gradient(180deg, #b9edf1 0%, #a6e1e8 100%);
+}
+
+.rankThree {
+  background: linear-gradient(180deg, #ffd46c 0%, #ffd97e 100%);
+}
+
+.rankMedal {
+  align-items: center;
+  background: rgba(26, 58, 40, 0.9);
+  border-radius: 999px;
+  color: white;
+  display: inline-flex;
+  font-weight: 800;
+  height: 2.15rem;
+  justify-content: center;
+  width: 2.15rem;
+}
+
+.leaderboardName {
+  font-size: 1.35rem;
+  max-width: 12ch;
+}
+
+.leaderboardRaised {
+  font-family: var(--wa-font-family-heading);
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.tabGroup::part(base) {
+  border-radius: 2rem;
+}
+
+.tabGroup::part(nav) {
+  gap: 0.5rem;
+  padding: 0 0 0.85rem;
+}
+
+.tabGroup::part(body) {
+  padding-top: 1rem;
+}
+
+.tabPanel {
+  --padding: 0;
+}
+
+.sortChip {
+  background: #f3f4f1;
+  border-radius: 999px;
+  color: var(--wa-color-text-quiet);
+  font-weight: var(--wa-font-weight-semibold);
+  padding: 0.8rem 1.1rem;
+}
+
+.activityFeed {
+  display: grid;
+  gap: 1rem;
+}
+
+.postCard,
+.fundraiserCard,
+.aboutCard {
+  background: var(--wa-color-surface-default);
+  border: 1px solid var(--wa-color-surface-border);
+  border-radius: 1.6rem;
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--wa-color-shadow) 7%, transparent);
+}
+
+.postCard {
+  display: grid;
+  gap: 1rem;
+  padding: 1.35rem;
+}
+
+.postHeader {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.postAvatar,
+.ownerAvatar {
+  background: linear-gradient(145deg, #d3f879, #b8ef6f);
+  height: 3rem;
+  width: 3rem;
+}
+
+.postMeta {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.postContent {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.postTitle {
+  font-family: var(--wa-font-family-heading);
+  font-size: 1.75rem;
+  letter-spacing: -0.04em;
+  line-height: 1.04;
+  margin: 0;
+}
+
+.commentThread {
+  background: color-mix(in srgb, var(--wa-color-surface-default) 80%, #f7faf2);
+  border-radius: 1.1rem;
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.commentHeading {
+  font-weight: var(--wa-font-weight-semibold);
+  margin: 0;
+}
+
+.commentList {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.commentItem {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.commentBody {
+  margin: 0;
+}
+
+.fundraiserGrid,
+.aboutGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.fundraiserGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.fundraiserCard {
+  color: var(--wa-color-text-normal);
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.35rem;
+  text-decoration: none;
+}
+
+.fundraiserTitle {
+  font-size: 1.2rem;
+}
+
+.fundraiserProgress {
+  background: #ebeee6;
+  border-radius: 999px;
+  height: 0.55rem;
+  overflow: hidden;
+}
+
+.fundraiserProgressFill {
+  background: linear-gradient(90deg, #77d04c, #3daa57);
+  border-radius: inherit;
+  height: 100%;
+}
+
+.fundraiserRaised {
+  font-size: 1.05rem;
+}
+
+.aboutGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.aboutCard {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1.35rem;
+}
+
+.ownerRow {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.inlineLink {
+  color: var(--wa-color-success-fill-loud);
+  font-weight: var(--wa-font-weight-semibold);
+  text-decoration: none;
+}
+
+.emptyState {
+  color: var(--wa-color-text-quiet);
+  margin: 0;
+}
+
+.errorPage {
+  display: grid;
+  margin: 0 auto;
+  max-width: 780px;
+  min-height: calc(100vh - 10rem);
+  padding: 3rem 0 4rem;
+  place-items: center;
+}
+
+.errorCard {
+  background: var(--wa-color-surface-default);
+  border: 1px solid var(--wa-color-surface-border);
+  border-radius: 2rem;
+  box-shadow: 0 24px 64px color-mix(in srgb, var(--wa-color-shadow) 9%, transparent);
+  padding: clamp(1.6rem, 3vw, 2.2rem);
+  width: 100%;
+}
+
+.errorHeading {
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+@media (max-width: 1040px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .leaderboardGrid,
+  .fundraiserGrid,
+  .aboutGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding-top: 1.6rem;
+  }
+
+  .statsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .stat {
+    border-left: none;
+    border-top: 1px solid var(--wa-color-surface-border);
+    padding-left: 0;
+    padding-top: 0.9rem;
+  }
+
+  .stat:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .sectionHeader,
+  .panelHeader,
+  .activityHeader,
+  .ownerRow,
+  .errorActions,
+  .ctaRow {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .primaryAction,
+  .secondaryAction,
+  .followButton {
+    width: 100%;
+  }
+}
