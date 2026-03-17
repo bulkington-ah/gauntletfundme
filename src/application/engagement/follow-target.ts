@@ -4,7 +4,9 @@ import {
   normalizeSlug,
   type FollowTargetType,
 } from "@/domain";
+import { buildFollowCompletedEvent } from "@/application/analytics";
 import { authorizeProtectedAction } from "@/application/authorization";
+import type { AnalyticsEventPublisher } from "@/application/analytics";
 
 import type {
   AuthenticatedViewer,
@@ -55,6 +57,7 @@ type Dependencies = {
   followTargetLookup: FollowTargetLookup;
   followOwnerLookup: FollowOwnerLookup;
   followWriteRepository: FollowWriteRepository;
+  analyticsEventPublisher?: AnalyticsEventPublisher;
 };
 
 export const followTarget = async (
@@ -130,6 +133,16 @@ export const followTarget = async (
       targetType: target.targetType,
       targetId: target.id,
     },
+  );
+
+  await dependencies.analyticsEventPublisher?.publish(
+    buildFollowCompletedEvent({
+      viewerUserId: authorization.viewer.userId,
+      targetType: target.targetType,
+      targetSlug: target.slug,
+      created: persistedFollow.created,
+      followerCount,
+    }),
   );
 
   return {

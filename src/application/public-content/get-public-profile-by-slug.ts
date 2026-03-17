@@ -1,3 +1,7 @@
+import {
+  buildProfilePageViewedEvent,
+  type AnalyticsEventPublisher,
+} from "@/application/analytics";
 import { DomainValidationError, normalizeSlug } from "@/domain";
 
 import type {
@@ -9,6 +13,7 @@ import type { PublicContentReadRepository } from "./ports";
 
 type Dependencies = {
   publicContentReadRepository: PublicContentReadRepository;
+  analyticsEventPublisher?: AnalyticsEventPublisher;
 };
 
 export const getPublicProfileBySlug = async (
@@ -31,6 +36,12 @@ export const getPublicProfileBySlug = async (
       message: `No public profile was found for slug "${slugResult}".`,
     };
   }
+
+  await dependencies.analyticsEventPublisher?.publish(
+    buildProfilePageViewedEvent({
+      profileSlug: snapshot.profile.slug,
+    }),
+  );
 
   return {
     status: "success",

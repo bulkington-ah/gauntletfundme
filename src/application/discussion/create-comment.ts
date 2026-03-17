@@ -1,3 +1,7 @@
+import {
+  buildCommentCreatedEvent,
+  type AnalyticsEventPublisher,
+} from "@/application/analytics";
 import { authorizeProtectedAction } from "@/application/authorization";
 import {
   createComment,
@@ -54,6 +58,7 @@ type Dependencies = {
   sessionViewerGateway: DiscussionSessionViewerGateway;
   discussionTargetLookup: DiscussionTargetLookup;
   discussionWriteRepository: DiscussionWriteRepository;
+  analyticsEventPublisher?: AnalyticsEventPublisher;
 };
 
 export const createCommentCommand = async (
@@ -102,6 +107,14 @@ export const createCommentCommand = async (
     body: requireNonEmptyString(request.body, "body"),
   });
   const comment = createComment(persistedComment);
+
+  await dependencies.analyticsEventPublisher?.publish(
+    buildCommentCreatedEvent({
+      viewerUserId: authorization.viewer.userId,
+      postId: comment.postId,
+      commentId: comment.id,
+    }),
+  );
 
   return {
     status: "success",

@@ -1,4 +1,5 @@
 import {
+  type AnalyticsEventPublisher,
   createCommentCommand,
   type DiscussionSessionViewerGateway,
   type DiscussionTargetLookup,
@@ -113,12 +114,14 @@ describe("createCommentCommand", () => {
         createdAt: new Date("2026-03-16T14:20:00.000Z"),
       },
     });
+    const analyticsEventPublisher = createAnalyticsEventPublisherStub();
 
     const result = await createCommentCommand(
       {
         sessionViewerGateway,
         discussionTargetLookup,
         discussionWriteRepository,
+        analyticsEventPublisher,
       },
       {
         sessionToken: "demo-supporter-session",
@@ -132,6 +135,16 @@ describe("createCommentCommand", () => {
       authorUserId: "user_supporter_jordan",
       body: "I can cover the first shift.",
     });
+    expect(analyticsEventPublisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "discussion.comment.created",
+        payload: {
+          viewerUserId: "user_supporter_jordan",
+          postId: "post_kickoff_update",
+          commentId: "comment_new_shift_offer",
+        },
+      }),
+    );
     expect(result).toEqual({
       status: "success",
       viewer: {
@@ -192,4 +205,10 @@ const createDiscussionWriteRepositoryStub = ({
 } => ({
   createPost: vi.fn(),
   createComment: vi.fn().mockResolvedValue(comment),
+});
+
+const createAnalyticsEventPublisherStub = (): AnalyticsEventPublisher & {
+  publish: ReturnType<typeof vi.fn>;
+} => ({
+  publish: vi.fn().mockResolvedValue(undefined),
 });

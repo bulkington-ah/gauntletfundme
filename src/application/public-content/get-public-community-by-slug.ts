@@ -1,3 +1,7 @@
+import {
+  buildCommunityPageViewedEvent,
+  type AnalyticsEventPublisher,
+} from "@/application/analytics";
 import { DomainValidationError, normalizeSlug } from "@/domain";
 
 import type {
@@ -9,6 +13,7 @@ import type { PublicContentReadRepository } from "./ports";
 
 type Dependencies = {
   publicContentReadRepository: PublicContentReadRepository;
+  analyticsEventPublisher?: AnalyticsEventPublisher;
 };
 
 export const getPublicCommunityBySlug = async (
@@ -31,6 +36,12 @@ export const getPublicCommunityBySlug = async (
       message: `No community was found for slug "${slugResult}".`,
     };
   }
+
+  await dependencies.analyticsEventPublisher?.publish(
+    buildCommunityPageViewedEvent({
+      communitySlug: snapshot.community.slug,
+    }),
+  );
 
   return {
     status: "success",

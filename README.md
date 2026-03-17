@@ -22,6 +22,7 @@ Implemented foundations currently include:
 - mocked donation intent start command with authenticated API flow and tracked `started` intent persistence
 - moderation report submission command with authenticated, idempotent post/comment reporting semantics
 - moderator/owner report resolution actions (`hide`, `remove`, `dismiss`) with public discussion visibility updates for moderated content
+- application-layer analytics instrumentation for page views, follows, post/comment creation, and donation intent starts
 - public profile page route with slug-based lookup and connected fundraiser/community links
 - public fundraiser page route with organizer context, story rendering, and mocked donation entry
 - public community page route with discussion feed, comment visibility, and connected links

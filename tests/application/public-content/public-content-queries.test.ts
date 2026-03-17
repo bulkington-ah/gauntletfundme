@@ -1,4 +1,5 @@
 import {
+  type AnalyticsEventPublisher,
   getPublicCommunityBySlug,
   getPublicFundraiserBySlug,
   getPublicProfileBySlug,
@@ -26,6 +27,7 @@ describe("public content queries", () => {
     const repository = createRepositoryStub({
       findProfileBySlug,
     });
+    const analyticsEventPublisher = createAnalyticsEventPublisherStub();
     const snapshot: PublicProfileSnapshot = {
       user: createUser({
         id: "user_123",
@@ -72,7 +74,7 @@ describe("public content queries", () => {
     findProfileBySlug.mockResolvedValue(snapshot);
 
     const result = await getPublicProfileBySlug(
-      { publicContentReadRepository: repository },
+      { publicContentReadRepository: repository, analyticsEventPublisher },
       { slug: " Avery Johnson " },
     );
 
@@ -109,6 +111,14 @@ describe("public content queries", () => {
         },
       },
     });
+    expect(analyticsEventPublisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "page_view.profile",
+        payload: {
+          profileSlug: "avery-johnson",
+        },
+      }),
+    );
   });
 
   it("returns an invalid request result when the fundraiser slug is blank", async () => {
@@ -132,6 +142,7 @@ describe("public content queries", () => {
     const repository = createRepositoryStub({
       findFundraiserBySlug,
     });
+    const analyticsEventPublisher = createAnalyticsEventPublisherStub();
     const owner = createUser({
       id: "user_123",
       email: "avery@example.com",
@@ -176,7 +187,7 @@ describe("public content queries", () => {
     findFundraiserBySlug.mockResolvedValue(snapshot);
 
     const result = await getPublicFundraiserBySlug(
-      { publicContentReadRepository: repository },
+      { publicContentReadRepository: repository, analyticsEventPublisher },
       { slug: " warm meals 2026 " },
     );
 
@@ -205,6 +216,14 @@ describe("public content queries", () => {
         },
       },
     });
+    expect(analyticsEventPublisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "page_view.fundraiser",
+        payload: {
+          fundraiserSlug: "warm-meals-2026",
+        },
+      }),
+    );
   });
 
   it("maps community discussion from the repository snapshot", async () => {
@@ -214,6 +233,7 @@ describe("public content queries", () => {
     const repository = createRepositoryStub({
       findCommunityBySlug,
     });
+    const analyticsEventPublisher = createAnalyticsEventPublisherStub();
     const owner = createUser({
       id: "user_123",
       email: "avery@example.com",
@@ -296,7 +316,7 @@ describe("public content queries", () => {
     findCommunityBySlug.mockResolvedValue(snapshot);
 
     const result = await getPublicCommunityBySlug(
-      { publicContentReadRepository: repository },
+      { publicContentReadRepository: repository, analyticsEventPublisher },
       { slug: "neighbors-helping-neighbors" },
     );
 
@@ -319,6 +339,14 @@ describe("public content queries", () => {
         },
       ],
     });
+    expect(analyticsEventPublisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "page_view.community",
+        payload: {
+          communitySlug: "neighbors-helping-neighbors",
+        },
+      }),
+    );
   });
 });
 
@@ -329,4 +357,10 @@ const createRepositoryStub = (
   findFundraiserBySlug: vi.fn().mockResolvedValue(null),
   findCommunityBySlug: vi.fn().mockResolvedValue(null),
   ...overrides,
+});
+
+const createAnalyticsEventPublisherStub = (): AnalyticsEventPublisher & {
+  publish: ReturnType<typeof vi.fn>;
+} => ({
+  publish: vi.fn().mockResolvedValue(undefined),
 });

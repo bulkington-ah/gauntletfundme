@@ -1,4 +1,5 @@
 import {
+  type AnalyticsEventPublisher,
   startDonationIntent,
   type DonationIntentTargetLookup,
   type DonationIntentWriteRepository,
@@ -117,12 +118,14 @@ describe("startDonationIntent", () => {
         createdAt: new Date("2026-03-16T16:00:00.000Z"),
       },
     });
+    const analyticsEventPublisher = createAnalyticsEventPublisherStub();
 
     const result = await startDonationIntent(
       {
         sessionViewerGateway,
         donationIntentTargetLookup,
         donationIntentWriteRepository,
+        analyticsEventPublisher,
       },
       {
         sessionToken: "demo-supporter-session",
@@ -136,6 +139,17 @@ describe("startDonationIntent", () => {
       fundraiserId: "fundraiser_warm_meals_2026",
       amount: 2500,
     });
+    expect(analyticsEventPublisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "engagement.donation_intent.started",
+        payload: {
+          viewerUserId: "user_supporter_jordan",
+          fundraiserSlug: "warm-meals-2026",
+          donationIntentId: "intent_jordan_warm_meals_new",
+          amount: 2500,
+        },
+      }),
+    );
     expect(result).toEqual({
       status: "success",
       viewer: {
@@ -195,4 +209,10 @@ const createDonationIntentWriteRepositoryStub = ({
   createDonationIntent: ReturnType<typeof vi.fn>;
 } => ({
   createDonationIntent: vi.fn().mockResolvedValue(donationIntent),
+});
+
+const createAnalyticsEventPublisherStub = (): AnalyticsEventPublisher & {
+  publish: ReturnType<typeof vi.fn>;
+} => ({
+  publish: vi.fn().mockResolvedValue(undefined),
 });

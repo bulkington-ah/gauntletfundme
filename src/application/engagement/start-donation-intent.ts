@@ -1,3 +1,7 @@
+import {
+  buildDonationIntentStartedEvent,
+  type AnalyticsEventPublisher,
+} from "@/application/analytics";
 import { authorizeProtectedAction } from "@/application/authorization";
 import {
   createDonationIntent,
@@ -57,6 +61,7 @@ type Dependencies = {
   sessionViewerGateway: SessionViewerGateway;
   donationIntentTargetLookup: DonationIntentTargetLookup;
   donationIntentWriteRepository: DonationIntentWriteRepository;
+  analyticsEventPublisher?: AnalyticsEventPublisher;
 };
 
 export const startDonationIntent = async (
@@ -110,6 +115,15 @@ export const startDonationIntent = async (
       amount: requirePositiveInteger(request.amount, "amount"),
     });
   const donationIntent = createDonationIntent(persistedDonationIntent);
+
+  await dependencies.analyticsEventPublisher?.publish(
+    buildDonationIntentStartedEvent({
+      viewerUserId: authorization.viewer.userId,
+      fundraiserSlug: fundraiser.slug,
+      donationIntentId: donationIntent.id,
+      amount: donationIntent.amount,
+    }),
+  );
 
   return {
     status: "success",

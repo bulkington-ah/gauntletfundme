@@ -1,3 +1,7 @@
+import {
+  buildPostCreatedEvent,
+  type AnalyticsEventPublisher,
+} from "@/application/analytics";
 import { authorizeProtectedAction } from "@/application/authorization";
 import {
   createPost,
@@ -59,6 +63,7 @@ type Dependencies = {
   sessionViewerGateway: DiscussionSessionViewerGateway;
   discussionTargetLookup: DiscussionTargetLookup;
   discussionWriteRepository: DiscussionWriteRepository;
+  analyticsEventPublisher?: AnalyticsEventPublisher;
 };
 
 export const createPostCommand = async (
@@ -121,6 +126,14 @@ export const createPostCommand = async (
     body: requireNonEmptyString(request.body, "body"),
   });
   const post = createPost(persistedPost);
+
+  await dependencies.analyticsEventPublisher?.publish(
+    buildPostCreatedEvent({
+      viewerUserId: viewer.userId,
+      communitySlug: community.slug,
+      postId: post.id,
+    }),
+  );
 
   return {
     status: "success",

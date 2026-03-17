@@ -1,3 +1,7 @@
+import {
+  buildFundraiserPageViewedEvent,
+  type AnalyticsEventPublisher,
+} from "@/application/analytics";
 import { DomainValidationError, normalizeSlug } from "@/domain";
 
 import type {
@@ -9,6 +13,7 @@ import type { PublicContentReadRepository } from "./ports";
 
 type Dependencies = {
   publicContentReadRepository: PublicContentReadRepository;
+  analyticsEventPublisher?: AnalyticsEventPublisher;
 };
 
 export const getPublicFundraiserBySlug = async (
@@ -30,6 +35,12 @@ export const getPublicFundraiserBySlug = async (
       message: `No fundraiser was found for slug "${slugResult}".`,
     };
   }
+
+  await dependencies.analyticsEventPublisher?.publish(
+    buildFundraiserPageViewedEvent({
+      fundraiserSlug: snapshot.fundraiser.slug,
+    }),
+  );
 
   return {
     status: "success",

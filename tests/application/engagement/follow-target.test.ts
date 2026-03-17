@@ -1,4 +1,5 @@
 import {
+  type AnalyticsEventPublisher,
   followTarget,
   type FollowOwnerLookup,
   type FollowTargetLookup,
@@ -140,6 +141,7 @@ describe("followTarget", () => {
         created: false,
       },
     });
+    const analyticsEventPublisher = createAnalyticsEventPublisherStub();
 
     const result = await followTarget(
       {
@@ -147,6 +149,7 @@ describe("followTarget", () => {
         followTargetLookup,
         followOwnerLookup,
         followWriteRepository,
+        analyticsEventPublisher,
       },
       {
         sessionToken: "demo-supporter-session",
@@ -179,6 +182,18 @@ describe("followTarget", () => {
       targetType: "community",
       targetId: "community_123",
     });
+    expect(analyticsEventPublisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "engagement.follow.completed",
+        payload: {
+          viewerUserId: "user_123",
+          targetType: "community",
+          targetSlug: "neighbors-helping-neighbors",
+          created: false,
+          followerCount: 8,
+        },
+      }),
+    );
   });
 });
 
@@ -239,4 +254,10 @@ const createFollowWriteRepositoryStub = ({
     removed: true,
   }),
   countFollowersForTarget: vi.fn().mockResolvedValue(followerCount),
+});
+
+const createAnalyticsEventPublisherStub = (): AnalyticsEventPublisher & {
+  publish: ReturnType<typeof vi.fn>;
+} => ({
+  publish: vi.fn().mockResolvedValue(undefined),
 });

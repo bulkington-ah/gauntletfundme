@@ -1,4 +1,5 @@
 import { createPostgresAccountAuthRepository } from "@/infrastructure/auth";
+import { createNoopAnalyticsEventPublisher } from "@/infrastructure/analytics";
 import { createPostgresPublicContentEngagementRepository } from "@/infrastructure/persistence";
 
 import {
@@ -12,6 +13,7 @@ import {
   type SignUpRequest,
   type AccountAuthRepository,
 } from "../accounts";
+import type { AnalyticsEventPublisher } from "../analytics";
 import {
   createCommentCommand,
   createPostCommand,
@@ -67,6 +69,7 @@ type Dependencies = {
   followTargetLookup?: FollowTargetLookup;
   followOwnerLookup?: FollowOwnerLookup;
   followWriteRepository?: FollowWriteRepository;
+  analyticsEventPublisher?: AnalyticsEventPublisher;
   sessionViewerGateway?: SessionViewerGateway;
   accountAuthRepository?: AccountAuthRepository;
 };
@@ -118,6 +121,8 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     dependencies.followWriteRepository ?? resolvePersistenceAdapter();
   const getAccountAuthRepository = () =>
     dependencies.accountAuthRepository ?? resolveAccountAuthRepository();
+  const analyticsEventPublisher =
+    dependencies.analyticsEventPublisher ?? createNoopAnalyticsEventPublisher();
   const sessionViewerGateway =
     dependencies.sessionViewerGateway ?? {
       findViewerBySessionToken: (sessionToken: string | null) =>
@@ -134,17 +139,27 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     getSession: (request: LookupSessionRequest) =>
       getSession({ accountAuthRepository: getAccountAuthRepository() }, request),
     getPublicProfileBySlug: (request: LookupBySlugRequest) =>
-      getPublicProfileBySlug({ publicContentReadRepository }, request),
+      getPublicProfileBySlug(
+        { publicContentReadRepository, analyticsEventPublisher },
+        request,
+      ),
     getPublicFundraiserBySlug: (request: LookupBySlugRequest) =>
-      getPublicFundraiserBySlug({ publicContentReadRepository }, request),
+      getPublicFundraiserBySlug(
+        { publicContentReadRepository, analyticsEventPublisher },
+        request,
+      ),
     getPublicCommunityBySlug: (request: LookupBySlugRequest) =>
-      getPublicCommunityBySlug({ publicContentReadRepository }, request),
+      getPublicCommunityBySlug(
+        { publicContentReadRepository, analyticsEventPublisher },
+        request,
+      ),
     createPost: (request: CreatePostRequest) =>
       createPostCommand(
         {
           sessionViewerGateway,
           discussionTargetLookup: getDiscussionTargetLookup(),
           discussionWriteRepository: getDiscussionWriteRepository(),
+          analyticsEventPublisher,
         },
         request,
       ),
@@ -154,6 +169,7 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
           sessionViewerGateway,
           discussionTargetLookup: getDiscussionTargetLookup(),
           discussionWriteRepository: getDiscussionWriteRepository(),
+          analyticsEventPublisher,
         },
         request,
       ),
@@ -163,6 +179,7 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
           sessionViewerGateway,
           donationIntentTargetLookup: getDonationIntentTargetLookup(),
           donationIntentWriteRepository: getDonationIntentWriteRepository(),
+          analyticsEventPublisher,
         },
         request,
       ),
@@ -191,6 +208,7 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
           followTargetLookup,
           followOwnerLookup,
           followWriteRepository,
+          analyticsEventPublisher,
         },
         request,
       ),
