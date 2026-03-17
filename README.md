@@ -15,6 +15,7 @@ Implemented foundations currently include:
 - domain models and persistence schema for core MVP entities
 - application and presentation API boundaries for public read routes
 - Postgres-backed repository adapters for public reads and follow persistence
+- account and session auth foundations (sign up, login, logout, session lookup)
 - follow command with auth checks, self-follow protection, and idempotent persistence semantics
 
 ## Environment
@@ -22,6 +23,8 @@ Copy `.env.example` to your local environment config and set:
 - `DATABASE_URL`: PostgreSQL connection string used by runtime persistence adapters
 
 The persistence layer bootstraps schema and seeds prototype data from `src/infrastructure/demo-data/` when tables are missing, which keeps local development and tests predictable.
+
+Auth routes and protected commands use the `x-session-token` request header.
 
 ## Common Commands
 - `npm install`

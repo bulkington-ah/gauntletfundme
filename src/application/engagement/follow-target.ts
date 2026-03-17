@@ -72,7 +72,7 @@ export const followTarget = async (
     return {
       status: "unauthorized",
       message:
-        "Authentication is required for follow commands. Send the x-demo-session header to continue.",
+        "Authentication is required for follow commands. Send the x-session-token header to continue.",
     };
   }
 

@@ -1,6 +1,17 @@
-import { createStaticSessionViewerGateway } from "@/infrastructure/auth";
+import { createPostgresAccountAuthRepository } from "@/infrastructure/auth";
 import { createPostgresPublicContentEngagementRepository } from "@/infrastructure/persistence";
 
+import {
+  getSession,
+  login,
+  logout,
+  signUp,
+  type LoginRequest,
+  type LogoutRequest,
+  type LookupSessionRequest,
+  type SignUpRequest,
+  type AccountAuthRepository,
+} from "../accounts";
 import {
   followTarget,
   type FollowTargetRequest,
@@ -25,6 +36,7 @@ type Dependencies = {
   followOwnerLookup?: FollowOwnerLookup;
   followWriteRepository?: FollowWriteRepository;
   sessionViewerGateway?: SessionViewerGateway;
+  accountAuthRepository?: AccountAuthRepository;
 };
 
 export const createApplicationApi = (dependencies: Dependencies = {}) => {
@@ -39,6 +51,15 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     return persistenceAdapter;
   };
 
+  let accountAuthRepository: AccountAuthRepository | null = null;
+  const resolveAccountAuthRepository = () => {
+    if (!accountAuthRepository) {
+      accountAuthRepository = createPostgresAccountAuthRepository();
+    }
+
+    return accountAuthRepository;
+  };
+
   const publicContentReadRepository =
     dependencies.publicContentReadRepository ?? resolvePersistenceAdapter();
   const followTargetLookup =
@@ -47,10 +68,23 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     dependencies.followOwnerLookup ?? resolvePersistenceAdapter();
   const followWriteRepository =
     dependencies.followWriteRepository ?? resolvePersistenceAdapter();
+  const getAccountAuthRepository = () =>
+    dependencies.accountAuthRepository ?? resolveAccountAuthRepository();
   const sessionViewerGateway =
-    dependencies.sessionViewerGateway ?? createStaticSessionViewerGateway();
+    dependencies.sessionViewerGateway ?? {
+      findViewerBySessionToken: (sessionToken: string | null) =>
+        getAccountAuthRepository().findViewerBySessionToken(sessionToken),
+    };
 
   return {
+    signUp: (request: SignUpRequest) =>
+      signUp({ accountAuthRepository: getAccountAuthRepository() }, request),
+    login: (request: LoginRequest) =>
+      login({ accountAuthRepository: getAccountAuthRepository() }, request),
+    logout: (request: LogoutRequest) =>
+      logout({ accountAuthRepository: getAccountAuthRepository() }, request),
+    getSession: (request: LookupSessionRequest) =>
+      getSession({ accountAuthRepository: getAccountAuthRepository() }, request),
     getPublicProfileBySlug: (request: LookupBySlugRequest) =>
       getPublicProfileBySlug({ publicContentReadRepository }, request),
     getPublicFundraiserBySlug: (request: LookupBySlugRequest) =>

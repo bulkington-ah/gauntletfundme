@@ -117,7 +117,7 @@ describe("API route handlers", () => {
     });
   });
 
-  it("returns unauthorized for follow commands without a demo session header", async () => {
+  it("returns unauthorized for follow commands without a session token header", async () => {
     const response = await handlePostFollowTargetRoute(
       new Request("http://test", {
         method: "POST",
@@ -135,20 +135,20 @@ describe("API route handlers", () => {
     await expect(response.json()).resolves.toEqual({
       error: "unauthorized",
       message:
-        "Authentication is required for follow commands. Send the x-demo-session header to continue.",
+        "Authentication is required for follow commands. Send the x-session-token header to continue.",
       meta: {
-        demoSessionHeader: "x-demo-session",
+        sessionTokenHeader: "x-session-token",
       },
     });
   });
 
-  it("returns 201 for a newly created follow after resolving a demo session", async () => {
+  it("returns 201 for a newly created follow after resolving a session", async () => {
     const response = await handlePostFollowTargetRoute(
       new Request("http://test", {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-demo-session": "demo-supporter-session",
+          "x-session-token": "demo-supporter-session",
         },
         body: JSON.stringify({
           targetType: "community",
@@ -172,7 +172,7 @@ describe("API route handlers", () => {
         created: true,
       },
       meta: {
-        demoSessionHeader: "x-demo-session",
+        sessionTokenHeader: "x-session-token",
       },
     });
   });
@@ -211,7 +211,7 @@ describe("API route handlers", () => {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-demo-session": "demo-supporter-session",
+          "x-session-token": "demo-supporter-session",
         },
         body: JSON.stringify({
           targetType: "community",

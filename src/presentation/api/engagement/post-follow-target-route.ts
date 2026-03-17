@@ -1,12 +1,11 @@
 import { getApplicationApi } from "../application-api";
 import { jsonResponse, parseJsonBody } from "../http";
+import { sessionTokenHeader } from "../auth/session-header";
 
 type FollowTargetBody = {
   targetType?: string;
   targetSlug?: string;
 };
-
-const demoSessionHeader = "x-demo-session";
 
 export const handlePostFollowTargetRoute = async (
   request: Request,
@@ -24,7 +23,7 @@ export const handlePostFollowTargetRoute = async (
   }
 
   const result = await getApplicationApi().followTarget({
-    sessionToken: request.headers.get(demoSessionHeader),
+    sessionToken: request.headers.get(sessionTokenHeader),
     targetType: body.targetType,
     targetSlug: body.targetSlug,
   });
@@ -38,7 +37,7 @@ export const handlePostFollowTargetRoute = async (
           error: result.status,
           message: result.message,
           meta: {
-            demoSessionHeader,
+            sessionTokenHeader,
           },
         },
         401,
@@ -57,7 +56,7 @@ export const handlePostFollowTargetRoute = async (
             created: result.created,
           },
           meta: {
-            demoSessionHeader,
+            sessionTokenHeader,
           },
         },
         result.created ? 201 : 200,
