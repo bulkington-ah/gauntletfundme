@@ -20,6 +20,7 @@ Implemented foundations currently include:
 - follow command with auth checks, self-follow protection, and idempotent persistence semantics
 - public profile page route with slug-based lookup and connected fundraiser/community links
 - public fundraiser page route with organizer context, story rendering, and mocked donation entry
+- public community page route with discussion feed, comment visibility, and connected links
 
 ## Environment
 Copy `.env.example` to your local environment config and set:
