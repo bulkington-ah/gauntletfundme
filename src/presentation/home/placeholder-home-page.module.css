@@ -1,0 +1,110 @@
+.hero {
+  display: grid;
+  gap: 2rem;
+  margin: 0 auto;
+  max-width: 1120px;
+  padding: 3rem 0 4rem;
+}
+
+.heroCard {
+  background:
+    radial-gradient(circle at top right, rgba(208, 248, 120, 0.55), transparent 35%),
+    linear-gradient(145deg, rgba(240, 248, 231, 0.95), rgba(255, 255, 255, 1));
+  border: 1px solid var(--wa-color-surface-border);
+  border-radius: 2rem;
+  box-shadow: 0 32px 80px color-mix(in srgb, var(--wa-color-shadow) 10%, transparent);
+  display: grid;
+  gap: 1.25rem;
+  padding: clamp(1.75rem, 4vw, 3rem);
+}
+
+.eyebrow {
+  color: var(--wa-color-success-fill-loud);
+  font-size: var(--wa-font-size-s);
+  font-weight: var(--wa-font-weight-semibold);
+  letter-spacing: 0.12em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.heading {
+  font-family: var(--wa-font-family-heading);
+  font-size: clamp(2.8rem, 8vw, 5.6rem);
+  line-height: 0.96;
+  margin: 0;
+}
+
+.lead {
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 56rem;
+}
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.ctaButton::part(base) {
+  font-weight: var(--wa-font-weight-semibold);
+}
+
+.routeGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.routeCard {
+  background: var(--wa-color-surface-default);
+  border: 1px solid var(--wa-color-surface-border);
+  border-radius: 1.5rem;
+  color: var(--wa-color-text-normal);
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  text-decoration: none;
+}
+
+.routeCard:hover {
+  border-color: var(--wa-color-success-border-normal);
+  transform: translateY(-1px);
+}
+
+.routeEyebrow {
+  color: var(--wa-color-text-quiet);
+  font-size: var(--wa-font-size-xs);
+  font-weight: var(--wa-font-weight-semibold);
+  letter-spacing: 0.1em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.routeTitle {
+  font-family: var(--wa-font-family-heading);
+  font-size: 1.45rem;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.routeBody {
+  line-height: 1.55;
+  margin: 0;
+}
+
+.routeFooter {
+  align-items: center;
+  color: var(--wa-color-success-fill-loud);
+  display: flex;
+  font-size: var(--wa-font-size-s);
+  font-weight: var(--wa-font-weight-semibold);
+  gap: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .routeGrid {
+    grid-template-columns: 1fr;
+  }
+}

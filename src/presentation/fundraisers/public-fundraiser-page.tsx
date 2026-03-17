@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import type { ApplicationApi } from "@/application";
+import { PublicSiteShell } from "@/presentation/shared";
 
 type PublicFundraiserQuery = Pick<ApplicationApi, "getPublicFundraiserBySlug">;
 
@@ -77,25 +78,29 @@ type PublicFundraiserPageProps = {
 export const PublicFundraiserPage = ({ model }: PublicFundraiserPageProps) => {
   if (model.status === "invalid_request") {
     return (
-      <main style={pageContainerStyle}>
-        <section style={cardStyle}>
-          <h1 style={headingStyle}>Invalid fundraiser request</h1>
-          <p style={bodyTextStyle}>{model.message}</p>
-        </section>
-      </main>
+      <PublicSiteShell>
+        <main style={pageContainerStyle}>
+          <section style={cardStyle}>
+            <h1 style={headingStyle}>Invalid fundraiser request</h1>
+            <p style={bodyTextStyle}>{model.message}</p>
+          </section>
+        </main>
+      </PublicSiteShell>
     );
   }
 
   if (model.status === "not_found") {
     return (
-      <main style={pageContainerStyle}>
-        <section style={cardStyle}>
-          <h1 style={headingStyle}>Fundraiser not found</h1>
-          <p style={bodyTextStyle}>
-            {model.message} Tried slug: <strong>{model.slug}</strong>
-          </p>
-        </section>
-      </main>
+      <PublicSiteShell>
+        <main style={pageContainerStyle}>
+          <section style={cardStyle}>
+            <h1 style={headingStyle}>Fundraiser not found</h1>
+            <p style={bodyTextStyle}>
+              {model.message} Tried slug: <strong>{model.slug}</strong>
+            </p>
+          </section>
+        </main>
+      </PublicSiteShell>
     );
   }
 
@@ -103,76 +108,79 @@ export const PublicFundraiserPage = ({ model }: PublicFundraiserPageProps) => {
   const organizerRole = toTitleCase(model.organizer.role);
 
   return (
-    <main style={pageContainerStyle}>
-      <section style={heroCardStyle}>
-        <p style={eyebrowStyle}>Public fundraiser</p>
-        <h1 style={headingStyle}>{model.fundraiser.title}</h1>
-        <p style={metaStyle}>
-          Status: {fundraiserStatus} · Goal: {formatCurrency(model.fundraiser.goalAmount)}
-        </p>
-        <p style={bodyTextStyle}>{model.fundraiser.story}</p>
-      </section>
+    <PublicSiteShell>
+      <main style={pageContainerStyle}>
+        <section style={heroCardStyle}>
+          <p style={eyebrowStyle}>Public fundraiser</p>
+          <h1 style={headingStyle}>{model.fundraiser.title}</h1>
+          <p style={metaStyle}>
+            Status: {fundraiserStatus} · Goal:{" "}
+            {formatCurrency(model.fundraiser.goalAmount)}
+          </p>
+          <p style={bodyTextStyle}>{model.fundraiser.story}</p>
+        </section>
 
-      <section style={cardStyle}>
-        <h2 style={sectionHeadingStyle}>Organizer context</h2>
-        <p style={bodyTextStyle}>
-          {model.organizer.displayName} · {organizerRole}
-        </p>
-        {model.organizer.profileSlug ? (
-          <a href={`/profiles/${model.organizer.profileSlug}`} style={linkStyle}>
-            View organizer profile
-          </a>
-        ) : (
-          <p style={bodyTextStyle}>Organizer profile link not available.</p>
-        )}
-      </section>
-
-      <section style={cardStyle}>
-        <h2 style={sectionHeadingStyle}>Prototype progress</h2>
-        <p style={bodyTextStyle}>
-          Mock donation intents started:{" "}
-          <strong>{model.fundraiser.donationIntentCount}</strong>
-        </p>
-        <div style={progressTrackStyle}>
-          <div
-            style={{
-              ...progressFillStyle,
-              width: `${toProgressWidth(model.fundraiser.donationIntentCount)}%`,
-            }}
-          />
-        </div>
-        <p style={helperTextStyle}>
-          Progress reflects mocked intent starts, not real payment volume.
-        </p>
-      </section>
-
-      <section style={cardStyle}>
-        <h2 style={sectionHeadingStyle}>Mocked donation entry</h2>
-        <a
-          href={`/fundraisers/${model.fundraiser.slug}?checkout=mock`}
-          style={mockDonateCtaStyle}
-        >
-          Start mocked donation
-        </a>
-        <p style={helperTextStyle}>
-          This CTA is intentionally mocked and does not collect payment details.
-        </p>
-      </section>
-
-      <section style={cardStyle}>
-        <h2 style={sectionHeadingStyle}>Connected community</h2>
-        {model.community ? (
-          <>
-            <a href={`/communities/${model.community.slug}`} style={linkStyle}>
-              {model.community.name}
+        <section style={cardStyle}>
+          <h2 style={sectionHeadingStyle}>Organizer context</h2>
+          <p style={bodyTextStyle}>
+            {model.organizer.displayName} · {organizerRole}
+          </p>
+          {model.organizer.profileSlug ? (
+            <a href={`/profiles/${model.organizer.profileSlug}`} style={linkStyle}>
+              View organizer profile
             </a>
-            <p style={bodyTextStyle}>{toTitleCase(model.community.visibility)}</p>
-          </>
-        ) : (
-          <p style={bodyTextStyle}>No community connected yet.</p>
-        )}
-      </section>
-    </main>
+          ) : (
+            <p style={bodyTextStyle}>Organizer profile link not available.</p>
+          )}
+        </section>
+
+        <section style={cardStyle}>
+          <h2 style={sectionHeadingStyle}>Prototype progress</h2>
+          <p style={bodyTextStyle}>
+            Mock donation intents started:{" "}
+            <strong>{model.fundraiser.donationIntentCount}</strong>
+          </p>
+          <div style={progressTrackStyle}>
+            <div
+              style={{
+                ...progressFillStyle,
+                width: `${toProgressWidth(model.fundraiser.donationIntentCount)}%`,
+              }}
+            />
+          </div>
+          <p style={helperTextStyle}>
+            Progress reflects mocked intent starts, not real payment volume.
+          </p>
+        </section>
+
+        <section style={cardStyle}>
+          <h2 style={sectionHeadingStyle}>Mocked donation entry</h2>
+          <a
+            href={`/fundraisers/${model.fundraiser.slug}?checkout=mock`}
+            style={mockDonateCtaStyle}
+          >
+            Start mocked donation
+          </a>
+          <p style={helperTextStyle}>
+            This CTA is intentionally mocked and does not collect payment details.
+          </p>
+        </section>
+
+        <section style={cardStyle}>
+          <h2 style={sectionHeadingStyle}>Connected community</h2>
+          {model.community ? (
+            <>
+              <a href={`/communities/${model.community.slug}`} style={linkStyle}>
+                {model.community.name}
+              </a>
+              <p style={bodyTextStyle}>{toTitleCase(model.community.visibility)}</p>
+            </>
+          ) : (
+            <p style={bodyTextStyle}>No community connected yet.</p>
+          )}
+        </section>
+      </main>
+    </PublicSiteShell>
   );
 };
 

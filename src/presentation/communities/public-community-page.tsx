@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import type { ApplicationApi } from "@/application";
+import { PublicSiteShell } from "@/presentation/shared";
 
 type PublicCommunityQuery = Pick<ApplicationApi, "getPublicCommunityBySlug">;
 
@@ -94,116 +95,122 @@ type PublicCommunityPageProps = {
 export const PublicCommunityPage = ({ model }: PublicCommunityPageProps) => {
   if (model.status === "invalid_request") {
     return (
-      <main style={pageContainerStyle}>
-        <section style={cardStyle}>
-          <h1 style={headingStyle}>Invalid community request</h1>
-          <p style={bodyTextStyle}>{model.message}</p>
-        </section>
-      </main>
+      <PublicSiteShell>
+        <main style={pageContainerStyle}>
+          <section style={cardStyle}>
+            <h1 style={headingStyle}>Invalid community request</h1>
+            <p style={bodyTextStyle}>{model.message}</p>
+          </section>
+        </main>
+      </PublicSiteShell>
     );
   }
 
   if (model.status === "not_found") {
     return (
-      <main style={pageContainerStyle}>
-        <section style={cardStyle}>
-          <h1 style={headingStyle}>Community not found</h1>
-          <p style={bodyTextStyle}>
-            {model.message} Tried slug: <strong>{model.slug}</strong>
-          </p>
-        </section>
-      </main>
+      <PublicSiteShell>
+        <main style={pageContainerStyle}>
+          <section style={cardStyle}>
+            <h1 style={headingStyle}>Community not found</h1>
+            <p style={bodyTextStyle}>
+              {model.message} Tried slug: <strong>{model.slug}</strong>
+            </p>
+          </section>
+        </main>
+      </PublicSiteShell>
     );
   }
 
   return (
-    <main style={pageContainerStyle}>
-      <section style={heroCardStyle}>
-        <p style={eyebrowStyle}>Public community</p>
-        <h1 style={headingStyle}>{model.community.name}</h1>
-        <p style={metaStyle}>
-          {toTitleCase(model.community.visibility)} · Followers:{" "}
-          {model.community.followerCount}
-        </p>
-        <p style={bodyTextStyle}>{model.community.description}</p>
-      </section>
+    <PublicSiteShell>
+      <main style={pageContainerStyle}>
+        <section style={heroCardStyle}>
+          <p style={eyebrowStyle}>Public community</p>
+          <h1 style={headingStyle}>{model.community.name}</h1>
+          <p style={metaStyle}>
+            {toTitleCase(model.community.visibility)} · Followers:{" "}
+            {model.community.followerCount}
+          </p>
+          <p style={bodyTextStyle}>{model.community.description}</p>
+        </section>
 
-      <section style={cardStyle}>
-        <h2 style={sectionHeadingStyle}>Community owner</h2>
-        <p style={bodyTextStyle}>
-          {model.owner.displayName} · {toTitleCase(model.owner.role)}
-        </p>
-        {model.owner.profileSlug ? (
-          <a href={`/profiles/${model.owner.profileSlug}`} style={linkStyle}>
-            View owner profile
-          </a>
-        ) : (
-          <p style={bodyTextStyle}>Owner profile link not available.</p>
-        )}
-      </section>
-
-      <section style={cardStyle}>
-        <h2 style={sectionHeadingStyle}>Featured fundraiser</h2>
-        {model.featuredFundraiser ? (
-          <>
-            <a
-              href={`/fundraisers/${model.featuredFundraiser.slug}`}
-              style={linkStyle}
-            >
-              {model.featuredFundraiser.title}
+        <section style={cardStyle}>
+          <h2 style={sectionHeadingStyle}>Community owner</h2>
+          <p style={bodyTextStyle}>
+            {model.owner.displayName} · {toTitleCase(model.owner.role)}
+          </p>
+          {model.owner.profileSlug ? (
+            <a href={`/profiles/${model.owner.profileSlug}`} style={linkStyle}>
+              View owner profile
             </a>
-            <p style={bodyTextStyle}>
-              {toTitleCase(model.featuredFundraiser.status)} ·{" "}
-              {formatCurrency(model.featuredFundraiser.goalAmount)}
-            </p>
-          </>
-        ) : (
-          <p style={bodyTextStyle}>No featured fundraiser yet.</p>
-        )}
-      </section>
+          ) : (
+            <p style={bodyTextStyle}>Owner profile link not available.</p>
+          )}
+        </section>
 
-      <section style={cardStyle}>
-        <h2 style={sectionHeadingStyle}>Discussion feed</h2>
-        {model.discussion.length > 0 ? (
-          <ul style={postListStyle}>
-            {model.discussion.map((post) => (
-              <li key={post.id} style={postCardStyle}>
-                <h3 style={postTitleStyle}>{post.title}</h3>
-                <p style={metaStyle}>
-                  By {post.authorDisplayName} ·{" "}
-                  {new Date(post.createdAt).toLocaleDateString("en-US")}
-                </p>
-                <p style={bodyTextStyle}>{post.body}</p>
-                <p style={helperTextStyle}>
-                  Post status: {toTitleCase(post.status)} · Moderation:{" "}
-                  {toTitleCase(post.moderationStatus)}
-                </p>
+        <section style={cardStyle}>
+          <h2 style={sectionHeadingStyle}>Featured fundraiser</h2>
+          {model.featuredFundraiser ? (
+            <>
+              <a
+                href={`/fundraisers/${model.featuredFundraiser.slug}`}
+                style={linkStyle}
+              >
+                {model.featuredFundraiser.title}
+              </a>
+              <p style={bodyTextStyle}>
+                {toTitleCase(model.featuredFundraiser.status)} ·{" "}
+                {formatCurrency(model.featuredFundraiser.goalAmount)}
+              </p>
+            </>
+          ) : (
+            <p style={bodyTextStyle}>No featured fundraiser yet.</p>
+          )}
+        </section>
 
-                <h4 style={commentHeadingStyle}>Comments</h4>
-                {post.comments.length > 0 ? (
-                  <ul style={commentListStyle}>
-                    {post.comments.map((comment) => (
-                      <li key={comment.id} style={commentCardStyle}>
-                        <p style={bodyTextStyle}>{comment.body}</p>
-                        <p style={helperTextStyle}>
-                          {comment.authorDisplayName} ·{" "}
-                          {new Date(comment.createdAt).toLocaleDateString("en-US")} ·{" "}
-                          {toTitleCase(comment.moderationStatus)}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p style={helperTextStyle}>No comments yet.</p>
-                )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p style={bodyTextStyle}>No discussion posts yet.</p>
-        )}
-      </section>
-    </main>
+        <section style={cardStyle}>
+          <h2 style={sectionHeadingStyle}>Discussion feed</h2>
+          {model.discussion.length > 0 ? (
+            <ul style={postListStyle}>
+              {model.discussion.map((post) => (
+                <li key={post.id} style={postCardStyle}>
+                  <h3 style={postTitleStyle}>{post.title}</h3>
+                  <p style={metaStyle}>
+                    By {post.authorDisplayName} ·{" "}
+                    {new Date(post.createdAt).toLocaleDateString("en-US")}
+                  </p>
+                  <p style={bodyTextStyle}>{post.body}</p>
+                  <p style={helperTextStyle}>
+                    Post status: {toTitleCase(post.status)} · Moderation:{" "}
+                    {toTitleCase(post.moderationStatus)}
+                  </p>
+
+                  <h4 style={commentHeadingStyle}>Comments</h4>
+                  {post.comments.length > 0 ? (
+                    <ul style={commentListStyle}>
+                      {post.comments.map((comment) => (
+                        <li key={comment.id} style={commentCardStyle}>
+                          <p style={bodyTextStyle}>{comment.body}</p>
+                          <p style={helperTextStyle}>
+                            {comment.authorDisplayName} ·{" "}
+                            {new Date(comment.createdAt).toLocaleDateString("en-US")} ·{" "}
+                            {toTitleCase(comment.moderationStatus)}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p style={helperTextStyle}>No comments yet.</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p style={bodyTextStyle}>No discussion posts yet.</p>
+          )}
+        </section>
+      </main>
+    </PublicSiteShell>
   );
 };
 

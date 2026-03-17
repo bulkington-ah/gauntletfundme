@@ -170,6 +170,7 @@ describe("PublicCommunityPage", () => {
     expect(
       screen.getByRole("link", { name: "Warm Meals 2026" }),
     ).toHaveAttribute("href", "/fundraisers/warm-meals-2026");
+    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     expect(screen.getByRole("heading", { name: "Discussion feed" })).toBeInTheDocument();
     expect(screen.getByText("Kitchen kickoff update")).toBeInTheDocument();
@@ -192,6 +193,7 @@ describe("PublicCommunityPage", () => {
       screen.getByRole("heading", { name: "Community not found" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Tried slug:/)).toBeInTheDocument();
+    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     rerender(
       <PublicCommunityPage
@@ -206,6 +208,7 @@ describe("PublicCommunityPage", () => {
       screen.getByRole("heading", { name: "Invalid community request" }),
     ).toBeInTheDocument();
     expect(screen.getByText("slug is required.")).toBeInTheDocument();
+    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
   });
 });
 

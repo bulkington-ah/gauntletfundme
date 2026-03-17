@@ -112,6 +112,7 @@ describe("PublicFundraiserPage", () => {
         "This CTA is intentionally mocked and does not collect payment details.",
       ),
     ).toBeInTheDocument();
+    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     const donateLink = screen.getByRole("link", { name: "Start mocked donation" });
     expect(donateLink).toHaveAttribute(
@@ -148,6 +149,7 @@ describe("PublicFundraiserPage", () => {
       screen.getByRole("heading", { name: "Fundraiser not found" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Tried slug:/)).toBeInTheDocument();
+    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     rerender(
       <PublicFundraiserPage
@@ -162,6 +164,7 @@ describe("PublicFundraiserPage", () => {
       screen.getByRole("heading", { name: "Invalid fundraiser request" }),
     ).toBeInTheDocument();
     expect(screen.getByText("slug is required.")).toBeInTheDocument();
+    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
   });
 });
 

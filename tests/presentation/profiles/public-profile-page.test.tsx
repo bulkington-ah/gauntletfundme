@@ -126,6 +126,7 @@ describe("PublicProfilePage", () => {
       screen.getByText("Organizer profile · Organizer role"),
     ).toBeInTheDocument();
     expect(screen.getByText("Followers:")).toBeInTheDocument();
+    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     const fundraiserLink = screen.getByRole("link", { name: "Warm Meals 2026" });
     expect(fundraiserLink).toHaveAttribute("href", "/fundraisers/warm-meals-2026");
@@ -154,6 +155,7 @@ describe("PublicProfilePage", () => {
       screen.getByRole("heading", { name: "Profile not found" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Tried slug:/)).toBeInTheDocument();
+    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     rerender(
       <PublicProfilePage
@@ -168,6 +170,7 @@ describe("PublicProfilePage", () => {
       screen.getByRole("heading", { name: "Invalid profile request" }),
     ).toBeInTheDocument();
     expect(screen.getByText("slug is required.")).toBeInTheDocument();
+    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
   });
 });
 

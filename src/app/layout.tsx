@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import type { JSX, ReactNode } from "react";
 
+import "@awesome.me/webawesome/dist/styles/webawesome.css";
+
+import { WebAwesomeRegistry } from "@/presentation/shared";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,7 +21,10 @@ export default function RootLayout({
 }: RootLayoutProps): JSX.Element {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <WebAwesomeRegistry />
+        {children}
+      </body>
     </html>
   );
 }

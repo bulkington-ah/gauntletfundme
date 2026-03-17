@@ -283,3 +283,109 @@ This plan breaks the MVP into dependency-ordered milestones and small implementa
 - Tests required:
   - end-to-end tests for the main user journeys
   - regression checks for previously completed milestone features
+
+## Milestone 8: Public Surface Redesign
+
+### Task 019: Web Awesome foundation and public shell
+- Description: Introduce Web Awesome as the shared public-surface design foundation and add a reusable public site shell with a shared navigation bar and responsive mobile menu.
+- Expected files affected:
+  - `package.json`
+  - `src/app/**`
+  - `src/presentation/shared/**`
+  - `src/presentation/home/**`
+  - `src/presentation/fundraisers/**`
+  - `src/presentation/communities/**`
+  - `src/presentation/profiles/**`
+  - `src/types/**`
+  - `tests/presentation/**`
+  - `tasks/task_019_webawesome_foundation_and_public_shell.md`
+- Acceptance criteria:
+  - Web Awesome is installed and theme styles are loaded through the shared app layout
+  - a client-side component registry exists for the initial set of shared public components
+  - the public shell renders a shared navbar and responsive mobile navigation
+  - the home page adopts the new shared shell
+  - the existing public fundraiser, community, and profile pages render within the shared shell without changing their underlying product behavior
+- Tests required:
+  - targeted presentation tests for home, fundraiser, community, and profile pages
+  - `npm run build`
+
+### Task 020: Public page derived view models and demo seed
+- Description: Expand public-content query responses and demo seed density so redesigned public pages can render richer stats, lists, and highlights without schema changes.
+- Expected files affected:
+  - `src/application/**`
+  - `src/infrastructure/persistence/**`
+  - `src/infrastructure/demo-data/**`
+  - `tests/application/**`
+  - `tests/infrastructure/**`
+  - `tasks/task_020_public_page_derived_view_models_and_demo_seed.md`
+- Acceptance criteria:
+  - public fundraiser, community, and profile responses expose the derived stats required by the redesign
+  - a shared fundraiser summary shape is introduced where the same data is reused across pages
+  - demo seed data is rich enough to populate supporter lists, leaderboard entries, profile highlights, and activity sections
+  - no schema migration is introduced for this task
+- Tests required:
+  - targeted public-content application tests
+  - targeted Postgres repository integration tests
+
+### Task 021: Public fundraiser page Web Awesome redesign
+- Description: Rebuild the public fundraiser page to match the approved reference more closely using the shared shell, Web Awesome primitives, and CSS modules.
+- Expected files affected:
+  - `src/presentation/fundraisers/**`
+  - `src/presentation/shared/**`
+  - `public/**`
+  - `tests/presentation/fundraisers/**`
+  - `tasks/task_021_public_fundraiser_page_webawesome_redesign.md`
+- Acceptance criteria:
+  - the fundraiser page uses a two-column layout with a large media area and sticky support sidebar on desktop
+  - donate entry remains functional through the existing mocked checkout flow
+  - organizer and connected community links remain functional
+  - unsupported interactions remain visually present but non-misleading
+- Tests required:
+  - targeted fundraiser presentation tests
+  - `npm run build`
+
+### Task 022: Public community page Web Awesome redesign
+- Description: Rebuild the public community page with a split hero, leaderboard presentation, and tabbed sections backed by derived community data.
+- Expected files affected:
+  - `src/presentation/communities/**`
+  - `src/presentation/shared/**`
+  - `tests/presentation/communities/**`
+  - `tasks/task_022_public_community_page_webawesome_redesign.md`
+- Acceptance criteria:
+  - the community page uses the shared shell and screenshot-inspired layout
+  - leaderboard cards and aggregate stats render from the enriched public community response
+  - tabbed Activity, Fundraisers, and About sections are present and map to supported product data
+- Tests required:
+  - targeted community presentation tests
+  - `npm run build`
+
+### Task 023: Public profile page Web Awesome redesign
+- Description: Rebuild the public profile page with header treatment, highlight cards, and a richer recent-activity section using the new shared design system.
+- Expected files affected:
+  - `src/presentation/profiles/**`
+  - `src/presentation/shared/**`
+  - `tests/presentation/profiles/**`
+  - `tasks/task_023_public_profile_page_webawesome_redesign.md`
+- Acceptance criteria:
+  - the profile page uses the shared shell and a screenshot-inspired composition
+  - profile counters, highlights, and recent activity render from the enriched public profile response
+  - linked fundraisers and communities remain navigable
+- Tests required:
+  - targeted profile presentation tests
+  - `npm run build`
+
+### Task 024: Playwright public-surface validation and polish
+- Description: Use Playwright CLI to validate the redesigned public surface in a real browser and apply final responsive and spacing polish.
+- Expected files affected:
+  - `src/presentation/**`
+  - `output/playwright/**`
+  - `tasks/task_024_playwright_public_surface_validation_and_polish.md`
+- Acceptance criteria:
+  - desktop and mobile browser checks cover home, fundraiser, community, and profile pages
+  - screenshots or other CLI artifacts are captured under `output/playwright/`
+  - final polish addresses the highest-priority issues found during browser validation
+- Tests required:
+  - Playwright CLI validation run
+  - `npm test`
+  - `npm run lint`
+  - `npm run build`

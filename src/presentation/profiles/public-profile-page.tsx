@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import type { ApplicationApi } from "@/application";
+import { PublicSiteShell } from "@/presentation/shared";
 
 type PublicProfileQuery = Pick<ApplicationApi, "getPublicProfileBySlug">;
 
@@ -80,82 +81,88 @@ type PublicProfilePageProps = {
 export const PublicProfilePage = ({ model }: PublicProfilePageProps) => {
   if (model.status === "invalid_request") {
     return (
-      <main style={pageContainerStyle}>
-        <section style={cardStyle}>
-          <h1 style={headingStyle}>Invalid profile request</h1>
-          <p style={bodyTextStyle}>{model.message}</p>
-        </section>
-      </main>
+      <PublicSiteShell>
+        <main style={pageContainerStyle}>
+          <section style={cardStyle}>
+            <h1 style={headingStyle}>Invalid profile request</h1>
+            <p style={bodyTextStyle}>{model.message}</p>
+          </section>
+        </main>
+      </PublicSiteShell>
     );
   }
 
   if (model.status === "not_found") {
     return (
-      <main style={pageContainerStyle}>
-        <section style={cardStyle}>
-          <h1 style={headingStyle}>Profile not found</h1>
-          <p style={bodyTextStyle}>
-            {model.message} Tried slug: <strong>{model.slug}</strong>
-          </p>
-        </section>
-      </main>
+      <PublicSiteShell>
+        <main style={pageContainerStyle}>
+          <section style={cardStyle}>
+            <h1 style={headingStyle}>Profile not found</h1>
+            <p style={bodyTextStyle}>
+              {model.message} Tried slug: <strong>{model.slug}</strong>
+            </p>
+          </section>
+        </main>
+      </PublicSiteShell>
     );
   }
 
   return (
-    <main style={pageContainerStyle}>
-      <section style={cardStyle}>
-        <p style={eyebrowStyle}>Public profile</p>
-        <h1 style={headingStyle}>{model.profile.displayName}</h1>
-        <p style={metaStyle}>
-          {toTitleCase(model.profile.profileType)} profile ·{" "}
-          {toTitleCase(model.profile.role)} role
-        </p>
-        <p style={bodyTextStyle}>{model.profile.bio}</p>
-        <p style={bodyTextStyle}>
-          Followers: <strong>{model.profile.followerCount}</strong>
-        </p>
-      </section>
+    <PublicSiteShell>
+      <main style={pageContainerStyle}>
+        <section style={cardStyle}>
+          <p style={eyebrowStyle}>Public profile</p>
+          <h1 style={headingStyle}>{model.profile.displayName}</h1>
+          <p style={metaStyle}>
+            {toTitleCase(model.profile.profileType)} profile ·{" "}
+            {toTitleCase(model.profile.role)} role
+          </p>
+          <p style={bodyTextStyle}>{model.profile.bio}</p>
+          <p style={bodyTextStyle}>
+            Followers: <strong>{model.profile.followerCount}</strong>
+          </p>
+        </section>
 
-      <section style={cardStyle}>
-        <h2 style={sectionHeadingStyle}>Connected fundraisers</h2>
-        {model.connections.fundraisers.length > 0 ? (
-          <ul style={listStyle}>
-            {model.connections.fundraisers.map((fundraiser) => (
-              <li key={fundraiser.slug} style={listItemStyle}>
-                <a href={`/fundraisers/${fundraiser.slug}`} style={linkStyle}>
-                  {fundraiser.title}
-                </a>
-                <p style={bodyTextStyle}>
-                  {toTitleCase(fundraiser.status)} ·{" "}
-                  {formatCurrency(fundraiser.goalAmount)}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p style={bodyTextStyle}>No connected fundraisers yet.</p>
-        )}
-      </section>
+        <section style={cardStyle}>
+          <h2 style={sectionHeadingStyle}>Connected fundraisers</h2>
+          {model.connections.fundraisers.length > 0 ? (
+            <ul style={listStyle}>
+              {model.connections.fundraisers.map((fundraiser) => (
+                <li key={fundraiser.slug} style={listItemStyle}>
+                  <a href={`/fundraisers/${fundraiser.slug}`} style={linkStyle}>
+                    {fundraiser.title}
+                  </a>
+                  <p style={bodyTextStyle}>
+                    {toTitleCase(fundraiser.status)} ·{" "}
+                    {formatCurrency(fundraiser.goalAmount)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p style={bodyTextStyle}>No connected fundraisers yet.</p>
+          )}
+        </section>
 
-      <section style={cardStyle}>
-        <h2 style={sectionHeadingStyle}>Connected communities</h2>
-        {model.connections.communities.length > 0 ? (
-          <ul style={listStyle}>
-            {model.connections.communities.map((community) => (
-              <li key={community.slug} style={listItemStyle}>
-                <a href={`/communities/${community.slug}`} style={linkStyle}>
-                  {community.name}
-                </a>
-                <p style={bodyTextStyle}>{toTitleCase(community.visibility)}</p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p style={bodyTextStyle}>No connected communities yet.</p>
-        )}
-      </section>
-    </main>
+        <section style={cardStyle}>
+          <h2 style={sectionHeadingStyle}>Connected communities</h2>
+          {model.connections.communities.length > 0 ? (
+            <ul style={listStyle}>
+              {model.connections.communities.map((community) => (
+                <li key={community.slug} style={listItemStyle}>
+                  <a href={`/communities/${community.slug}`} style={linkStyle}>
+                    {community.name}
+                  </a>
+                  <p style={bodyTextStyle}>{toTitleCase(community.visibility)}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p style={bodyTextStyle}>No connected communities yet.</p>
+          )}
+        </section>
+      </main>
+    </PublicSiteShell>
   );
 };
 

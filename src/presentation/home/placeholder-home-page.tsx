@@ -1,88 +1,86 @@
 import type { JSX } from "react";
 
-const layerNames = [
-  "presentation",
-  "application",
-  "domain",
-  "infrastructure",
-] as const;
+import { PublicSiteShell } from "@/presentation/shared";
+
+import styles from "./placeholder-home-page.module.css";
 
 export function PlaceholderHomePage(): JSX.Element {
   return (
-    <main
-      style={{
-        alignItems: "center",
-        display: "grid",
-        minHeight: "100vh",
-        padding: "48px 24px",
-      }}
-    >
-      <section
-        style={{
-          backgroundColor: "rgba(255, 252, 248, 0.88)",
-          border: "1px solid rgba(30, 29, 26, 0.08)",
-          borderRadius: "28px",
-          boxShadow: "0 24px 80px rgba(52, 44, 33, 0.08)",
-          maxWidth: "720px",
-          padding: "40px",
-          width: "100%",
-        }}
-      >
-        <p
-          style={{
-            fontSize: "0.85rem",
-            fontWeight: 700,
-            letterSpacing: "0.14em",
-            margin: 0,
-            textTransform: "uppercase",
-          }}
-        >
-          Task 001 scaffold
-        </p>
-        <h1
-          style={{
-            fontSize: "clamp(2.5rem, 7vw, 4.5rem)",
-            lineHeight: 1,
-            margin: "16px 0",
-          }}
-        >
-          GoFundMe V2
-        </h1>
-        <p
-          style={{
-            fontSize: "1.1rem",
-            lineHeight: 1.6,
-            margin: 0,
-            maxWidth: "56ch",
-          }}
-        >
-          The application shell is in place. Product behavior will be added in
-          later tasks through the modular monolith layers below.
-        </p>
-        <ul
-          style={{
-            display: "grid",
-            gap: "12px",
-            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-            listStyle: "none",
-            margin: "32px 0 0",
-            padding: 0,
-          }}
-        >
-          {layerNames.map((layerName) => (
-            <li
-              key={layerName}
-              style={{
-                backgroundColor: "#ffffff",
-                borderRadius: "18px",
-                padding: "18px 20px",
-              }}
+    <PublicSiteShell>
+      <main className={styles.hero}>
+        <section className={styles.heroCard}>
+          <p className={styles.eyebrow}>Public surface foundation</p>
+          <h1 className={styles.heading}>GoFundMe V2</h1>
+          <p className={styles.lead}>
+            The shared shell is now in place. Use the prototype routes below to
+            explore the fundraiser, community, and profile experiences while the
+            redesign rolls out one task at a time.
+          </p>
+
+          <div className={styles.ctaRow}>
+            <wa-button
+              className={styles.ctaButton}
+              appearance="accent"
+              href="/fundraisers/warm-meals-2026"
+              pill
+              variant="brand"
             >
-              <strong>{layerName}</strong>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </main>
+              Explore fundraiser
+            </wa-button>
+            <wa-button
+              className={styles.ctaButton}
+              appearance="outlined"
+              href="/communities/neighbors-helping-neighbors"
+              pill
+            >
+              Explore community
+            </wa-button>
+            <wa-button
+              className={styles.ctaButton}
+              appearance="outlined"
+              href="/profiles/avery-johnson"
+              pill
+            >
+              Explore profile
+            </wa-button>
+          </div>
+        </section>
+
+        <section className={styles.routeGrid}>
+          <a className={styles.routeCard} href="/fundraisers/warm-meals-2026">
+            <p className={styles.routeEyebrow}>Fundraiser</p>
+            <h2 className={styles.routeTitle}>Warm Meals 2026</h2>
+            <p className={styles.routeBody}>
+              Prototype campaign story, mocked donation entry, and connected
+              organizer/community context.
+            </p>
+            <span className={styles.routeFooter}>Open route</span>
+          </a>
+
+          <a
+            className={styles.routeCard}
+            href="/communities/neighbors-helping-neighbors"
+          >
+            <p className={styles.routeEyebrow}>Community</p>
+            <h2 className={styles.routeTitle}>Neighbors Helping Neighbors</h2>
+            <p className={styles.routeBody}>
+              Public discussion, organizer context, and a path to the connected
+              fundraiser.
+            </p>
+            <span className={styles.routeFooter}>Open route</span>
+          </a>
+
+          <a className={styles.routeCard} href="/profiles/avery-johnson">
+            <p className={styles.routeEyebrow}>Profile</p>
+            <h2 className={styles.routeTitle}>Avery Johnson</h2>
+            <p className={styles.routeBody}>
+              Organizer profile with linked fundraisers and communities in the
+              shared public shell.
+            </p>
+            <span className={styles.routeFooter}>Open route</span>
+          </a>
+        </section>
+      </main>
+    </PublicSiteShell>
   );
 }

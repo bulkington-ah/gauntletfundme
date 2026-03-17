@@ -1,11 +1,8 @@
 :root {
   color-scheme: light;
-  font-family:
-    "Söhne",
-    "Segoe UI",
-    sans-serif;
-  background-color: #f6f3ee;
-  color: #1e1d1a;
+  background-color: var(--wa-color-surface-default);
+  color: var(--wa-color-text-normal);
+  font-family: var(--wa-font-family-body);
 }
 
 * {
@@ -19,9 +16,9 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(circle at top left, rgba(230, 140, 92, 0.16), transparent 35%),
-    linear-gradient(180deg, #f8f4ee 0%, #f1ece5 100%);
+  background: var(--wa-color-surface-default);
+  color: var(--wa-color-text-normal);
+  margin: 0;
 }
 
 a {
