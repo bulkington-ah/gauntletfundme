@@ -55,6 +55,27 @@ Auth routes and protected commands use the `x-session-token` request header.
 - Secrets guidance:
   - keep secrets in managed environment configuration (AWS ECS task definition / App Runner / Parameter Store / Secrets Manager), never in source files.
 
+## Terraform AWS Deployment (Task 018)
+- Terraform infrastructure lives in `infra/terraform`.
+- Baseline provisions:
+  - private-networked PostgreSQL RDS
+  - ECR repository for application images
+  - App Runner service with VPC connector egress to private RDS
+- Controlled release model:
+  - deploy explicit image tags via Terraform variable `app_image_tag`
+  - auto-deploy is disabled to keep production rollouts intentional
+- Core commands:
+  - `cd infra/terraform`
+  - `terraform fmt -check`
+  - `terraform init`
+  - `terraform validate`
+  - `terraform plan -var="app_image_tag=<image-tag>"`
+  - `terraform apply -var="app_image_tag=<image-tag>"`
+- Post-deploy smoke check:
+  - `GET https://<apprunner_service_url>/api/health`
+- State note:
+  - this first version intentionally uses local Terraform state; migrate to S3 + DynamoDB locking in a follow-up task before collaborative production operations.
+
 ## Known Limitations
 - Authenticated API actions currently rely on `x-session-token` request headers and are not yet integrated with browser cookie/session middleware.
 - Donation flow is intentionally mocked and does not process real payments.
