@@ -30,6 +30,8 @@ Implemented foundations currently include:
 ## Environment
 Copy `.env.example` to your local environment config and set:
 - `DATABASE_URL`: PostgreSQL connection string used by runtime persistence adapters
+- `PORT`: runtime HTTP port (default `3000`)
+- `HOSTNAME`: runtime bind address (default `0.0.0.0`)
 
 The persistence layer bootstraps schema and seeds prototype data from `src/infrastructure/demo-data/` when tables are missing, which keeps local development and tests predictable.
 
@@ -42,8 +44,20 @@ Auth routes and protected commands use the `x-session-token` request header.
 - `npm run lint`
 - `npm run build`
 
+## Deployment Baseline
+- The app is Dockerized with a production multi-stage `Dockerfile` and Next.js standalone output.
+- Build a production image:
+  - `docker build -t gofundme-v2:local .`
+- Run the container with managed environment variables:
+  - `docker run --rm -p 3000:3000 --env DATABASE_URL=<your-managed-db-url> gofundme-v2:local`
+- Runtime health check endpoint:
+  - `GET /api/health`
+- Secrets guidance:
+  - keep secrets in managed environment configuration (AWS ECS task definition / App Runner / Parameter Store / Secrets Manager), never in source files.
+
 ## Workflow
 Work is organized into one scoped task at a time under `tasks/`, with completion expectations defined in:
 - [AGENTS.md](/Users/jasonallen/Documents/Gauntlet/hiring_projects/gofundme_v2/AGENTS.md)
 - [harness/architecture_checks.md](/Users/jasonallen/Documents/Gauntlet/hiring_projects/gofundme_v2/harness/architecture_checks.md)
 - [harness/coding_standards.md](/Users/jasonallen/Documents/Gauntlet/hiring_projects/gofundme_v2/harness/coding_standards.md)
+- [harness/deployment_hardening.md](/Users/jasonallen/Documents/Gauntlet/hiring_projects/gofundme_v2/harness/deployment_hardening.md)
