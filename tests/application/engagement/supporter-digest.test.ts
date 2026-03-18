@@ -1,5 +1,6 @@
 import {
   getSupporterDigest,
+  refreshSupporterDigestNarration,
   recordDigestView,
   type AnalyticsEventPublisher,
   type SessionViewerGateway,
@@ -17,7 +18,6 @@ describe("supporter digest application flows", () => {
     const result = await getSupporterDigest(
       {
         sessionViewerGateway,
-        supporterDigestNarrator: createSupporterDigestNarratorStub(),
         supporterDigestReadRepository: createSupporterDigestReadRepositoryStub(),
         supporterDigestStateRepository: createSupporterDigestStateRepositoryStub(),
       },
@@ -45,7 +45,6 @@ describe("supporter digest application flows", () => {
       {
         now: () => now,
         sessionViewerGateway: createSessionViewerGatewayStub(),
-        supporterDigestNarrator: createSupporterDigestNarratorStub(),
         supporterDigestReadRepository,
         supporterDigestStateRepository: createSupporterDigestStateRepositoryStub(),
       },
@@ -70,7 +69,7 @@ describe("supporter digest application flows", () => {
     expect(result.digest.highlights).toEqual([]);
   });
 
-  it("uses persisted digest state and narrated OpenAI copy when available", async () => {
+  it("uses persisted digest state and returns deterministic highlights immediately", async () => {
     const now = new Date("2026-03-18T12:00:00.000Z");
     const supporterDigestReadRepository = createSupporterDigestReadRepositoryStub({
       statefulCommunityUpdates: [
@@ -85,25 +84,10 @@ describe("supporter digest application flows", () => {
         },
       ],
     });
-    const supporterDigestNarrator = createSupporterDigestNarratorStub({
-      result: {
-        status: "success",
-        items: [
-          {
-            candidateId: "community_update:post_evening_update",
-            headline: "Avery shared a fresh organizer update.",
-            body: "The neighbors community has a new evening prep shift update ready to read.",
-            ctaLabel: "Read update",
-          },
-        ],
-      },
-    });
-
     const result = await getSupporterDigest(
       {
         now: () => now,
         sessionViewerGateway: createSessionViewerGatewayStub(),
-        supporterDigestNarrator,
         supporterDigestReadRepository,
         supporterDigestStateRepository: createSupporterDigestStateRepositoryStub({
           state: {
@@ -122,31 +106,102 @@ describe("supporter digest application flows", () => {
     }
 
     expect(result.digest.windowStart).toBe("2026-03-17T18:00:00.000Z");
-    expect(result.digest.generationMode).toBe("openai");
+    expect(result.digest.generationMode).toBe("deterministic");
+    expect(result.digest.narration).toEqual({
+      status: "pending",
+      reason: null,
+    });
     expect(result.digest.highlights).toEqual([
       expect.objectContaining({
         id: "community_update:post_evening_update",
-        headline: "Avery shared a fresh organizer update.",
-        body: "The neighbors community has a new evening prep shift update ready to read.",
+        headline:
+          "Avery Johnson posted a new update in Neighbors Helping Neighbors.",
+        body:
+          "\"Evening prep shift\" is a fresh organizer update in Neighbors Helping Neighbors.",
         ctaLabel: "Read update",
         href: "/communities/neighbors-helping-neighbors#post-post_evening_update",
       }),
     ]);
-    expect(supporterDigestNarrator.narrateDigest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        viewerUserId: "user_supporter_jordan",
-        windowStart: new Date("2026-03-17T18:00:00.000Z"),
-        windowEnd: now,
-      }),
-    );
   });
 
-  it("falls back to deterministic copy when OpenAI narration is unavailable", async () => {
+  it("refreshes a digest window with narrated OpenAI copy when available", async () => {
+    const supporterDigestNarrator = createSupporterDigestNarratorStub({
+      result: {
+        status: "success",
+        items: [
+          {
+            candidateId: "community_update:post_evening_update",
+            headline: "Avery shared a fresh organizer update.",
+            body:
+              "The neighbors community has a new evening prep shift update ready to read.",
+            ctaLabel: "Read update",
+          },
+        ],
+      },
+    });
+
+    const result = await refreshSupporterDigestNarration(
+      {
+        analyticsEventPublisher: createAnalyticsEventPublisherStub(),
+        sessionViewerGateway: createSessionViewerGatewayStub(),
+        supporterDigestNarrator,
+        supporterDigestReadRepository: createSupporterDigestReadRepositoryStub({
+          statefulCommunityUpdates: [
+            {
+              communityId: "community_neighbors_helping_neighbors",
+              communitySlug: "neighbors-helping-neighbors",
+              communityName: "Neighbors Helping Neighbors",
+              organizerDisplayName: "Avery Johnson",
+              postId: "post_evening_update",
+              postTitle: "Evening prep shift",
+              publishedAt: new Date("2026-03-18T10:30:00.000Z"),
+            },
+          ],
+        }),
+      },
+      {
+        sessionToken: "demo-supporter-session",
+        windowStart: "2026-03-17T18:00:00.000Z",
+        windowEnd: "2026-03-18T12:00:00.000Z",
+      },
+    );
+
+    expect(result.status).toBe("success");
+    if (result.status !== "success") {
+      throw new Error("Expected a successful digest refresh result.");
+    }
+
+    expect(result.digest.generationMode).toBe("openai");
+    expect(result.digest.narration).toEqual({
+      status: "completed",
+      reason: null,
+    });
+    expect(result.digest.highlights).toEqual([
+      expect.objectContaining({
+        id: "community_update:post_evening_update",
+        headline: "Avery shared a fresh organizer update.",
+        body:
+          "The neighbors community has a new evening prep shift update ready to read.",
+        ctaLabel: "Read update",
+      }),
+    ]);
+    expect(supporterDigestNarrator.narrateDigest).toHaveBeenCalledWith({
+      viewerUserId: "user_supporter_jordan",
+      windowStart: new Date("2026-03-17T18:00:00.000Z"),
+      windowEnd: new Date("2026-03-18T12:00:00.000Z"),
+      highlights: expect.arrayContaining([
+        expect.objectContaining({
+          id: "community_update:post_evening_update",
+        }),
+      ]),
+    });
+  });
+
+  it("falls back to deterministic copy during narration refresh when OpenAI is unavailable", async () => {
     const analyticsEventPublisher = createAnalyticsEventPublisherStub();
 
-    const result = await getSupporterDigest(
+    const result = await refreshSupporterDigestNarration(
       {
-        now: () => new Date("2026-03-18T12:00:00.000Z"),
         analyticsEventPublisher,
         sessionViewerGateway: createSessionViewerGatewayStub(),
         supporterDigestNarrator: createSupporterDigestNarratorStub({
@@ -172,14 +227,11 @@ describe("supporter digest application flows", () => {
             },
           ],
         }),
-        supporterDigestStateRepository: createSupporterDigestStateRepositoryStub({
-          state: {
-            lastViewedAt: new Date("2026-03-17T18:00:00.000Z"),
-          },
-        }),
       },
       {
         sessionToken: "demo-supporter-session",
+        windowStart: "2026-03-17T18:00:00.000Z",
+        windowEnd: "2026-03-18T12:00:00.000Z",
       },
     );
 
@@ -189,6 +241,10 @@ describe("supporter digest application flows", () => {
     }
 
     expect(result.digest.generationMode).toBe("deterministic");
+    expect(result.digest.narration).toEqual({
+      status: "unavailable",
+      reason: "provider_error",
+    });
     expect(result.digest.highlights[0]).toMatchObject({
       id: "fundraiser_momentum:fundraiser_warm_meals_2026",
       headline: "Warm Meals 2026 picked up momentum.",
@@ -203,16 +259,34 @@ describe("supporter digest application flows", () => {
         },
       }),
     );
-    expect(analyticsEventPublisher.publish).toHaveBeenCalledWith(
+    expect(analyticsEventPublisher.publish).not.toHaveBeenCalledWith(
       expect.objectContaining({
         name: "page_view.supporter_digest",
-        payload: {
-          viewerUserId: "user_supporter_jordan",
-          generationMode: "deterministic",
-          highlightCount: 1,
-        },
       }),
     );
+  });
+
+  it("rejects invalid narration refresh windows before calling OpenAI", async () => {
+    const supporterDigestNarrator = createSupporterDigestNarratorStub();
+
+    const result = await refreshSupporterDigestNarration(
+      {
+        sessionViewerGateway: createSessionViewerGatewayStub(),
+        supporterDigestNarrator,
+        supporterDigestReadRepository: createSupporterDigestReadRepositoryStub(),
+      },
+      {
+        sessionToken: "demo-supporter-session",
+        windowStart: "not-a-date",
+        windowEnd: "2026-03-18T12:00:00.000Z",
+      },
+    );
+
+    expect(result).toEqual({
+      status: "invalid_request",
+      message: "windowStart must be a valid ISO-8601 timestamp.",
+    });
+    expect(supporterDigestNarrator.narrateDigest).not.toHaveBeenCalled();
   });
 
   it("records digest acknowledgements only for authorized viewers with valid timestamps", async () => {

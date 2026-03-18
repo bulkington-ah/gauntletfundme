@@ -46,6 +46,7 @@ import {
 import {
   followTarget,
   getSupporterDigest,
+  refreshSupporterDigestNarration,
   recordDigestView,
   startDonationIntent,
   submitDonation,
@@ -57,6 +58,7 @@ import {
   unfollowTarget,
   type FollowTargetRequest,
   type GetSupporterDigestRequest,
+  type RefreshSupporterDigestNarrationRequest,
   type RecordDigestViewRequest,
   type StartDonationIntentRequest,
   type SubmitDonationRequest,
@@ -270,9 +272,20 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
       getSupporterDigest(
         {
           sessionViewerGateway,
-          supporterDigestNarrator,
           supporterDigestReadRepository: getSupporterDigestReadRepository(),
           supporterDigestStateRepository: getSupporterDigestStateRepository(),
+          analyticsEventPublisher,
+        },
+        request,
+      ),
+    refreshSupporterDigestNarration: (
+      request: RefreshSupporterDigestNarrationRequest,
+    ) =>
+      refreshSupporterDigestNarration(
+        {
+          sessionViewerGateway,
+          supporterDigestNarrator,
+          supporterDigestReadRepository: getSupporterDigestReadRepository(),
           analyticsEventPublisher,
         },
         request,

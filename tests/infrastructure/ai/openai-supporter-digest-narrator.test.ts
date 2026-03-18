@@ -38,7 +38,7 @@ describe("OpenAI supporter digest narrator", () => {
           create,
         },
       },
-      model: "gpt-5-nano",
+      model: "gpt-5-mini",
     });
 
     const result = await narrator.narrateDigest(createNarrationInput());
@@ -56,7 +56,7 @@ describe("OpenAI supporter digest narrator", () => {
     });
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: "gpt-5-nano",
+        model: "gpt-5-mini",
         max_output_tokens: 2500,
         reasoning: {
           effort: "minimal",

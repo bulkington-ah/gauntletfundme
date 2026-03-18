@@ -176,6 +176,11 @@ export type SupporterDigestNarration = {
   ctaLabel: string;
 };
 
+export type SupporterDigestNarrationUnavailableReason =
+  | "missing_configuration"
+  | "provider_error"
+  | "invalid_response";
+
 export type SupporterDigestNarrationResult =
   | {
       status: "success";
@@ -183,10 +188,7 @@ export type SupporterDigestNarrationResult =
     }
   | {
       status: "unavailable";
-      reason:
-        | "missing_configuration"
-        | "provider_error"
-        | "invalid_response";
+      reason: SupporterDigestNarrationUnavailableReason;
       message: string;
     };
 

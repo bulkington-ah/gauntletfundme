@@ -273,12 +273,41 @@ const createApplicationApiStub = ({
     status: "not_found",
     message: "not configured for this test",
   }),
+  getPublicProfileSlugByUserId: vi.fn().mockResolvedValue(null),
   getPublicFundraiserBySlug: vi.fn().mockResolvedValue({
     status: "not_found",
     message: "not configured for this test",
   }),
   getPublicCommunityBySlug: vi.fn().mockResolvedValue({
     status: "not_found",
+    message: "not configured for this test",
+  }),
+  listPublicFundraisers: vi.fn().mockResolvedValue({
+    status: "success",
+    fundraisers: [],
+  }),
+  listPublicCommunities: vi.fn().mockResolvedValue({
+    status: "success",
+    communities: [],
+  }),
+  getSupporterDigest: vi.fn().mockResolvedValue({
+    status: "unauthorized",
+    message: "not configured for this test",
+  }),
+  refreshSupporterDigestNarration: vi.fn().mockResolvedValue({
+    status: "unauthorized",
+    message: "not configured for this test",
+  }),
+  recordDigestView: vi.fn().mockResolvedValue({
+    status: "unauthorized",
+    message: "not configured for this test",
+  }),
+  listOwnedCommunitiesForViewer: vi.fn().mockResolvedValue({
+    status: "unauthorized",
+    message: "not configured for this test",
+  }),
+  createCommunity: vi.fn().mockResolvedValue({
+    status: "unauthorized",
     message: "not configured for this test",
   }),
   createPost: vi.fn().mockResolvedValue({
@@ -290,6 +319,10 @@ const createApplicationApiStub = ({
     message: "not configured for this test",
   }),
   submitDonation: vi.fn().mockResolvedValue({
+    status: "unauthorized",
+    message: "not configured for this test",
+  }),
+  startDonationIntent: vi.fn().mockResolvedValue({
     status: "unauthorized",
     message: "not configured for this test",
   }),
