@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 
 import { createApplicationApi } from "@/application";
-import { getAuthenticatedViewerFromBrowserSession } from "@/presentation/auth";
+import { getPublicShellViewerStateFromBrowserSession } from "@/presentation/auth";
 import {
   PublicCommunityBrowsePage,
   buildPublicCommunityBrowsePageModel,
@@ -9,7 +9,8 @@ import {
 
 export default async function CommunityBrowsePage(): Promise<JSX.Element> {
   const applicationApi = createApplicationApi();
-  const viewer = await getAuthenticatedViewerFromBrowserSession(applicationApi);
+  const { viewer, viewerProfileSlug } =
+    await getPublicShellViewerStateFromBrowserSession(applicationApi);
   const model = await buildPublicCommunityBrowsePageModel({
     publicCommunityQuery: applicationApi,
   });
@@ -19,6 +20,7 @@ export default async function CommunityBrowsePage(): Promise<JSX.Element> {
       model={model}
       returnTo="/communities"
       viewer={viewer}
+      viewerProfileSlug={viewerProfileSlug}
     />
   );
 }

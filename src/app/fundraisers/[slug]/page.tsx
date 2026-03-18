@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 
 import { createApplicationApi } from "@/application";
-import { getAuthenticatedViewerFromBrowserSession } from "@/presentation/auth";
+import { getPublicShellViewerStateFromBrowserSession } from "@/presentation/auth";
 import {
   PublicFundraiserPage,
   buildPublicFundraiserPageModel,
@@ -18,7 +18,8 @@ export default async function PublicFundraiserRoutePage({
 }: RouteContext): Promise<JSX.Element> {
   const slug = (await params).slug;
   const applicationApi = createApplicationApi();
-  const viewer = await getAuthenticatedViewerFromBrowserSession(applicationApi);
+  const { viewer, viewerProfileSlug } =
+    await getPublicShellViewerStateFromBrowserSession(applicationApi);
   const model = await buildPublicFundraiserPageModel(
     {
       publicFundraiserQuery: applicationApi,
@@ -31,6 +32,7 @@ export default async function PublicFundraiserRoutePage({
       model={model}
       returnTo={`/fundraisers/${slug}`}
       viewer={viewer}
+      viewerProfileSlug={viewerProfileSlug}
     />
   );
 }

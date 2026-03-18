@@ -164,7 +164,6 @@ describe("PublicFundraiserPage", () => {
     expect(
       screen.getAllByText("$7,800 in prototype support"),
     ).toHaveLength(2);
-    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     const donateLink = screen.getAllByRole("link", { name: "Donate now" })[0];
     expect(donateLink).toHaveAttribute(
@@ -204,7 +203,6 @@ describe("PublicFundraiserPage", () => {
     expect(
       screen.getByRole("link", { name: "View seeded fundraiser" }),
     ).toHaveAttribute("href", "/fundraisers/warm-meals-2026");
-    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     rerender(
       <PublicFundraiserPage
@@ -223,7 +221,6 @@ describe("PublicFundraiserPage", () => {
       "href",
       "/",
     );
-    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
   });
 });
 

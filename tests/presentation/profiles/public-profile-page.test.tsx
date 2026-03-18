@@ -208,7 +208,6 @@ describe("PublicProfilePage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Fundraiser momentum")).toBeInTheDocument();
     expect(screen.getByText("Recent public activity")).toBeInTheDocument();
-    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     expect(
       screen
@@ -261,7 +260,6 @@ describe("PublicProfilePage", () => {
     expect(
       screen.getByRole("link", { name: "View seeded profile" }),
     ).toHaveAttribute("href", "/profiles/avery-johnson");
-    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     rerender(
       <PublicProfilePage
@@ -280,7 +278,6 @@ describe("PublicProfilePage", () => {
       "href",
       "/",
     );
-    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
   });
 });
 

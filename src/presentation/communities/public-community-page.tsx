@@ -73,16 +73,22 @@ type PublicCommunityPageProps = {
   model: PublicCommunityPageModel;
   returnTo?: string;
   viewer?: AuthenticatedViewer | null;
+  viewerProfileSlug?: string | null;
 };
 
 export const PublicCommunityPage = ({
   model,
   returnTo = "/",
   viewer = null,
+  viewerProfileSlug = null,
 }: PublicCommunityPageProps) => {
   if (model.status === "invalid_request") {
     return (
-      <PublicSiteShell returnTo={returnTo} viewer={viewer}>
+      <PublicSiteShell
+        returnTo={returnTo}
+        viewer={viewer}
+        viewerProfileSlug={viewerProfileSlug}
+      >
         <main className={styles.errorPage}>
           <section className={styles.errorCard}>
             <p className={styles.errorEyebrow}>Public community</p>
@@ -107,7 +113,11 @@ export const PublicCommunityPage = ({
 
   if (model.status === "not_found") {
     return (
-      <PublicSiteShell returnTo={returnTo} viewer={viewer}>
+      <PublicSiteShell
+        returnTo={returnTo}
+        viewer={viewer}
+        viewerProfileSlug={viewerProfileSlug}
+      >
         <main className={styles.errorPage}>
           <section className={styles.errorCard}>
             <p className={styles.errorEyebrow}>Public community</p>
@@ -137,7 +147,11 @@ export const PublicCommunityPage = ({
   const descriptionLead = toLeadSentence(model.community.description);
 
   return (
-    <PublicSiteShell returnTo={returnTo} viewer={viewer}>
+    <PublicSiteShell
+      returnTo={returnTo}
+      viewer={viewer}
+      viewerProfileSlug={viewerProfileSlug}
+    >
       <main className={styles.page}>
         <section className={styles.hero}>
           <div className={styles.heroCopy}>

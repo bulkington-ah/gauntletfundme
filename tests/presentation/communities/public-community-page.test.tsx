@@ -298,7 +298,6 @@ describe("PublicCommunityPage", () => {
     expect(screen.getAllByText("Activity").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Fundraisers").length).toBeGreaterThan(0);
     expect(screen.getAllByText("About").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     expect(screen.getByText("Community updates")).toBeInTheDocument();
     expect(screen.getByText("Kitchen kickoff update")).toBeInTheDocument();
@@ -335,7 +334,6 @@ describe("PublicCommunityPage", () => {
     expect(
       screen.getByRole("link", { name: "View seeded community" }),
     ).toHaveAttribute("href", "/communities/neighbors-helping-neighbors");
-    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
 
     rerender(
       <PublicCommunityPage
@@ -354,7 +352,6 @@ describe("PublicCommunityPage", () => {
       "href",
       "/",
     );
-    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
   });
 });
 

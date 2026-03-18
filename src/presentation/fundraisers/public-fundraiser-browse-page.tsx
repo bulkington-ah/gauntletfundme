@@ -35,15 +35,21 @@ type PublicFundraiserBrowsePageProps = {
   model: PublicFundraiserBrowsePageModel;
   returnTo?: string;
   viewer?: AuthenticatedViewer | null;
+  viewerProfileSlug?: string | null;
 };
 
 export const PublicFundraiserBrowsePage = ({
   model,
   returnTo = "/fundraisers",
   viewer = null,
+  viewerProfileSlug = null,
 }: PublicFundraiserBrowsePageProps) => {
   return (
-    <PublicSiteShell returnTo={returnTo} viewer={viewer}>
+    <PublicSiteShell
+      returnTo={returnTo}
+      viewer={viewer}
+      viewerProfileSlug={viewerProfileSlug}
+    >
       <main className={styles.page}>
         <section className={styles.hero}>
           <div className={styles.heroCopy}>

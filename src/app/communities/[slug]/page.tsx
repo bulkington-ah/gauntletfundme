@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 
 import { createApplicationApi } from "@/application";
-import { getAuthenticatedViewerFromBrowserSession } from "@/presentation/auth";
+import { getPublicShellViewerStateFromBrowserSession } from "@/presentation/auth";
 import {
   PublicCommunityPage,
   buildPublicCommunityPageModel,
@@ -18,7 +18,8 @@ export default async function PublicCommunityRoutePage({
 }: RouteContext): Promise<JSX.Element> {
   const slug = (await params).slug;
   const applicationApi = createApplicationApi();
-  const viewer = await getAuthenticatedViewerFromBrowserSession(applicationApi);
+  const { viewer, viewerProfileSlug } =
+    await getPublicShellViewerStateFromBrowserSession(applicationApi);
   const model = await buildPublicCommunityPageModel(
     {
       publicCommunityQuery: applicationApi,
@@ -31,6 +32,7 @@ export default async function PublicCommunityRoutePage({
       model={model}
       returnTo={`/communities/${slug}`}
       viewer={viewer}
+      viewerProfileSlug={viewerProfileSlug}
     />
   );
 }

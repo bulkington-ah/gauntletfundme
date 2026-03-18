@@ -85,16 +85,22 @@ type PublicProfilePageProps = {
   model: PublicProfilePageModel;
   returnTo?: string;
   viewer?: AuthenticatedViewer | null;
+  viewerProfileSlug?: string | null;
 };
 
 export const PublicProfilePage = ({
   model,
   returnTo = "/",
   viewer = null,
+  viewerProfileSlug = null,
 }: PublicProfilePageProps) => {
   if (model.status === "invalid_request") {
     return (
-      <PublicSiteShell returnTo={returnTo} viewer={viewer}>
+      <PublicSiteShell
+        returnTo={returnTo}
+        viewer={viewer}
+        viewerProfileSlug={viewerProfileSlug}
+      >
         <main className={styles.errorPage}>
           <section className={styles.errorCard}>
             <p className={styles.errorEyebrow}>Public profile</p>
@@ -116,7 +122,11 @@ export const PublicProfilePage = ({
 
   if (model.status === "not_found") {
     return (
-      <PublicSiteShell returnTo={returnTo} viewer={viewer}>
+      <PublicSiteShell
+        returnTo={returnTo}
+        viewer={viewer}
+        viewerProfileSlug={viewerProfileSlug}
+      >
         <main className={styles.errorPage}>
           <section className={styles.errorCard}>
             <p className={styles.errorEyebrow}>Public profile</p>
@@ -142,7 +152,11 @@ export const PublicProfilePage = ({
   const discoverPeople = buildDiscoverPeople(model);
 
   return (
-    <PublicSiteShell returnTo={returnTo} viewer={viewer}>
+    <PublicSiteShell
+      returnTo={returnTo}
+      viewer={viewer}
+      viewerProfileSlug={viewerProfileSlug}
+    >
       <main className={styles.page}>
         <section className={styles.profileHero}>
           <div className={styles.coverArt} aria-hidden="true">

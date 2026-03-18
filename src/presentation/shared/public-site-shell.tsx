@@ -10,50 +10,34 @@ type PublicSiteShellProps = {
   children: ReactNode;
   returnTo: string;
   viewer: AuthenticatedViewer | null;
+  viewerProfileSlug?: string | null;
 };
 
 export function PublicSiteShell({
   children,
   returnTo,
   viewer,
+  viewerProfileSlug = null,
 }: PublicSiteShellProps) {
   const signInHref = `/login?next=${encodeURIComponent(returnTo)}`;
-  const viewerRoleLabel = viewer ? toTitleCase(viewer.role) : null;
+  const navigationItems = [
+    ...(viewer && viewerProfileSlug
+      ? [{ href: `/profiles/${viewerProfileSlug}`, label: "Profile" }]
+      : []),
+    { href: "/communities", label: "Communities" },
+    { href: "/fundraisers", label: "Fundraisers" },
+  ];
 
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <div className={`${styles.navCluster} ${styles.desktopOnly}`}>
-            <wa-button className={styles.navButton} appearance="plain" href="/">
-              Search
-            </wa-button>
-            <wa-button
-              className={styles.navButton}
-              appearance="plain"
-              href="/fundraisers/warm-meals-2026"
-              withCaret
-            >
-              Donate
-            </wa-button>
-            <wa-button
-              className={styles.navButton}
-              appearance="plain"
-              href="/communities/neighbors-helping-neighbors"
-              withCaret
-            >
-              Fundraise
-            </wa-button>
-            <wa-button
-              className={styles.navButton}
-              appearance="plain"
-              href="/profiles/avery-johnson"
-            >
-              Giving Funds
-            </wa-button>
-            <wa-badge className={styles.newBadge} appearance="filled" pill variant="brand">
-              NEW
-            </wa-badge>
+            {navigationItems.map((item) => (
+              <Link className={styles.navLink} href={item.href} key={item.href}>
+                {item.label}
+              </Link>
+            ))}
           </div>
 
           <Link className={styles.brand} href="/">
@@ -63,22 +47,8 @@ export function PublicSiteShell({
           <div
             className={`${styles.navCluster} ${styles.navClusterEnd} ${styles.desktopOnly}`}
           >
-            <wa-button className={styles.navButton} appearance="plain" withCaret>
-              About
-            </wa-button>
-            <wa-button className={styles.navButton} appearance="plain">
-              Alerts
-            </wa-button>
             {viewer ? (
               <div className={styles.authCluster}>
-                <wa-badge
-                  className={styles.authBadge}
-                  appearance="outlined"
-                  pill
-                  variant="brand"
-                >
-                  {viewerRoleLabel}
-                </wa-badge>
                 <SignOutButton className={styles.authButton} />
               </div>
             ) : (
@@ -86,14 +56,6 @@ export function PublicSiteShell({
                 Sign in
               </Link>
             )}
-            <wa-button
-              className={styles.ctaButton}
-              appearance="outlined"
-              href="/fundraisers/warm-meals-2026?checkout=mock"
-              pill
-            >
-              Start a GoFundMe
-            </wa-button>
           </div>
 
           <div className={`${styles.navCluster} ${styles.mobileOnly}`}>
@@ -108,37 +70,21 @@ export function PublicSiteShell({
             className={styles.mobileDetails}
             appearance="outlined"
             iconPlacement="end"
-            summary="Explore"
+            summary="Navigate"
           >
             <div className={styles.mobileMenuLinks}>
-              <Link className={styles.mobileMenuLink} href="/fundraisers/warm-meals-2026">
-                Donate
-              </Link>
-              <Link
-                className={styles.mobileMenuLink}
-                href="/communities/neighbors-helping-neighbors"
-              >
-                Fundraise
-              </Link>
-              <Link className={styles.mobileMenuLink} href="/profiles/avery-johnson">
-                Giving Funds
-              </Link>
+              {navigationItems.map((item) => (
+                <Link className={styles.mobileMenuLink} href={item.href} key={item.href}>
+                  {item.label}
+                </Link>
+              ))}
               {viewer ? (
-                <div className={styles.mobileAuthRow}>
-                  <span className={styles.mobileAuthLabel}>{viewerRoleLabel}</span>
-                  <SignOutButton className={styles.mobileSignOutButton} />
-                </div>
+                <SignOutButton className={styles.mobileSignOutButton} />
               ) : (
                 <Link className={styles.mobileMenuLink} href={signInHref}>
                   Sign in
                 </Link>
               )}
-              <Link
-                className={styles.mobileMenuLink}
-                href="/fundraisers/warm-meals-2026?checkout=mock"
-              >
-                Start a GoFundMe
-              </Link>
             </div>
           </wa-details>
         </div>
@@ -148,6 +94,3 @@ export function PublicSiteShell({
     </div>
   );
 }
-
-const toTitleCase = (value: string) =>
-  value.charAt(0).toUpperCase() + value.slice(1);

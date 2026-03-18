@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 
 import { createApplicationApi } from "@/application";
-import { getAuthenticatedViewerFromBrowserSession } from "@/presentation/auth";
+import { getPublicShellViewerStateFromBrowserSession } from "@/presentation/auth";
 import {
   PublicFundraiserBrowsePage,
   buildPublicFundraiserBrowsePageModel,
@@ -9,7 +9,8 @@ import {
 
 export default async function FundraiserBrowsePage(): Promise<JSX.Element> {
   const applicationApi = createApplicationApi();
-  const viewer = await getAuthenticatedViewerFromBrowserSession(applicationApi);
+  const { viewer, viewerProfileSlug } =
+    await getPublicShellViewerStateFromBrowserSession(applicationApi);
   const model = await buildPublicFundraiserBrowsePageModel({
     publicFundraiserQuery: applicationApi,
   });
@@ -19,6 +20,7 @@ export default async function FundraiserBrowsePage(): Promise<JSX.Element> {
       model={model}
       returnTo="/fundraisers"
       viewer={viewer}
+      viewerProfileSlug={viewerProfileSlug}
     />
   );
 }

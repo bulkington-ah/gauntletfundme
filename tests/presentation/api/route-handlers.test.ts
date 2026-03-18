@@ -208,11 +208,17 @@ describe("API route handlers", () => {
         inspiredSupporterCount: 6,
       },
       connections: {
-        communities: [
-          {
+        communities: expect.arrayContaining([
+          expect.objectContaining({
             slug: "neighbors-helping-neighbors",
-          },
-        ],
+          }),
+          expect.objectContaining({
+            slug: "weekend-pantry-crew",
+          }),
+          expect.objectContaining({
+            slug: "school-success-network",
+          }),
+        ]),
       },
     });
     expect(body.connections.fundraisers).toEqual(

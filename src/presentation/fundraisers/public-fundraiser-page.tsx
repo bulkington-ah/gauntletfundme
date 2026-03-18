@@ -72,16 +72,22 @@ type PublicFundraiserPageProps = {
   model: PublicFundraiserPageModel;
   returnTo?: string;
   viewer?: AuthenticatedViewer | null;
+  viewerProfileSlug?: string | null;
 };
 
 export const PublicFundraiserPage = ({
   model,
   returnTo = "/",
   viewer = null,
+  viewerProfileSlug = null,
 }: PublicFundraiserPageProps) => {
   if (model.status === "invalid_request") {
     return (
-      <PublicSiteShell returnTo={returnTo} viewer={viewer}>
+      <PublicSiteShell
+        returnTo={returnTo}
+        viewer={viewer}
+        viewerProfileSlug={viewerProfileSlug}
+      >
         <main className={styles.errorPage}>
           <section className={styles.errorCard}>
             <p className={styles.errorEyebrow}>Public fundraiser</p>
@@ -106,7 +112,11 @@ export const PublicFundraiserPage = ({
 
   if (model.status === "not_found") {
     return (
-      <PublicSiteShell returnTo={returnTo} viewer={viewer}>
+      <PublicSiteShell
+        returnTo={returnTo}
+        viewer={viewer}
+        viewerProfileSlug={viewerProfileSlug}
+      >
         <main className={styles.errorPage}>
           <section className={styles.errorCard}>
             <p className={styles.errorEyebrow}>Public fundraiser</p>
@@ -141,7 +151,11 @@ export const PublicFundraiserPage = ({
   const organizerFirstName = getFirstName(model.organizer.displayName);
 
   return (
-    <PublicSiteShell returnTo={returnTo} viewer={viewer}>
+    <PublicSiteShell
+      returnTo={returnTo}
+      viewer={viewer}
+      viewerProfileSlug={viewerProfileSlug}
+    >
       <main className={styles.page}>
         <section className={styles.headline}>
           <div className={styles.headlineCopy}>

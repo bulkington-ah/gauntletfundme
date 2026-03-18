@@ -10,9 +10,16 @@ describe("PlaceholderHomePage", () => {
       screen.getByRole("heading", { name: "GoFundMe V2" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Public surface foundation")).toBeInTheDocument();
-    expect(screen.getByText("Explore fundraiser")).toBeInTheDocument();
-    expect(screen.getByText("Explore community")).toBeInTheDocument();
-    expect(screen.getByText("Explore profile")).toBeInTheDocument();
-    expect(screen.getAllByText("Start a GoFundMe")[0]).toBeInTheDocument();
+    expect(screen.getByText("Browse fundraisers")).toBeInTheDocument();
+    expect(screen.getByText("Browse communities")).toBeInTheDocument();
+    expect(screen.getByText("View featured profile")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Fundraisers" })[0]).toHaveAttribute(
+      "href",
+      "/fundraisers",
+    );
+    expect(screen.getAllByRole("link", { name: "Communities" })[0]).toHaveAttribute(
+      "href",
+      "/communities",
+    );
   });
 });

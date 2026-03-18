@@ -35,15 +35,21 @@ type PublicCommunityBrowsePageProps = {
   model: PublicCommunityBrowsePageModel;
   returnTo?: string;
   viewer?: AuthenticatedViewer | null;
+  viewerProfileSlug?: string | null;
 };
 
 export const PublicCommunityBrowsePage = ({
   model,
   returnTo = "/communities",
   viewer = null,
+  viewerProfileSlug = null,
 }: PublicCommunityBrowsePageProps) => {
   return (
-    <PublicSiteShell returnTo={returnTo} viewer={viewer}>
+    <PublicSiteShell
+      returnTo={returnTo}
+      viewer={viewer}
+      viewerProfileSlug={viewerProfileSlug}
+    >
       <main className={styles.page}>
         <section className={styles.hero}>
           <div className={styles.heroCopy}>

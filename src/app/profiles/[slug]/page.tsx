@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 
 import { createApplicationApi } from "@/application";
-import { getAuthenticatedViewerFromBrowserSession } from "@/presentation/auth";
+import { getPublicShellViewerStateFromBrowserSession } from "@/presentation/auth";
 import {
   PublicProfilePage,
   buildPublicProfilePageModel,
@@ -18,7 +18,8 @@ export default async function PublicProfileRoutePage({
 }: RouteContext): Promise<JSX.Element> {
   const slug = (await params).slug;
   const applicationApi = createApplicationApi();
-  const viewer = await getAuthenticatedViewerFromBrowserSession(applicationApi);
+  const { viewer, viewerProfileSlug } =
+    await getPublicShellViewerStateFromBrowserSession(applicationApi);
   const model = await buildPublicProfilePageModel(
     {
       publicProfileQuery: applicationApi,
@@ -31,6 +32,7 @@ export default async function PublicProfileRoutePage({
       model={model}
       returnTo={`/profiles/${slug}`}
       viewer={viewer}
+      viewerProfileSlug={viewerProfileSlug}
     />
   );
 }
