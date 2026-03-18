@@ -15,6 +15,13 @@ import {
 } from "../accounts";
 import type { AnalyticsEventPublisher } from "../analytics";
 import {
+  createCommunityCommand,
+  listOwnedCommunitiesForViewer,
+  type CommunityWriteRepository,
+  type CreateCommunityRequest,
+  type ViewerOwnedCommunityQuery,
+} from "../communities";
+import {
   createCommentCommand,
   createPostCommand,
   type CreateCommentRequest,
@@ -22,6 +29,12 @@ import {
   type DiscussionTargetLookup,
   type DiscussionWriteRepository,
 } from "../discussion";
+import {
+  createFundraiserCommand,
+  type CreateFundraiserRequest,
+  type FundraiserCommunityOwnershipLookup,
+  type FundraiserWriteRepository,
+} from "../fundraisers";
 import {
   followTarget,
   startDonationIntent,
@@ -72,10 +85,14 @@ import { createPostgresPrototypeDataResetRepository } from "@/infrastructure/per
 
 type Dependencies = {
   publicContentReadRepository?: PublicContentReadRepository;
+  communityWriteRepository?: CommunityWriteRepository;
+  viewerOwnedCommunityQuery?: ViewerOwnedCommunityQuery;
   discussionTargetLookup?: DiscussionTargetLookup;
   discussionWriteRepository?: DiscussionWriteRepository;
   donationTargetLookup?: DonationTargetLookup;
   donationWriteRepository?: DonationWriteRepository;
+  fundraiserWriteRepository?: FundraiserWriteRepository;
+  fundraiserCommunityOwnershipLookup?: FundraiserCommunityOwnershipLookup;
   donationIntentTargetLookup?: DonationIntentTargetLookup;
   donationIntentWriteRepository?: DonationIntentWriteRepository;
   reportTargetLookup?: ReportTargetLookup;
@@ -114,6 +131,10 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
 
   const publicContentReadRepository =
     dependencies.publicContentReadRepository ?? resolvePersistenceAdapter();
+  const getCommunityWriteRepository = () =>
+    dependencies.communityWriteRepository ?? resolvePersistenceAdapter();
+  const getViewerOwnedCommunityQuery = () =>
+    dependencies.viewerOwnedCommunityQuery ?? resolvePersistenceAdapter();
   const getDiscussionTargetLookup = () =>
     dependencies.discussionTargetLookup ?? resolvePersistenceAdapter();
   const getDiscussionWriteRepository = () =>
@@ -130,6 +151,10 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
       dependencies.donationIntentWriteRepository ??
       resolvePersistenceAdapter()
     ) as LegacyCompatibleDonationWriteRepository;
+  const getFundraiserWriteRepository = () =>
+    dependencies.fundraiserWriteRepository ?? resolvePersistenceAdapter();
+  const getFundraiserCommunityOwnershipLookup = () =>
+    dependencies.fundraiserCommunityOwnershipLookup ?? resolvePersistenceAdapter();
   const getReportTargetLookup = () =>
     dependencies.reportTargetLookup ?? resolvePersistenceAdapter();
   const getReportWriteRepository = () =>
@@ -191,6 +216,22 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
       listPublicFundraisers({ publicContentReadRepository }),
     listPublicCommunities: () =>
       listPublicCommunities({ publicContentReadRepository }),
+    listOwnedCommunitiesForViewer: (ownerUserId: string) =>
+      listOwnedCommunitiesForViewer(
+        {
+          viewerOwnedCommunityQuery: getViewerOwnedCommunityQuery(),
+        },
+        ownerUserId,
+      ),
+    createCommunity: (request: CreateCommunityRequest) =>
+      createCommunityCommand(
+        {
+          sessionViewerGateway,
+          communityWriteRepository: getCommunityWriteRepository(),
+          analyticsEventPublisher,
+        },
+        request,
+      ),
     createPost: (request: CreatePostRequest) =>
       createPostCommand(
         {
@@ -207,6 +248,17 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
           sessionViewerGateway,
           discussionTargetLookup: getDiscussionTargetLookup(),
           discussionWriteRepository: getDiscussionWriteRepository(),
+          analyticsEventPublisher,
+        },
+        request,
+      ),
+    createFundraiser: (request: CreateFundraiserRequest) =>
+      createFundraiserCommand(
+        {
+          sessionViewerGateway,
+          fundraiserWriteRepository: getFundraiserWriteRepository(),
+          fundraiserCommunityOwnershipLookup:
+            getFundraiserCommunityOwnershipLookup(),
           analyticsEventPublisher,
         },
         request,

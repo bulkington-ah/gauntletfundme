@@ -1,9 +1,11 @@
 import {
   analyticsEventNames,
   buildCommentCreatedEvent,
+  buildCommunityCreatedEvent,
   buildCommunityPageViewedEvent,
   buildDonationCompletedEvent,
   buildFollowCompletedEvent,
+  buildFundraiserCreatedEvent,
   buildFundraiserPageViewedEvent,
   buildPostCreatedEvent,
   buildProfilePageViewedEvent,
@@ -53,6 +55,17 @@ describe("analytics event contracts", () => {
       postId: "post_kickoff_update",
       commentId: "comment_new_shift_offer",
     });
+    const createdCommunity = buildCommunityCreatedEvent({
+      viewerUserId: "user_supporter_jordan",
+      communityId: "community_jordan_garden_network",
+      communitySlug: "jordan-garden-network",
+    });
+    const createdFundraiser = buildFundraiserCreatedEvent({
+      viewerUserId: "user_supporter_jordan",
+      fundraiserId: "fundraiser_spring_pantry_drive",
+      fundraiserSlug: "spring-pantry-drive",
+      communitySlug: "jordan-garden-network",
+    });
     const donationIntent = buildDonationCompletedEvent({
       viewerUserId: "user_supporter_jordan",
       fundraiserSlug: "warm-meals-2026",
@@ -79,6 +92,19 @@ describe("analytics event contracts", () => {
       viewerUserId: "user_supporter_jordan",
       postId: "post_kickoff_update",
       commentId: "comment_new_shift_offer",
+    });
+    expect(createdCommunity.name).toBe(analyticsEventNames.communityCreated);
+    expect(createdCommunity.payload).toEqual({
+      viewerUserId: "user_supporter_jordan",
+      communityId: "community_jordan_garden_network",
+      communitySlug: "jordan-garden-network",
+    });
+    expect(createdFundraiser.name).toBe(analyticsEventNames.fundraiserCreated);
+    expect(createdFundraiser.payload).toEqual({
+      viewerUserId: "user_supporter_jordan",
+      fundraiserId: "fundraiser_spring_pantry_drive",
+      fundraiserSlug: "spring-pantry-drive",
+      communitySlug: "jordan-garden-network",
     });
     expect(donationIntent.name).toBe(analyticsEventNames.donationCompleted);
     expect(donationIntent.payload).toEqual({

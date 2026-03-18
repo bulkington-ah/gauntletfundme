@@ -100,4 +100,22 @@ describe("authorizeProtectedAction", () => {
       },
     });
   });
+
+  it("returns authorized for authenticated fundraiser creation", () => {
+    const result = authorizeProtectedAction({
+      action: "create_fundraiser",
+      viewer: {
+        userId: "user_member",
+        role: "supporter",
+      },
+    });
+
+    expect(result).toEqual({
+      status: "authorized",
+      viewer: {
+        userId: "user_member",
+        role: "supporter",
+      },
+    });
+  });
 });

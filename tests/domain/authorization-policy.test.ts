@@ -26,6 +26,10 @@ describe("authorization policy", () => {
       action: "create_comment",
       viewer: null,
     });
+    const communityCreate = evaluateAuthorizationPolicy({
+      action: "create_community",
+      viewer: null,
+    });
     const follow = evaluateAuthorizationPolicy({
       action: "follow_target",
       viewer: null,
@@ -45,6 +49,11 @@ describe("authorization policy", () => {
       allowed: false,
       reason: "unauthenticated",
       message: "Authentication is required to create comments.",
+    });
+    expect(communityCreate).toEqual({
+      allowed: false,
+      reason: "unauthenticated",
+      message: "Authentication is required to create communities.",
     });
     expect(follow).toEqual({
       allowed: false,
@@ -137,7 +146,19 @@ describe("authorization policy", () => {
     });
   });
 
-  it("allows members to comment, report content, and create donations", () => {
+  it("allows authenticated members to create content, fundraisers, and donations", () => {
+    expect(
+      evaluateAuthorizationPolicy({
+        action: "create_community",
+        viewer: memberViewer,
+      }),
+    ).toEqual({ allowed: true });
+    expect(
+      evaluateAuthorizationPolicy({
+        action: "create_fundraiser",
+        viewer: memberViewer,
+      }),
+    ).toEqual({ allowed: true });
     expect(
       evaluateAuthorizationPolicy({
         action: "create_comment",

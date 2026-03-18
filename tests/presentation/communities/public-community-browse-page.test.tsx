@@ -6,6 +6,13 @@ import {
   buildPublicCommunityBrowsePageModel,
 } from "@/presentation/communities";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));
+
 describe("PublicCommunityBrowsePage", () => {
   it("builds a browse page model from the public community list query", async () => {
     const query = createPublicCommunityListQueryStub({
@@ -117,6 +124,40 @@ describe("PublicCommunityBrowsePage", () => {
     expect(
       screen.getByRole("link", { name: "Open community Neighbors Helping Neighbors" }),
     ).toHaveAttribute("href", "/communities/neighbors-helping-neighbors");
+  });
+
+  it("links the create CTA through login for anonymous visitors", () => {
+    render(
+      <PublicCommunityBrowsePage
+        model={{
+          status: "success",
+          communities: [],
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Create a community" }),
+    ).toHaveAttribute("href", "/login?next=%2Fcommunities%2Fcreate");
+  });
+
+  it("links the create CTA directly for authenticated viewers", () => {
+    render(
+      <PublicCommunityBrowsePage
+        model={{
+          status: "success",
+          communities: [],
+        }}
+        viewer={{
+          userId: "user_supporter_jordan",
+          role: "supporter",
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Create a community" }),
+    ).toHaveAttribute("href", "/communities/create");
   });
 });
 

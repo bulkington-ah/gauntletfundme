@@ -1,6 +1,8 @@
 export const protectedActions = [
   "edit_profile",
   "manage_community",
+  "create_community",
+  "create_fundraiser",
   "create_post",
   "create_comment",
   "follow_target",
@@ -46,6 +48,8 @@ export const evaluateAuthorizationPolicy = (
   }
 
   switch (input.action) {
+    case "create_community":
+    case "create_fundraiser":
     case "create_comment":
     case "submit_donation":
     case "report_content":
@@ -110,6 +114,8 @@ const canManageOwnedResource = (
 const unauthenticatedMessageByAction: Record<ProtectedAction, string> = {
   edit_profile: "Authentication is required to edit profiles.",
   manage_community: "Authentication is required to manage communities.",
+  create_community: "Authentication is required to create communities.",
+  create_fundraiser: "Authentication is required to create fundraisers.",
   create_post: "Authentication is required to create posts.",
   create_comment: "Authentication is required to create comments.",
   follow_target: "Authentication is required for follow commands.",

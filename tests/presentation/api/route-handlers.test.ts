@@ -6,7 +6,9 @@ import {
   handleGetPublicCommunityRoute,
   handleGetPublicFundraiserRoute,
   handleGetPublicProfileRoute,
+  handlePostCreateCommunityRoute,
   handlePostCreateCommentRoute,
+  handlePostCreateFundraiserRoute,
   handlePostCreatePostRoute,
   handlePostFollowTargetRoute,
   handlePostResolveReportRoute,
@@ -26,9 +28,69 @@ describe("API route handlers", () => {
         accountAuthRepository: createAccountAuthRepositoryStub(),
         followTargetLookup: staticRepository,
         sessionViewerGateway: createStaticSessionViewerGateway(),
+        communityWriteRepository: {
+          async findCommunityBySlugForCreation(communitySlug) {
+            return communitySlug === "neighbors-helping-neighbors"
+              ? {
+                  id: "community_neighbors_helping_neighbors",
+                  slug: "neighbors-helping-neighbors",
+                }
+              : null;
+          },
+          async createCommunity(input) {
+            return {
+              id: "community_created_route_test",
+              ownerUserId: input.ownerUserId,
+              slug: input.slug,
+              name: input.name,
+              description: input.description,
+              visibility: input.visibility,
+              createdAt: new Date("2026-03-18T15:00:00.000Z"),
+            };
+          },
+        },
         followOwnerLookup: {
           async findOwnerUserIdByTarget() {
             return "user_organizer_avery";
+          },
+        },
+        fundraiserWriteRepository: {
+          async findFundraiserBySlugForCreation(fundraiserSlug) {
+            return fundraiserSlug === "warm-meals-2026"
+              ? {
+                  id: "fundraiser_warm_meals_2026",
+                  slug: "warm-meals-2026",
+                }
+              : null;
+          },
+          async createFundraiser(input) {
+            return {
+              id: "fundraiser_created_route_test",
+              ownerUserId: input.ownerUserId,
+              communityId: input.communityId ?? null,
+              slug: input.slug,
+              title: input.title,
+              story: input.story,
+              status: input.status,
+              goalAmount: input.goalAmount,
+              createdAt: new Date("2026-03-18T16:00:00.000Z"),
+            };
+          },
+        },
+        fundraiserCommunityOwnershipLookup: {
+          async findOwnedCommunityBySlugForFundraiser(ownerUserId, communitySlug) {
+            if (
+              ownerUserId === "user_supporter_jordan" &&
+              communitySlug === "jordan-garden-network"
+            ) {
+              return {
+                id: "community_jordan_garden_network",
+                slug: "jordan-garden-network",
+                name: "Jordan Garden Network",
+              };
+            }
+
+            return null;
           },
         },
         discussionTargetLookup: {
@@ -368,6 +430,221 @@ describe("API route handlers", () => {
         isFollowing: true,
         isOwnTarget: false,
       },
+    });
+  });
+
+  it("returns invalid_request for create community commands with missing fields", async () => {
+    const response = await handlePostCreateCommunityRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          name: "Jordan Garden Network",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "invalid_request",
+      message: "name and description are required.",
+    });
+  });
+
+  it("returns unauthorized for create community commands without a session token header", async () => {
+    const response = await handlePostCreateCommunityRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          name: "Jordan Garden Network",
+          description: "Shared planning for pantry beds and harvests.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "unauthorized",
+      message:
+        "Authentication is required to create communities. Send the x-session-token header to continue.",
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns 201 for a supporter creating a community", async () => {
+    const response = await handlePostCreateCommunityRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-session-token": "demo-supporter-session",
+        },
+        body: JSON.stringify({
+          name: "Jordan Garden Network",
+          description: "Shared planning for pantry beds and harvests.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_supporter_jordan",
+        role: "supporter",
+      },
+      community: {
+        id: "community_created_route_test",
+        slug: "jordan-garden-network",
+        name: "Jordan Garden Network",
+        description: "Shared planning for pantry beds and harvests.",
+        visibility: "public",
+        createdAt: "2026-03-18T15:00:00.000Z",
+      },
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns 409 when create community would reuse an existing slug", async () => {
+    const response = await handlePostCreateCommunityRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-session-token": "demo-supporter-session",
+        },
+        body: JSON.stringify({
+          name: "Neighbors Helping Neighbors",
+          description: "Shared planning for pantry beds and harvests.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({
+      error: "conflict",
+      message: 'A community already exists for slug "neighbors-helping-neighbors".',
+    });
+  });
+
+  it("returns invalid_request for create fundraiser commands with missing fields", async () => {
+    const response = await handlePostCreateFundraiserRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          title: "Spring Pantry Drive",
+          story: "Funding pantry deliveries through spring.",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "invalid_request",
+      message: "title, story, and goalAmount are required.",
+    });
+  });
+
+  it("returns unauthorized for create fundraiser commands without a session token header", async () => {
+    const response = await handlePostCreateFundraiserRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          title: "Spring Pantry Drive",
+          story: "Funding pantry deliveries through spring.",
+          goalAmount: 18000,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "unauthorized",
+      message:
+        "Authentication is required to create fundraisers. Send the x-session-token header to continue.",
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns 201 for a supporter creating a fundraiser with an owned community", async () => {
+    const response = await handlePostCreateFundraiserRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-session-token": "demo-supporter-session",
+        },
+        body: JSON.stringify({
+          title: "Spring Pantry Drive",
+          story: "Funding pantry deliveries through spring.",
+          goalAmount: 18000,
+          communitySlug: "jordan-garden-network",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      viewer: {
+        userId: "user_supporter_jordan",
+        role: "supporter",
+      },
+      fundraiser: {
+        id: "fundraiser_created_route_test",
+        slug: "spring-pantry-drive",
+        title: "Spring Pantry Drive",
+        story: "Funding pantry deliveries through spring.",
+        status: "active",
+        goalAmount: 18000,
+        createdAt: "2026-03-18T16:00:00.000Z",
+      },
+      community: {
+        slug: "jordan-garden-network",
+        name: "Jordan Garden Network",
+      },
+      meta: {
+        sessionTokenHeader: "x-session-token",
+      },
+    });
+  });
+
+  it("returns 403 when fundraiser creation tries to link a non-owned community", async () => {
+    const response = await handlePostCreateFundraiserRoute(
+      new Request("http://test", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-session-token": "demo-supporter-session",
+        },
+        body: JSON.stringify({
+          title: "Spring Pantry Drive",
+          story: "Funding pantry deliveries through spring.",
+          goalAmount: 18000,
+          communitySlug: "neighbors-helping-neighbors",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      error: "forbidden",
+      message: "You can only link a fundraiser to a community you own.",
     });
   });
 

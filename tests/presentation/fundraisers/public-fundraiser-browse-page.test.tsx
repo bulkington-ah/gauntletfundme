@@ -6,6 +6,13 @@ import {
   buildPublicFundraiserBrowsePageModel,
 } from "@/presentation/fundraisers";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));
+
 describe("PublicFundraiserBrowsePage", () => {
   it("builds a browse page model from the public fundraiser list query", async () => {
     const query = createPublicFundraiserListQueryStub({
@@ -146,6 +153,40 @@ describe("PublicFundraiserBrowsePage", () => {
       screen.getByRole("link", { name: "Open fundraiser Warm Meals 2026" }),
     ).toHaveAttribute("href", "/fundraisers/warm-meals-2026");
     expect(screen.getByText("Weekend Pantry Crew")).toBeInTheDocument();
+  });
+
+  it("links the create CTA through login for anonymous visitors", () => {
+    render(
+      <PublicFundraiserBrowsePage
+        model={{
+          status: "success",
+          fundraisers: [],
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Start a fundraiser" }),
+    ).toHaveAttribute("href", "/login?next=%2Ffundraisers%2Fcreate");
+  });
+
+  it("links the create CTA directly for authenticated viewers", () => {
+    render(
+      <PublicFundraiserBrowsePage
+        model={{
+          status: "success",
+          fundraisers: [],
+        }}
+        viewer={{
+          userId: "user_supporter_jordan",
+          role: "supporter",
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Start a fundraiser" }),
+    ).toHaveAttribute("href", "/fundraisers/create");
   });
 });
 

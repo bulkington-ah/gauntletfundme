@@ -44,6 +44,10 @@ export const PublicFundraiserBrowsePage = ({
   viewer = null,
   viewerProfileSlug = null,
 }: PublicFundraiserBrowsePageProps) => {
+  const createFundraiserHref = viewer
+    ? "/fundraisers/create"
+    : `/login?next=${encodeURIComponent("/fundraisers/create")}`;
+
   return (
     <PublicSiteShell
       returnTo={returnTo}
@@ -60,6 +64,12 @@ export const PublicFundraiserBrowsePage = ({
               and jump straight into the fundraiser pages that already have active
               supporter energy.
             </p>
+
+            <div className={styles.heroActions}>
+              <Link className={styles.createAction} href={createFundraiserHref}>
+                Start a fundraiser
+              </Link>
+            </div>
           </div>
 
           <div className={styles.heroStats}>

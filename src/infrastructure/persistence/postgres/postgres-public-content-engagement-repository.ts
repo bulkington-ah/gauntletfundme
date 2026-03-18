@@ -1,11 +1,14 @@
 import { randomUUID } from "node:crypto";
 
 import type {
+  CommunityWriteRepository,
   CommunityDiscussionSnapshot,
   DonationTargetLookup,
   DonationWriteRepository,
   DiscussionTargetLookup,
   DiscussionWriteRepository,
+  FundraiserCommunityOwnershipLookup,
+  FundraiserWriteRepository,
   FollowOwnerLookup,
   FollowTargetLookup,
   FollowWriteRepository,
@@ -23,6 +26,7 @@ import type {
   ReportTargetLookup,
   ReportWriteRepository,
   ReportWriteResult,
+  ViewerOwnedCommunityQuery,
   ViewerFollowStateSnapshot,
 } from "@/application";
 import {
@@ -55,16 +59,20 @@ type Dependencies = {
 export const createPostgresPublicContentEngagementRepository = (
   dependencies: Dependencies = {},
 ): PublicContentReadRepository &
+  CommunityWriteRepository &
   DonationTargetLookup &
   DonationWriteRepository &
   DiscussionTargetLookup &
   DiscussionWriteRepository &
+  FundraiserCommunityOwnershipLookup &
+  FundraiserWriteRepository &
   ReportReviewLookup &
   ReportReviewWriteRepository &
   ReportTargetLookup &
   ReportWriteRepository &
   FollowTargetLookup &
   FollowOwnerLookup &
+  ViewerOwnedCommunityQuery &
   FollowWriteRepository => {
   const sqlClient = dependencies.sqlClient ?? createPostgresPool();
   const bootstrapper = createPersistenceBootstrapper(sqlClient);
@@ -623,6 +631,130 @@ export const createPostgresPublicContentEngagementRepository = (
       : null;
   };
 
+  const findCommunityReferenceBySlug = async (slug: string) => {
+    const result = await query<{
+      id: string;
+      slug: string;
+    }>(
+      `SELECT id, slug
+       FROM communities
+       WHERE slug = $1
+       LIMIT 1`,
+      [slug],
+    );
+    const community = result.rows[0];
+
+    return community
+      ? {
+          id: community.id,
+          slug: community.slug,
+        }
+      : null;
+  };
+
+  const findOwnedCommunityReferenceBySlug = async (
+    ownerUserId: string,
+    slug: string,
+  ) => {
+    const result = await query<{
+      id: string;
+      slug: string;
+      name: string;
+    }>(
+      `SELECT id, slug, name
+       FROM communities
+       WHERE owner_user_id = $1
+         AND slug = $2
+       LIMIT 1`,
+      [ownerUserId, slug],
+    );
+    const community = result.rows[0];
+
+    return community
+      ? {
+          id: community.id,
+          slug: community.slug,
+          name: community.name,
+        }
+      : null;
+  };
+
+  const persistCommunity = async (input: {
+    ownerUserId: string;
+    slug: string;
+    name: string;
+    description: string;
+    visibility: "public";
+  }) => {
+    const communityId = `community_${randomUUID()}`;
+    const now = new Date();
+    const result = await query<CommunityRow>(
+      `INSERT INTO communities
+         (id, owner_user_id, slug, name, description, visibility, created_at)
+       VALUES
+         ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, owner_user_id, slug, name, description, visibility, created_at`,
+      [
+        communityId,
+        input.ownerUserId,
+        input.slug,
+        input.name,
+        input.description,
+        input.visibility,
+        now,
+      ],
+    );
+    const row = result.rows[0];
+
+    if (!row) {
+      throw new Error(
+        "Expected the created community row to be returned after insert.",
+      );
+    }
+
+    return mapCommunity(row);
+  };
+
+  const persistFundraiser = async (input: {
+    ownerUserId: string;
+    communityId?: string | null;
+    slug: string;
+    title: string;
+    story: string;
+    status: "active";
+    goalAmount: number;
+  }) => {
+    const fundraiserId = `fundraiser_${randomUUID()}`;
+    const now = new Date();
+    const result = await query<FundraiserRow>(
+      `INSERT INTO fundraisers
+         (id, owner_user_id, community_id, slug, title, story, status, goal_amount, created_at)
+       VALUES
+         ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING id, owner_user_id, community_id, slug, title, story, status, goal_amount, created_at`,
+      [
+        fundraiserId,
+        input.ownerUserId,
+        input.communityId ?? null,
+        input.slug,
+        input.title,
+        input.story,
+        input.status,
+        input.goalAmount,
+        now,
+      ],
+    );
+    const row = result.rows[0];
+
+    if (!row) {
+      throw new Error(
+        "Expected the created fundraiser row to be returned after insert.",
+      );
+    }
+
+    return mapFundraiser(row);
+  };
+
   const persistDonation = async (input: {
     userId: string;
     fundraiserId: string;
@@ -674,6 +806,10 @@ export const createPostgresPublicContentEngagementRepository = (
           buildCommunitySummarySnapshotFromRow(communityRow),
         ),
       );
+    },
+
+    async listOwnedCommunitiesByOwnerUserId(ownerUserId) {
+      return (await findCommunityRowsByOwnerUserId(ownerUserId)).map(mapCommunity);
     },
 
     async findProfileSlugByUserId(userId) {
@@ -875,6 +1011,14 @@ export const createPostgresPublicContentEngagementRepository = (
       };
     },
 
+    async findCommunityBySlugForCreation(communitySlug) {
+      return findCommunityReferenceBySlug(communitySlug);
+    },
+
+    async createCommunity(input) {
+      return persistCommunity(input);
+    },
+
     async findCommunityBySlugForPostCreation(slug) {
       const result = await query<{
         id: string;
@@ -900,6 +1044,14 @@ export const createPostgresPublicContentEngagementRepository = (
 
     async findFundraiserBySlugForDonation(slug) {
       return findFundraiserReferenceBySlug(slug);
+    },
+
+    async findFundraiserBySlugForCreation(fundraiserSlug) {
+      return findFundraiserReferenceBySlug(fundraiserSlug);
+    },
+
+    async findOwnedCommunityBySlugForFundraiser(ownerUserId, communitySlug) {
+      return findOwnedCommunityReferenceBySlug(ownerUserId, communitySlug);
     },
 
     async findPostByIdForCommentCreation(postId) {
@@ -1184,6 +1336,10 @@ export const createPostgresPublicContentEngagementRepository = (
       }
 
       return mapComment(row);
+    },
+
+    async createFundraiser(input) {
+      return persistFundraiser(input);
     },
 
     async createDonation(input) {

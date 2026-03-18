@@ -356,6 +356,83 @@ describe("PostgresPublicContentEngagementRepository", () => {
     ).toBe("user_organizer_avery");
   });
 
+  it("persists created communities and fundraisers for public reads", async () => {
+    const repository = await createSeededRepository();
+
+    const createdCommunity = await repository.createCommunity({
+      ownerUserId: "user_supporter_jordan",
+      slug: "jordan-garden-network",
+      name: "Jordan Garden Network",
+      description: "Shared planning for pantry beds and neighborhood harvests.",
+      visibility: "public",
+    });
+
+    expect(
+      await repository.findCommunityBySlugForCreation("jordan-garden-network"),
+    ).toEqual({
+      id: createdCommunity.id,
+      slug: "jordan-garden-network",
+    });
+    expect(
+      await repository.listOwnedCommunitiesByOwnerUserId("user_supporter_jordan"),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: createdCommunity.id,
+          slug: "jordan-garden-network",
+          ownerUserId: "user_supporter_jordan",
+        }),
+      ]),
+    );
+    expect(
+      await repository.findOwnedCommunityBySlugForFundraiser(
+        "user_supporter_jordan",
+        "jordan-garden-network",
+      ),
+    ).toEqual({
+      id: createdCommunity.id,
+      slug: "jordan-garden-network",
+      name: "Jordan Garden Network",
+    });
+
+    const createdFundraiser = await repository.createFundraiser({
+      ownerUserId: "user_supporter_jordan",
+      communityId: createdCommunity.id,
+      slug: "spring-pantry-drive",
+      title: "Spring Pantry Drive",
+      story: "Funding pantry deliveries through spring.",
+      status: "active",
+      goalAmount: 18000,
+    });
+
+    expect(
+      await repository.findFundraiserBySlugForCreation("spring-pantry-drive"),
+    ).toEqual({
+      id: createdFundraiser.id,
+      slug: "spring-pantry-drive",
+    });
+
+    const communitySnapshot = await repository.findCommunityBySlug({
+      slug: "jordan-garden-network",
+    });
+    const fundraiserSnapshot = await repository.findFundraiserBySlug({
+      slug: "spring-pantry-drive",
+    });
+
+    expect(communitySnapshot).not.toBeNull();
+    expect(communitySnapshot?.community.slug).toBe("jordan-garden-network");
+    expect(communitySnapshot?.owner.displayName).toBe("Jordan Lee");
+    expect(communitySnapshot?.fundraisers[0]?.fundraiser.slug).toBe(
+      "spring-pantry-drive",
+    );
+    expect(fundraiserSnapshot).not.toBeNull();
+    expect(fundraiserSnapshot?.summary.fundraiser.slug).toBe("spring-pantry-drive");
+    expect(fundraiserSnapshot?.summary.relatedCommunity?.slug).toBe(
+      "jordan-garden-network",
+    );
+    expect(fundraiserSnapshot?.summary.owner.displayName).toBe("Jordan Lee");
+  });
+
   it("persists created posts and comments for public discussion reads", async () => {
     const repository = await createSeededRepository();
 

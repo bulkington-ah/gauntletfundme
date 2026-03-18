@@ -44,6 +44,10 @@ export const PublicCommunityBrowsePage = ({
   viewer = null,
   viewerProfileSlug = null,
 }: PublicCommunityBrowsePageProps) => {
+  const createCommunityHref = viewer
+    ? "/communities/create"
+    : `/login?next=${encodeURIComponent("/communities/create")}`;
+
   return (
     <PublicSiteShell
       returnTo={returnTo}
@@ -60,6 +64,12 @@ export const PublicCommunityBrowsePage = ({
               momentum, and open the spaces that are already connecting people to
               fundraisers and discussion.
             </p>
+
+            <div className={styles.heroActions}>
+              <Link className={styles.createAction} href={createCommunityHref}>
+                Create a community
+              </Link>
+            </div>
           </div>
 
           <div className={styles.heroStats}>

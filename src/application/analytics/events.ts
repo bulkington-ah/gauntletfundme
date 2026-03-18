@@ -3,6 +3,8 @@ export const analyticsEventNames = {
   fundraiserPageViewed: "page_view.fundraiser",
   communityPageViewed: "page_view.community",
   followCompleted: "engagement.follow.completed",
+  communityCreated: "community.created",
+  fundraiserCreated: "fundraiser.created",
   postCreated: "discussion.post.created",
   commentCreated: "discussion.comment.created",
   donationCompleted: "engagement.donation.completed",
@@ -72,6 +74,30 @@ export const buildCommentCreatedEvent = (input: {
     viewerUserId: input.viewerUserId,
     postId: input.postId,
     commentId: input.commentId,
+  });
+
+export const buildCommunityCreatedEvent = (input: {
+  viewerUserId: string;
+  communityId: string;
+  communitySlug: string;
+}): AnalyticsEvent =>
+  toEvent(analyticsEventNames.communityCreated, {
+    viewerUserId: input.viewerUserId,
+    communityId: input.communityId,
+    communitySlug: input.communitySlug,
+  });
+
+export const buildFundraiserCreatedEvent = (input: {
+  viewerUserId: string;
+  fundraiserId: string;
+  fundraiserSlug: string;
+  communitySlug: string | null;
+}): AnalyticsEvent =>
+  toEvent(analyticsEventNames.fundraiserCreated, {
+    viewerUserId: input.viewerUserId,
+    fundraiserId: input.fundraiserId,
+    fundraiserSlug: input.fundraiserSlug,
+    communitySlug: input.communitySlug,
   });
 
 export const buildPostCreatedEvent = (input: {
