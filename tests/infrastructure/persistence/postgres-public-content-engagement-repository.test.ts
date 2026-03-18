@@ -517,7 +517,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(fundraiserSnapshot.summary.supporterCount).toBe(5);
   });
 
-  it("returns supporter digest activity scoped to followed, visible content only", async () => {
+  it("returns supporter digest activity scoped to followed or owned, visible content only", async () => {
     const harness = createRepositoryHarness();
     await harness.resetRepository.resetPrototypeData();
     const { pool, repository } = harness;
@@ -609,6 +609,51 @@ describe("PostgresPublicContentEngagementRepository", () => {
         lastCommentAt: new Date("2026-03-16T14:02:00.000Z"),
       }),
     ]);
+  });
+
+  it("returns digest highlights for owned organizer resources without self-follow rows", async () => {
+    const harness = createRepositoryHarness();
+    const now = new Date("2026-03-18T12:00:00.000Z");
+
+    await harness.resetRepository.resetPrototypeData();
+
+    const result = await getSupporterDigest(
+      {
+        now: () => now,
+        sessionViewerGateway: {
+          findViewerBySessionToken: vi.fn().mockResolvedValue({
+            userId: "user_organizer_avery",
+            role: "organizer",
+          }),
+        },
+        supporterDigestNarrator: {
+          narrateDigest: vi.fn().mockResolvedValue({
+            status: "unavailable",
+            reason: "provider_error",
+            message: "OpenAI is temporarily unavailable.",
+          }),
+        },
+        supporterDigestReadRepository: harness.repository,
+        supporterDigestStateRepository: harness.repository,
+      },
+      {
+        sessionToken: "demo-organizer-session",
+      },
+    );
+
+    expect(result.status).toBe("success");
+    if (result.status !== "success") {
+      throw new Error("Expected the organizer digest to resolve successfully.");
+    }
+
+    expect(result.digest.windowStart).toBe("2026-03-16T08:00:00.000Z");
+    expect(result.digest.highlights.length).toBeGreaterThan(0);
+    expect(result.digest.highlights.map((highlight) => highlight.id)).toContain(
+      "fundraiser_momentum:fundraiser_warm_meals_2026",
+    );
+    expect(result.digest.highlights.map((highlight) => highlight.id)).toContain(
+      "community_update:post_kickoff_update",
+    );
   });
 
   it("returns derived fundraiser and community engagement summaries for seeded content", async () => {

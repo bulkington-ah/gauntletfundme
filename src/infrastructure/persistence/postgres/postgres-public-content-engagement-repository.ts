@@ -721,13 +721,33 @@ export const createPostgresPublicContentEngagementRepository = (
     windowEnd: Date;
   }) => {
     const result = await query<SupporterDigestFundraiserActivityRow>(
-      `SELECT *
+      `WITH tracked_fundraisers AS (
+         SELECT
+           f.id,
+           f.slug,
+           f.title,
+           f.goal_amount
+         FROM fundraisers f
+         WHERE f.owner_user_id = $1
+         UNION
+         SELECT
+           f.id,
+           f.slug,
+           f.title,
+           f.goal_amount
+         FROM follows fo
+         INNER JOIN fundraisers f
+           ON f.id = fo.target_id
+          AND fo.target_type = 'fundraiser'
+         WHERE fo.user_id = $1
+       )
+       SELECT *
        FROM (
          SELECT
-           f.id AS fundraiser_id,
-           f.slug AS fundraiser_slug,
-           f.title AS fundraiser_title,
-           f.goal_amount,
+           tf.id AS fundraiser_id,
+           tf.slug AS fundraiser_slug,
+           tf.title AS fundraiser_title,
+           tf.goal_amount,
            COALESCE(SUM(CASE WHEN d.created_at < $2 THEN d.amount ELSE 0 END), 0)::text AS amount_raised_before_window,
            COALESCE(SUM(d.amount), 0)::text AS amount_raised_after_window,
            COALESCE(
@@ -766,14 +786,10 @@ export const createPostgresPublicContentEngagementRepository = (
                ELSE NULL
              END
            ) AS last_donation_at
-         FROM follows fo
-         INNER JOIN fundraisers f
-           ON f.id = fo.target_id
-          AND fo.target_type = 'fundraiser'
+         FROM tracked_fundraisers tf
          LEFT JOIN donations d
-           ON d.fundraiser_id = f.id
-         WHERE fo.user_id = $1
-         GROUP BY f.id, f.slug, f.title, f.goal_amount
+           ON d.fundraiser_id = tf.id
+         GROUP BY tf.id, tf.slug, tf.title, tf.goal_amount
        ) fundraiser_activity
        WHERE last_donation_at IS NOT NULL
        ORDER BY last_donation_at DESC`,
@@ -808,7 +824,27 @@ export const createPostgresPublicContentEngagementRepository = (
     windowEnd: Date;
   }) => {
     const result = await query<SupporterDigestCommunityUpdateRow>(
-      `SELECT
+      `WITH tracked_communities AS (
+         SELECT
+           c.id,
+           c.slug,
+           c.name,
+           c.owner_user_id
+         FROM communities c
+         WHERE c.owner_user_id = $1
+         UNION
+         SELECT
+           c.id,
+           c.slug,
+           c.name,
+           c.owner_user_id
+         FROM follows fo
+         INNER JOIN communities c
+           ON c.id = fo.target_id
+          AND fo.target_type = 'community'
+         WHERE fo.user_id = $1
+       )
+       SELECT
          c.id AS community_id,
          c.slug AS community_slug,
          c.name AS community_name,
@@ -816,16 +852,12 @@ export const createPostgresPublicContentEngagementRepository = (
          p.id AS post_id,
          p.title AS post_title,
          p.created_at AS published_at
-       FROM follows fo
-       INNER JOIN communities c
-         ON c.id = fo.target_id
-        AND fo.target_type = 'community'
+       FROM tracked_communities c
        INNER JOIN posts p
          ON p.community_id = c.id
        INNER JOIN users u
          ON u.id = p.author_user_id
-       WHERE fo.user_id = $1
-         AND p.author_user_id = c.owner_user_id
+       WHERE p.author_user_id = c.owner_user_id
          AND p.status = 'published'
          AND p.moderation_status = 'visible'
          AND p.created_at >= $2
@@ -851,7 +883,25 @@ export const createPostgresPublicContentEngagementRepository = (
     windowEnd: Date;
   }) => {
     const result = await query<SupporterDigestDiscussionBurstRow>(
-      `SELECT
+      `WITH tracked_communities AS (
+         SELECT
+           c.id,
+           c.slug,
+           c.name
+         FROM communities c
+         WHERE c.owner_user_id = $1
+         UNION
+         SELECT
+           c.id,
+           c.slug,
+           c.name
+         FROM follows fo
+         INNER JOIN communities c
+           ON c.id = fo.target_id
+          AND fo.target_type = 'community'
+         WHERE fo.user_id = $1
+       )
+       SELECT
          c.id AS community_id,
          c.slug AS community_slug,
          c.name AS community_name,
@@ -860,16 +910,12 @@ export const createPostgresPublicContentEngagementRepository = (
          COUNT(*)::text AS new_comment_count,
          COUNT(DISTINCT cm.author_user_id)::text AS participant_count,
          MAX(cm.created_at) AS last_comment_at
-       FROM follows fo
-       INNER JOIN communities c
-         ON c.id = fo.target_id
-        AND fo.target_type = 'community'
+       FROM tracked_communities c
        INNER JOIN posts p
          ON p.community_id = c.id
        INNER JOIN comments cm
          ON cm.post_id = p.id
-       WHERE fo.user_id = $1
-         AND p.status = 'published'
+       WHERE p.status = 'published'
          AND p.moderation_status = 'visible'
          AND cm.status <> 'archived'
          AND cm.moderation_status = 'visible'
