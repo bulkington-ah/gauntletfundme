@@ -50,12 +50,12 @@ Extend the AWS Terraform deployment baseline so the App Runner service keeps pri
 - `terraform -chdir=infra/terraform fmt -check`
 - `terraform -chdir=infra/terraform init`
 - `terraform -chdir=infra/terraform validate`
-- `terraform -chdir=infra/terraform plan -input=false -var='app_image_tag=local-test' -var='openai_api_key_secret_arn=arn:aws:secretsmanager:us-east-1:123456789012:secret:dummy'`
+- `terraform -chdir=infra/terraform plan -input=false -var='app_image_tag=local-test'`
 - `npm test`
 - `npm run build`
 
 ## Handoff Notes
 - Terraform `apply` was not run in this task, so no AWS resources were created and no post-deploy smoke checks were executed.
-- The recorded Terraform plan used a placeholder Secrets Manager ARN only to exercise the secret-backed App Runner path; an actual deployment still needs a real `OPENAI_API_KEY` secret ARN.
+- An actual deployment still needs a real `OPENAI_API_KEY` Secrets Manager ARN passed through `openai_api_key_secret_arn`.
 - `terraform init` and `terraform validate` needed to run outside the sandbox in this environment so Terraform could reach the provider registry and execute the AWS provider plugin successfully.
 - The single NAT gateway is intentional for this internal demo to keep cost and scope down; it remains a single-AZ egress dependency.
