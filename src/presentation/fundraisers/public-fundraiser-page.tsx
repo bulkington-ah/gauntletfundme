@@ -12,6 +12,7 @@ import {
   FundraiserDonationButton,
   FundraiserDonationForm,
 } from "./fundraiser-donation-controls";
+import { FundraiserSupporterRail } from "./fundraiser-supporter-rail";
 import styles from "./public-fundraiser-page.module.css";
 
 type PublicFundraiserQuery = Pick<ApplicationApi, "getPublicFundraiserBySlug">;
@@ -408,37 +409,13 @@ export const PublicFundraiserPage = ({
                 </button>
               </div>
 
-              <div className={styles.supportersHeader}>
-                <h2 className={styles.supportersTitle}>Recent supporters</h2>
-                <p className={styles.supportersCount}>
-                  {model.recentDonations.length} public donations
-                </p>
-              </div>
-
-              <ul className={styles.supportersList}>
-                {model.recentDonations.map((supporter) => (
-                  <SupporterListItem key={`${supporter.displayName}-${supporter.createdAt}`} supporter={supporter} />
-                ))}
-              </ul>
-
-              <div className={styles.sidebarFooter}>
-                <button className={styles.footerButton} type="button">
-                  See all
-                </button>
-                <button className={styles.footerButton} type="button">
-                  See top
-                </button>
-              </div>
+              <FundraiserSupporterRail donations={model.recentDonations} />
             </section>
           </aside>
         </div>
       </main>
     </PublicSiteShell>
   );
-};
-
-type SupporterListItemProps = {
-  supporter: PublicFundraiserDonation;
 };
 
 type SupportProgressDetailsProps = {
@@ -474,51 +451,6 @@ const SupportProgressDetails = ({
   </div>
 );
 
-const SupporterListItem = ({ supporter }: SupporterListItemProps) => (
-  <li className={styles.supporterItem}>
-    {supporter.profileSlug ? (
-      <Link
-        className={styles.supporterIdentityLink}
-        href={`/profiles/${supporter.profileSlug}`}
-      >
-        <div className={styles.supporterAvatar} aria-hidden="true">
-          {toInitials(supporter.displayName)}
-        </div>
-
-        <div className={styles.supporterDetails}>
-          <div className={styles.supporterNameRow}>
-            <span className={styles.supporterName}>{supporter.displayName}</span>
-            <span className={styles.supporterDate}>
-              {formatSupporterDate(supporter.createdAt)}
-            </span>
-          </div>
-          <p className={styles.supporterMeta}>
-            {formatCurrency(supporter.amount)} donated
-          </p>
-        </div>
-      </Link>
-    ) : (
-      <>
-        <div className={styles.supporterAvatar} aria-hidden="true">
-          {toInitials(supporter.displayName)}
-        </div>
-
-        <div className={styles.supporterDetails}>
-          <div className={styles.supporterNameRow}>
-            <span className={styles.supporterName}>{supporter.displayName}</span>
-            <span className={styles.supporterDate}>
-              {formatSupporterDate(supporter.createdAt)}
-            </span>
-          </div>
-          <p className={styles.supporterMeta}>
-            {formatCurrency(supporter.amount)} donated
-          </p>
-        </div>
-      </>
-    )}
-  </li>
-);
-
 const getFirstName = (displayName: string): string => displayName.split(" ")[0] ?? displayName;
 
 const toInitials = (value: string): string =>
@@ -551,13 +483,6 @@ const formatCompactCurrency = (value: number): string =>
     notation: "compact",
     maximumFractionDigits: 0,
   }).format(value);
-
-const formatSupporterDate = (value: string): string =>
-  new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(value));
 
 const toGoalProgressPercentage = (supportAmount: number, goalAmount: number): number => {
   if (goalAmount <= 0) {

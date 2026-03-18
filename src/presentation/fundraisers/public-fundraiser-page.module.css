@@ -496,6 +496,14 @@
   font-size: 0.95rem;
 }
 
+.supportersViewport {
+  max-height: min(24rem, calc(100vh - 26rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+  scrollbar-gutter: stable;
+}
+
 .supportersList {
   display: grid;
   gap: 1rem;
@@ -669,6 +677,17 @@
   width: 100%;
 }
 
+.footerButtonActive {
+  background: #204f36;
+  border-color: #204f36;
+  color: white;
+}
+
+.footerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .errorPage {
   display: grid;
   margin: 0 auto;
@@ -742,6 +761,10 @@
 
   .sidebarCard {
     gap: 1rem;
+  }
+
+  .supportersViewport {
+    max-height: 18rem;
   }
 
   .sidebarBanner,

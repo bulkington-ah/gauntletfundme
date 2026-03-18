@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 import type { PublicFundraiserResponse, PublicQueryResult } from "@/application";
 import {
@@ -235,6 +235,108 @@ describe("PublicFundraiserPage", () => {
     );
   });
 
+  it("keeps the supporter rail scrollable while toggling recent, all, and top donations", () => {
+    render(
+      <PublicFundraiserPage
+        model={createSuccessfulPageModel([
+          {
+            displayName: "Latest Donor",
+            profileSlug: "latest-donor",
+            avatarUrl: null,
+            amount: 100,
+            status: "completed",
+            createdAt: "2026-03-16T12:55:00.000Z",
+          },
+          {
+            displayName: "Second Donor",
+            profileSlug: "second-donor",
+            avatarUrl: null,
+            amount: 4000,
+            status: "completed",
+            createdAt: "2026-03-16T12:50:00.000Z",
+          },
+          {
+            displayName: "Third Donor",
+            profileSlug: "third-donor",
+            avatarUrl: null,
+            amount: 200,
+            status: "completed",
+            createdAt: "2026-03-16T12:45:00.000Z",
+          },
+          {
+            displayName: "Top Donor",
+            profileSlug: "top-donor",
+            avatarUrl: null,
+            amount: 9000,
+            status: "completed",
+            createdAt: "2026-03-16T12:40:00.000Z",
+          },
+          {
+            displayName: "Fifth Donor",
+            profileSlug: "fifth-donor",
+            avatarUrl: null,
+            amount: 3000,
+            status: "completed",
+            createdAt: "2026-03-16T12:35:00.000Z",
+          },
+        ])}
+      />,
+    );
+
+    const viewport = screen.getByTestId("fundraiser-supporter-viewport");
+    const seeAllButton = screen.getByRole("button", { name: "See all" });
+    const seeTopButton = screen.getByRole("button", { name: "See top" });
+
+    expect(viewport).toHaveAttribute("role", "region");
+    expect(within(viewport).getByRole("list")).toBeInTheDocument();
+    expect(within(viewport).getAllByRole("listitem")).toHaveLength(3);
+    expect(within(viewport).getByText("Latest Donor")).toBeInTheDocument();
+    expect(within(viewport).getByText("Second Donor")).toBeInTheDocument();
+    expect(within(viewport).getByText("Third Donor")).toBeInTheDocument();
+    expect(within(viewport).queryByText("Top Donor")).not.toBeInTheDocument();
+    expect(within(viewport).queryByText("Fifth Donor")).not.toBeInTheDocument();
+    expect(seeAllButton).toHaveAttribute("aria-pressed", "false");
+    expect(seeTopButton).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(seeAllButton);
+
+    expect(seeAllButton).toHaveAttribute("aria-pressed", "true");
+    expect(seeTopButton).toHaveAttribute("aria-pressed", "false");
+    expect(within(viewport).getAllByRole("listitem")).toHaveLength(5);
+    expect(within(viewport).getByText("Top Donor")).toBeInTheDocument();
+    expect(within(viewport).getByText("Fifth Donor")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Recent supporters" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(seeTopButton);
+
+    expect(seeAllButton).toHaveAttribute("aria-pressed", "false");
+    expect(seeTopButton).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.getByRole("heading", { name: "Top supporters" }),
+    ).toBeInTheDocument();
+
+    const sortedItems = within(viewport).getAllByRole("listitem");
+    expect(within(sortedItems[0]!).getByText("Top Donor")).toBeInTheDocument();
+    expect(within(sortedItems[1]!).getByText("Second Donor")).toBeInTheDocument();
+    expect(within(sortedItems[2]!).getByText("Fifth Donor")).toBeInTheDocument();
+    expect(within(sortedItems[3]!).getByText("Third Donor")).toBeInTheDocument();
+    expect(within(sortedItems[4]!).getByText("Latest Donor")).toBeInTheDocument();
+  });
+
+  it("disables supporter rail buttons when there are no public donations", () => {
+    render(<PublicFundraiserPage model={createSuccessfulPageModel([])} />);
+
+    expect(screen.getByRole("button", { name: "See all" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "See top" })).toBeDisabled();
+    expect(
+      within(screen.getByTestId("fundraiser-supporter-viewport")).queryAllByRole(
+        "listitem",
+      ),
+    ).toHaveLength(0);
+  });
+
   it("reveals the donation form from the shared CTA and submits a persisted donation", async () => {
     const fetchSpy = vi.fn().mockResolvedValue(
       new Response(
@@ -406,4 +508,37 @@ const createPublicFundraiserQueryStub = ({
   result: PublicQueryResult<PublicFundraiserResponse>;
 }) => ({
   getPublicFundraiserBySlug: vi.fn().mockResolvedValue(result),
+});
+
+const createSuccessfulPageModel = (
+  recentDonations: PublicFundraiserResponse["recentDonations"],
+) => ({
+  status: "success" as const,
+  viewerFollowState: {
+    isFollowing: false,
+    isOwnTarget: false,
+  },
+  fundraiser: {
+    slug: "warm-meals-2026",
+    title: "Warm Meals 2026",
+    story:
+      "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
+    status: "active" as const,
+    goalAmount: 250000,
+    amountRaised: 7800,
+    supporterCount: recentDonations.length,
+    donationCount: recentDonations.length,
+  },
+  organizer: {
+    displayName: "Avery Johnson",
+    role: "organizer" as const,
+    profileSlug: "avery-johnson",
+    avatarUrl: null,
+  },
+  community: {
+    slug: "neighbors-helping-neighbors",
+    name: "Neighbors Helping Neighbors",
+    visibility: "public" as const,
+  },
+  recentDonations,
 });
