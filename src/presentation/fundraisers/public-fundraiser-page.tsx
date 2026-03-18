@@ -324,19 +324,6 @@ export const PublicFundraiserPage = ({
 
               <wa-divider className={styles.divider} />
 
-              <div className={styles.reactionRow}>
-                <div className={styles.reaction}>
-                  <span className={styles.reactionIcon} aria-hidden="true">
-                    ♡
-                  </span>
-                  <span>React</span>
-                </div>
-                <div className={styles.reactionCount}>
-                  <span aria-hidden="true">✦</span>
-                  <span>{model.fundraiser.supporterCount}</span>
-                </div>
-              </div>
-
               <div className={styles.actionRow}>
                 <FundraiserDonationButton className={styles.primaryAction}>
                   Donate now

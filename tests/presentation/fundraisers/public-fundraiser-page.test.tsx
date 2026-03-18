@@ -208,6 +208,7 @@ describe("PublicFundraiserPage", () => {
     expect(screen.getAllByText("3% of goal")).toHaveLength(2);
     expect(screen.getAllByText("$4,000 donated")).toHaveLength(1);
     expect(screen.getAllByText("$3,800 donated")).toHaveLength(1);
+    expect(screen.queryByText("React")).not.toBeInTheDocument();
 
     const donateButtons = screen.getAllByRole("button", { name: "Donate now" });
     expect(donateButtons).toHaveLength(3);

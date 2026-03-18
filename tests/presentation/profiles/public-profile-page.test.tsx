@@ -303,6 +303,8 @@ describe("PublicProfilePage", () => {
       screen.getByRole("link", { name: "2 following" }),
     ).toHaveAttribute("href", "/profiles/avery-johnson/following");
     expect(screen.getByRole("button", { name: "Follow" })).toBeInTheDocument();
+    expect(screen.queryByText("Discover more people")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "..." })).not.toBeInTheDocument();
     expect(screen.getByText("Fundraiser momentum")).toBeInTheDocument();
     expect(screen.getByText("Recent public activity")).toBeInTheDocument();
 

@@ -156,7 +156,6 @@ export const PublicProfilePage = ({
   }
 
   const profileInitials = toInitials(model.profile.displayName);
-  const discoverPeople = buildDiscoverPeople(model);
 
   return (
     <PublicSiteShell
@@ -222,31 +221,8 @@ export const PublicProfilePage = ({
                   targetType="profile"
                   viewer={viewer}
                 />
-                <button className={styles.moreButton} type="button">
-                  ...
-                </button>
               </div>
             </div>
-          </div>
-        </section>
-
-        <section className={styles.discoverStrip}>
-          <div>
-            <p className={styles.sectionEyebrow}>Discover</p>
-            <h2 className={styles.sectionTitle}>Discover more people</h2>
-          </div>
-
-          <div className={styles.discoverPreview}>
-            <div className={styles.discoverAvatars}>
-              {discoverPeople.map((person) => (
-                <div className={styles.discoverAvatar} key={person}>
-                  {toInitials(person)}
-                </div>
-              ))}
-            </div>
-            <button className={styles.discoverToggle} type="button">
-              ˅
-            </button>
           </div>
         </section>
 
@@ -389,9 +365,6 @@ export const PublicProfilePage = ({
                         </div>
                       </>
                     )}
-                    <button className={styles.activityMoreButton} type="button">
-                      ...
-                    </button>
                   </div>
 
                   <div className={styles.activityContent}>
@@ -434,16 +407,6 @@ export const PublicProfilePage = ({
       </main>
     </PublicSiteShell>
   );
-};
-
-const buildDiscoverPeople = (model: SuccessfulProfilePageModel): string[] => {
-  const activityNames = model.recentActivity
-    .map((entry) => entry.actor.displayName)
-    .filter((name) => name !== model.profile.displayName);
-
-  const communityNames = model.connections.communities.map((community) => community.name);
-
-  return [...new Set([...activityNames, ...communityNames])].slice(0, 3);
 };
 
 const toInitials = (value: string): string =>

@@ -7,7 +7,6 @@
 }
 
 .profileHero,
-.discoverStrip,
 .highlightCard,
 .activityCard,
 .communityPill,
@@ -79,7 +78,6 @@
 }
 
 .avatar,
-.discoverAvatar,
 .activityAvatar {
   align-items: center;
   background: linear-gradient(145deg, #274d39, #82d48c);
@@ -184,11 +182,8 @@
 }
 
 .followButton,
-.moreButton,
 .primaryAction,
-.secondaryAction,
-.discoverToggle,
-.activityMoreButton {
+.secondaryAction {
   align-items: center;
   border-radius: 999px;
   display: inline-flex;
@@ -211,55 +206,14 @@
   text-decoration: none;
 }
 
-.moreButton,
-.discoverToggle,
-.activityMoreButton,
 .secondaryAction {
   background: var(--wa-color-surface-default);
   border: 1px solid var(--wa-color-surface-border);
   color: var(--wa-color-text-normal);
 }
 
-.moreButton {
-  cursor: pointer;
-  min-width: 3.1rem;
-}
-
-.discoverStrip {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-}
-
 .sectionTitle {
   font-size: clamp(1.8rem, 3vw, 2.4rem);
-}
-
-.discoverPreview {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-}
-
-.discoverAvatars {
-  display: flex;
-  padding-left: 0.8rem;
-}
-
-.discoverAvatar {
-  border: 3px solid var(--wa-color-surface-default);
-  font-size: 0.92rem;
-  height: 3rem;
-  margin-left: -0.8rem;
-  width: 3rem;
-}
-
-.discoverToggle {
-  cursor: pointer;
-  height: 2.75rem;
-  width: 2.75rem;
 }
 
 .causesSection,
@@ -498,7 +452,6 @@
     padding-top: 1.6rem;
   }
 
-  .discoverStrip,
   .sectionHeader,
   .activityHeader,
   .heroActions,

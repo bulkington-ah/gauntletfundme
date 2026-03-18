@@ -243,26 +243,6 @@
   margin: 1.4rem 0 1rem;
 }
 
-.reactionRow {
-  align-items: center;
-  display: flex;
-  gap: 1.25rem;
-}
-
-.reaction,
-.reactionCount {
-  align-items: center;
-  color: var(--wa-color-text-quiet);
-  display: inline-flex;
-  gap: 0.5rem;
-  font-size: 0.98rem;
-  font-weight: var(--wa-font-weight-semibold);
-}
-
-.reactionIcon {
-  font-size: 1.1rem;
-}
-
 .actionRow,
 .promoActions,
 .sidebarActions,
