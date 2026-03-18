@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 
 import type { PublicCommunityResponse, PublicQueryResult } from "@/application";
 import {
@@ -314,10 +314,24 @@ describe("PublicCommunityPage", () => {
         name: "Neighbors Helping Neighbors",
       }),
     ).toBeInTheDocument();
+    const heroSection = screen
+      .getByRole("heading", {
+        level: 1,
+        name: "Neighbors Helping Neighbors",
+      })
+      .closest("section");
+    expect(heroSection).not.toBeNull();
     expect(
-      screen.getAllByText("A public space for updates and volunteer coordination.")
-        .length,
-    ).toBeGreaterThan(0);
+      within(heroSection as HTMLElement).getAllByText(
+        "A public space for updates and volunteer coordination.",
+      ),
+    ).toHaveLength(1);
+    expect(screen.queryByText("Community spotlight")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Coordination, updates, and fundraising all in one public surface.",
+      ),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByText("12 followers"),
     ).toBeInTheDocument();

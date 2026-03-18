@@ -149,7 +149,6 @@ export const PublicCommunityPage = ({
 
   const ownerInitials = toInitials(model.owner.displayName);
   const communityInitials = toInitials(model.community.name);
-  const descriptionLead = toLeadSentence(model.community.description);
 
   return (
     <PublicSiteShell
@@ -162,7 +161,6 @@ export const PublicCommunityPage = ({
           <div className={styles.heroCopy}>
             <p className={styles.eyebrow}>Community</p>
             <h1 className={styles.heroTitle}>{model.community.name}</h1>
-            <p className={styles.heroLead}>{descriptionLead}</p>
             <p className={styles.heroBody}>{model.community.description}</p>
 
             <div className={styles.communityMeta}>
@@ -221,18 +219,6 @@ export const PublicCommunityPage = ({
                 <p className={styles.statValue}>{model.community.fundraiserCount}</p>
                 <p className={styles.statLabel}>fundraisers</p>
               </div>
-            </div>
-          </div>
-
-          <div className={styles.heroArtwork}>
-            <div className={styles.heroArtworkCard}>
-              <p className={styles.heroArtworkLabel}>Community spotlight</p>
-              <h2 className={styles.heroArtworkTitle}>{model.community.name}</h2>
-              <p className={styles.heroArtworkBody}>
-                Coordination, updates, and fundraising all in one public surface.
-              </p>
-              <div className={styles.heroArtworkGlow} aria-hidden="true" />
-              <div className={styles.heroArtworkTerrain} aria-hidden="true" />
             </div>
           </div>
         </section>
@@ -539,12 +525,6 @@ const formatDate = (value: string): string =>
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(value));
-
-const toLeadSentence = (description: string): string => {
-  const firstSentence = description.split(".")[0]?.trim();
-
-  return firstSentence ? `${firstSentence}.` : description;
-};
 
 const toGoalProgressPercentage = (supportAmount: number, goalAmount: number): number => {
   if (goalAmount <= 0) {

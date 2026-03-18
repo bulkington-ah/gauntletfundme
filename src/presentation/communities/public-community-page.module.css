@@ -12,7 +12,6 @@
   border-radius: 2.25rem;
   display: grid;
   gap: 1.75rem;
-  grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr);
   padding: clamp(1.5rem, 3vw, 2.5rem);
 }
 
@@ -47,7 +46,6 @@
   max-width: 12ch;
 }
 
-.heroLead,
 .heroBody,
 .metaPrimary,
 .metaSecondary,
@@ -63,12 +61,6 @@
 .errorBody {
   line-height: 1.6;
   margin: 0;
-}
-
-.heroLead {
-  font-size: clamp(1.15rem, 2vw, 1.4rem);
-  font-weight: var(--wa-font-weight-semibold);
-  max-width: 42rem;
 }
 
 .heroBody {
@@ -203,69 +195,6 @@
   font-size: clamp(1.7rem, 3vw, 2.4rem);
   letter-spacing: -0.04em;
   line-height: 1;
-}
-
-.heroArtwork {
-  display: grid;
-}
-
-.heroArtworkCard {
-  background:
-    radial-gradient(circle at top left, rgba(255, 237, 138, 0.4), transparent 30%),
-    linear-gradient(180deg, #ffc537 0%, #ffb307 56%, #ef9810 100%);
-  border-radius: 2rem;
-  min-height: 100%;
-  overflow: hidden;
-  padding: clamp(1.5rem, 3vw, 2.25rem);
-  position: relative;
-}
-
-.heroArtworkLabel {
-  color: rgba(38, 31, 18, 0.75);
-  font-size: 0.95rem;
-  font-weight: var(--wa-font-weight-semibold);
-  margin: 0;
-  text-transform: uppercase;
-}
-
-.heroArtworkTitle {
-  color: #151515;
-  font-family: var(--wa-font-family-heading);
-  font-size: clamp(2.4rem, 5vw, 3.6rem);
-  letter-spacing: -0.05em;
-  margin: 1.5rem 0 0;
-  max-width: 9ch;
-  position: relative;
-  z-index: 1;
-}
-
-.heroArtworkBody {
-  color: rgba(21, 21, 21, 0.82);
-  line-height: 1.6;
-  margin: 0.75rem 0 0;
-  max-width: 18rem;
-  position: relative;
-  z-index: 1;
-}
-
-.heroArtworkGlow {
-  background: radial-gradient(circle, rgba(255, 251, 220, 0.8) 0%, rgba(255, 251, 220, 0) 70%);
-  height: 18rem;
-  position: absolute;
-  right: -2rem;
-  top: -3rem;
-  width: 18rem;
-}
-
-.heroArtworkTerrain {
-  background:
-    linear-gradient(180deg, rgba(255, 200, 82, 0) 0%, rgba(197, 125, 0, 0.38) 100%),
-    radial-gradient(circle at 0% 100%, rgba(117, 72, 11, 0.28) 0%, rgba(117, 72, 11, 0) 54%),
-    radial-gradient(circle at 100% 100%, rgba(73, 47, 6, 0.3) 0%, rgba(73, 47, 6, 0) 58%);
-  bottom: 0;
-  inset-inline: 0;
-  position: absolute;
-  top: 42%;
 }
 
 .leaderboardSection,
@@ -553,10 +482,6 @@
 }
 
 @media (max-width: 1040px) {
-  .hero {
-    grid-template-columns: 1fr;
-  }
-
   .leaderboardGrid,
   .fundraiserGrid,
   .aboutGrid {
