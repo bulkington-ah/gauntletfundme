@@ -25,6 +25,7 @@ export default async function PublicFundraiserRoutePage({
       publicFundraiserQuery: applicationApi,
     },
     slug,
+    viewer?.userId ?? null,
   );
 
   return (

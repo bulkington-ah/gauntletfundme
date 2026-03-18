@@ -12,6 +12,7 @@ const { refreshSpy } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
+    push: vi.fn(),
     refresh: refreshSpy,
   }),
 }));
@@ -28,6 +29,10 @@ describe("PublicFundraiserPage", () => {
         status: "success",
         data: {
           kind: "fundraiser",
+          viewerFollowState: {
+            isFollowing: false,
+            isOwnTarget: false,
+          },
           fundraiser: {
             slug: "warm-meals-2026",
             title: "Warm Meals 2026",
@@ -72,9 +77,14 @@ describe("PublicFundraiserPage", () => {
 
     expect(query.getPublicFundraiserBySlug).toHaveBeenCalledWith({
       slug: "warm-meals-2026",
+      viewerUserId: null,
     });
     expect(model).toEqual({
       status: "success",
+      viewerFollowState: {
+        isFollowing: false,
+        isOwnTarget: false,
+      },
       fundraiser: {
         slug: "warm-meals-2026",
         title: "Warm Meals 2026",
@@ -114,6 +124,10 @@ describe("PublicFundraiserPage", () => {
       <PublicFundraiserPage
         model={{
           status: "success",
+          viewerFollowState: {
+            isFollowing: false,
+            isOwnTarget: false,
+          },
           fundraiser: {
             slug: "warm-meals-2026",
             title: "Warm Meals 2026",
@@ -180,6 +194,7 @@ describe("PublicFundraiserPage", () => {
 
     const donateButtons = screen.getAllByRole("button", { name: "Donate now" });
     expect(donateButtons).toHaveLength(3);
+    expect(screen.getAllByRole("button", { name: "Follow" })).toHaveLength(2);
 
     expect(
       screen
@@ -226,6 +241,10 @@ describe("PublicFundraiserPage", () => {
       <PublicFundraiserPage
         model={{
           status: "success",
+          viewerFollowState: {
+            isFollowing: false,
+            isOwnTarget: false,
+          },
           fundraiser: {
             slug: "warm-meals-2026",
             title: "Warm Meals 2026",
@@ -278,6 +297,50 @@ describe("PublicFundraiserPage", () => {
       await screen.findByText("$250 donated. Totals are refreshing now."),
     ).toBeInTheDocument();
     await waitFor(() => expect(refreshSpy).toHaveBeenCalledTimes(1));
+  });
+
+  it("hides fundraiser follow controls on a self-owned fundraiser page", () => {
+    render(
+      <PublicFundraiserPage
+        model={{
+          status: "success",
+          viewerFollowState: {
+            isFollowing: false,
+            isOwnTarget: true,
+          },
+          fundraiser: {
+            slug: "warm-meals-2026",
+            title: "Warm Meals 2026",
+            story: "Funding hot meals for families all winter.",
+            status: "active",
+            goalAmount: 250000,
+            amountRaised: 7800,
+            supporterCount: 2,
+            donationCount: 2,
+          },
+          organizer: {
+            displayName: "Avery Johnson",
+            role: "organizer",
+            profileSlug: "avery-johnson",
+            avatarUrl: null,
+          },
+          community: null,
+          recentDonations: [],
+        }}
+        viewer={{
+          userId: "user_organizer_avery",
+          role: "organizer",
+        }}
+      />,
+    );
+
+    expect(screen.getAllByRole("button", { name: "Donate now" })).toHaveLength(3);
+    expect(
+      screen.queryByRole("button", { name: "Follow" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Unfollow" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders fundraiser-not-found and invalid-request states", () => {

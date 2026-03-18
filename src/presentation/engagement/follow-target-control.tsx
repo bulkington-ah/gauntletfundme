@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 
 import type {
   AuthenticatedViewer,
-  FollowTargetType,
   ViewerFollowState,
 } from "@/application";
+import type { FollowTargetType } from "@/domain";
 
 import styles from "./follow-target-control.module.css";
 

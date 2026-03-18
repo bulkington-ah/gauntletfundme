@@ -5,6 +5,7 @@ import type {
   PublicFundraiserResponse,
   PublicFundraiserDonation,
 } from "@/application";
+import { FollowTargetControl } from "@/presentation/engagement";
 import { PublicSiteShell } from "@/presentation/shared";
 
 import {
@@ -17,6 +18,7 @@ type PublicFundraiserQuery = Pick<ApplicationApi, "getPublicFundraiserBySlug">;
 
 type SuccessfulFundraiserPageModel = {
   status: "success";
+  viewerFollowState: PublicFundraiserResponse["viewerFollowState"];
   fundraiser: PublicFundraiserResponse["fundraiser"];
   organizer: PublicFundraiserResponse["organizer"];
   community: PublicFundraiserResponse["community"];
@@ -44,15 +46,18 @@ const fundraiserHeroImagePath = "/fundraiser-hero-warm-meals.svg";
 export const buildPublicFundraiserPageModel = async (
   dependencies: BuildDependencies,
   slug: string,
+  viewerUserId: string | null = null,
 ): Promise<PublicFundraiserPageModel> => {
   const result = await dependencies.publicFundraiserQuery.getPublicFundraiserBySlug({
     slug,
+    viewerUserId,
   });
 
   switch (result.status) {
     case "success":
       return {
         status: "success",
+        viewerFollowState: result.data.viewerFollowState,
         fundraiser: result.data.fundraiser,
         organizer: result.data.organizer,
         community: result.data.community,
@@ -245,6 +250,14 @@ export const PublicFundraiserPage = ({
                   nextPath={`/fundraisers/${model.fundraiser.slug}`}
                   viewer={viewer}
                 />
+                <FollowTargetControl
+                  buttonClassName={styles.secondaryAction}
+                  initialFollowState={model.viewerFollowState}
+                  nextPath={returnTo}
+                  targetSlug={model.fundraiser.slug}
+                  targetType="fundraiser"
+                  viewer={viewer}
+                />
                 <button className={styles.secondaryAction} type="button">
                   Share
                 </button>
@@ -404,6 +417,14 @@ export const PublicFundraiserPage = ({
                   buttonClassName={styles.primaryAction}
                   fundraiserSlug={model.fundraiser.slug}
                   nextPath={`/fundraisers/${model.fundraiser.slug}`}
+                  viewer={viewer}
+                />
+                <FollowTargetControl
+                  buttonClassName={styles.sidebarSecondaryAction}
+                  initialFollowState={model.viewerFollowState}
+                  nextPath={returnTo}
+                  targetSlug={model.fundraiser.slug}
+                  targetType="fundraiser"
                   viewer={viewer}
                 />
                 <button className={styles.sidebarSecondaryAction} type="button">
