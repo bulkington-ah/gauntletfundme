@@ -127,49 +127,6 @@
   width: 100%;
 }
 
-.mediaDots {
-  align-items: center;
-  bottom: 1.25rem;
-  display: flex;
-  gap: 0.45rem;
-  left: 1.25rem;
-  position: absolute;
-}
-
-.mediaDot {
-  background: rgba(255, 255, 255, 0.35);
-  border-radius: 999px;
-  display: block;
-  height: 0.5rem;
-  width: 0.5rem;
-}
-
-.mediaDotActive {
-  background: rgba(255, 255, 255, 0.95);
-  width: 1.4rem;
-}
-
-.mediaControls {
-  bottom: 1.1rem;
-  display: flex;
-  gap: 0.6rem;
-  position: absolute;
-  right: 1.1rem;
-}
-
-.mediaControl {
-  align-items: center;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 999px;
-  color: rgba(255, 255, 255, 0.95);
-  display: inline-flex;
-  font-size: 1.1rem;
-  height: 2.6rem;
-  justify-content: center;
-  width: 2.6rem;
-}
-
 .organizerCard,
 .storyCard,
 .sidebarCard {

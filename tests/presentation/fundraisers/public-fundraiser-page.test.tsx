@@ -196,6 +196,8 @@ describe("PublicFundraiserPage", () => {
         name: "Warm meal deliveries staged for neighborhood pickup",
       }),
     ).toBeInTheDocument();
+    expect(screen.queryByText("←")).not.toBeInTheDocument();
+    expect(screen.queryByText("→")).not.toBeInTheDocument();
     expect(
       screen.getByText("Recent supporters"),
     ).toBeInTheDocument();

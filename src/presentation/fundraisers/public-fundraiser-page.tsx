@@ -213,21 +213,6 @@ export const PublicFundraiserPage = ({
                   className={styles.mediaImage}
                   src={fundraiserHeroImagePath}
                 />
-
-                <div className={styles.mediaDots} aria-hidden="true">
-                  <span className={`${styles.mediaDot} ${styles.mediaDotActive}`} />
-                  <span className={styles.mediaDot} />
-                  <span className={styles.mediaDot} />
-                </div>
-
-                <div className={styles.mediaControls} aria-hidden="true">
-                  <button className={styles.mediaControl} disabled type="button">
-                    ←
-                  </button>
-                  <button className={styles.mediaControl} disabled type="button">
-                    →
-                  </button>
-                </div>
               </div>
             </section>
 
