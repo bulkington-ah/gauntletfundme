@@ -32,6 +32,36 @@ resource "aws_vpc" "main" {
   })
 }
 
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(local.merged_tags, {
+    Name = "${local.resource_prefix}-igw"
+  })
+}
+
+resource "aws_subnet" "public_a" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnet_cidr_blocks[0]
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = true
+
+  tags = merge(local.merged_tags, {
+    Name = "${local.resource_prefix}-public-a"
+  })
+}
+
+resource "aws_subnet" "public_b" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnet_cidr_blocks[1]
+  availability_zone       = data.aws_availability_zones.available.names[1]
+  map_public_ip_on_launch = true
+
+  tags = merge(local.merged_tags, {
+    Name = "${local.resource_prefix}-public-b"
+  })
+}
+
 resource "aws_subnet" "private_a" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.private_subnet_cidr_blocks[0]
@@ -52,12 +82,61 @@ resource "aws_subnet" "private_b" {
   })
 }
 
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(local.merged_tags, {
+    Name = "${local.resource_prefix}-public-rt"
+  })
+}
+
+resource "aws_route" "public_internet_access" {
+  route_table_id         = aws_route_table.public.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.main.id
+}
+
+resource "aws_route_table_association" "public_a" {
+  subnet_id      = aws_subnet.public_a.id
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_route_table_association" "public_b" {
+  subnet_id      = aws_subnet.public_b.id
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = merge(local.merged_tags, {
+    Name = "${local.resource_prefix}-nat"
+  })
+}
+
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public_a.id
+
+  tags = merge(local.merged_tags, {
+    Name = "${local.resource_prefix}-nat"
+  })
+
+  depends_on = [aws_internet_gateway.main]
+}
+
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   tags = merge(local.merged_tags, {
     Name = "${local.resource_prefix}-private-rt"
   })
+}
+
+resource "aws_route" "private_internet_access" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.main.id
 }
 
 resource "aws_route_table_association" "private_a" {
@@ -76,10 +155,31 @@ resource "aws_security_group" "apprunner_vpc_connector" {
   vpc_id      = aws_vpc.main.id
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr_block]
+  }
+
+  egress {
+    from_port   = 53
+    to_port     = 53
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr_block]
+  }
+
+  egress {
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    cidr_blocks = [var.vpc_cidr_block]
+  }
+
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = merge(local.merged_tags, {
@@ -271,7 +371,7 @@ resource "aws_apprunner_service" "app" {
       image_identifier      = "${aws_ecr_repository.app.repository_url}:${var.app_image_tag}"
 
       image_configuration {
-        port = tostring(var.app_port)
+        port                          = tostring(var.app_port)
         runtime_environment_variables = local.apprunner_runtime_environment_variables
         runtime_environment_secrets   = local.apprunner_runtime_environment_secrets
       }

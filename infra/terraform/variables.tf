@@ -79,6 +79,17 @@ variable "private_subnet_cidr_blocks" {
   }
 }
 
+variable "public_subnet_cidr_blocks" {
+  description = "Two public subnet CIDR blocks used for internet gateway and NAT-backed egress."
+  type        = list(string)
+  default     = ["10.30.101.0/24", "10.30.102.0/24"]
+
+  validation {
+    condition     = length(var.public_subnet_cidr_blocks) == 2
+    error_message = "public_subnet_cidr_blocks must contain exactly two CIDR blocks."
+  }
+}
+
 variable "database_name" {
   description = "Primary PostgreSQL database name for the application."
   type        = string

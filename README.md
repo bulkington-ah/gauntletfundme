@@ -121,19 +121,32 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
 - Baseline provisions:
   - private-networked PostgreSQL RDS
   - ECR repository for application images
-  - App Runner service with VPC connector egress to private RDS
+  - App Runner service with VPC connector egress to private RDS plus NAT-backed HTTPS egress for Digest AI
 - Controlled release model:
   - deploy explicit image tags via Terraform variable `app_image_tag`
   - auto-deploy is disabled to keep production rollouts intentional
+- Required inputs:
+  - AWS credentials in the shell with access to Terraform-managed networking, ECR, App Runner, IAM, RDS, and Secrets Manager resources
+  - a Docker image tag to publish to ECR and deploy through `app_image_tag`
+  - an `OPENAI_API_KEY` stored in AWS Secrets Manager, with its ARN passed as `openai_api_key_secret_arn`
+- Two-phase operator flow:
+  - phase 1: bootstrap only the ECR repository so there is a target for the first image push
+  - phase 2: push the image tag to ECR, then run the full Terraform plan/apply for App Runner and RDS
 - Core commands:
   - `cd infra/terraform`
   - `terraform fmt -check`
   - `terraform init`
   - `terraform validate`
+  - `terraform apply -target=aws_ecr_repository.app -var="app_image_tag=bootstrap" -var="openai_api_key_secret_arn=<secret-arn>"`
+  - read `ecr_repository_url` from `terraform output`
+  - authenticate Docker to ECR, tag the image as `<ecr_repository_url>:<image-tag>`, and push it
   - `terraform plan -var="app_image_tag=<image-tag>" -var="openai_api_key_secret_arn=<secret-arn>"`
   - `terraform apply -var="app_image_tag=<image-tag>" -var="openai_api_key_secret_arn=<secret-arn>"`
 - Post-deploy smoke check:
   - `GET https://<apprunner_service_url>/api/health`
+- Internal demo setup note:
+  - this environment intentionally leaves `/prototype/reset` open so the demo catalog can be restored manually after deploy
+  - do not reuse this exact setup for a public launch until the reset tooling is protected or disabled
 - State note:
   - this first version intentionally uses local Terraform state; migrate to S3 + DynamoDB locking in a follow-up task before collaborative production operations.
 
