@@ -164,6 +164,7 @@ describe("PublicFundraiserPage", () => {
     expect(
       screen.getAllByText("$7,800 in prototype support"),
     ).toHaveLength(2);
+    expect(screen.getAllByText("3% of goal")).toHaveLength(2);
 
     const donateLink = screen.getAllByRole("link", { name: "Donate now" })[0];
     expect(donateLink).toHaveAttribute(

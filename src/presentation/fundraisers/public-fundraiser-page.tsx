@@ -216,29 +216,11 @@ export const PublicFundraiserPage = ({
                 Help {organizerFirstName} keep meals moving this week.
               </div>
 
-              <div className={styles.mobileSupportStats}>
-                <div className={styles.progressCluster}>
-                  <wa-progress-ring
-                    className={styles.progressRing}
-                    label={`${goalProgress}% of goal represented by prototype support`}
-                    value={goalProgress}
-                  >
-                    <span className={styles.progressValue}>{goalProgress}%</span>
-                  </wa-progress-ring>
-                </div>
-
-                <div className={styles.supportSummary}>
-                  <p className={styles.supportAmount}>
-                    {formatCurrency(model.fundraiser.supportAmount)} in prototype
-                    support
-                  </p>
-                  <p className={styles.supportMeta}>
-                    Goal {formatCompactCurrency(model.fundraiser.goalAmount)} ·{" "}
-                    {model.fundraiser.supporterCount} supporters ·{" "}
-                    {model.fundraiser.donationIntentCount} support actions
-                  </p>
-                </div>
-              </div>
+              <SupportProgressDetails
+                className={styles.mobileSupportStats}
+                fundraiser={model.fundraiser}
+                goalProgress={goalProgress}
+              />
 
               <div className={styles.mobileSupportActions}>
                 <a
@@ -386,29 +368,11 @@ export const PublicFundraiserPage = ({
                 Help {organizerFirstName} keep meals moving this week.
               </div>
 
-              <div className={styles.sidebarStats}>
-                <div className={styles.progressCluster}>
-                  <wa-progress-ring
-                    className={styles.progressRing}
-                    label={`${goalProgress}% of goal represented by prototype support`}
-                    value={goalProgress}
-                  >
-                    <span className={styles.progressValue}>{goalProgress}%</span>
-                  </wa-progress-ring>
-                </div>
-
-                <div className={styles.supportSummary}>
-                  <p className={styles.supportAmount}>
-                    {formatCurrency(model.fundraiser.supportAmount)} in prototype
-                    support
-                  </p>
-                  <p className={styles.supportMeta}>
-                    Goal {formatCompactCurrency(model.fundraiser.goalAmount)} ·{" "}
-                    {model.fundraiser.supporterCount} supporters ·{" "}
-                    {model.fundraiser.donationIntentCount} support actions
-                  </p>
-                </div>
-              </div>
+              <SupportProgressDetails
+                className={styles.sidebarStats}
+                fundraiser={model.fundraiser}
+                goalProgress={goalProgress}
+              />
 
               <div className={styles.sidebarActions}>
                 <a
@@ -454,6 +418,40 @@ export const PublicFundraiserPage = ({
 type SupporterListItemProps = {
   supporter: PublicFundraiserSupporter;
 };
+
+type SupportProgressDetailsProps = {
+  className: string;
+  fundraiser: SuccessfulFundraiserPageModel["fundraiser"];
+  goalProgress: number;
+};
+
+const SupportProgressDetails = ({
+  className,
+  fundraiser,
+  goalProgress,
+}: SupportProgressDetailsProps) => (
+  <div className={className}>
+    <div className={styles.supportSummary}>
+      <p className={styles.supportAmount}>
+        {formatCurrency(fundraiser.supportAmount)} in prototype support
+      </p>
+      <p className={styles.supportMeta}>
+        Goal {formatCompactCurrency(fundraiser.goalAmount)} ·{" "}
+        {fundraiser.supporterCount} supporters · {fundraiser.donationIntentCount}{" "}
+        support actions
+      </p>
+    </div>
+
+    <div className={styles.progressBarGroup}>
+      <p className={styles.progressBarLabel}>{goalProgress}% of goal</p>
+      <wa-progress-bar
+        className={styles.progressBar}
+        label={`${goalProgress}% of goal represented by prototype support`}
+        value={goalProgress}
+      />
+    </div>
+  </div>
+);
 
 const SupporterListItem = ({ supporter }: SupporterListItemProps) => (
   <li className={styles.supporterItem}>

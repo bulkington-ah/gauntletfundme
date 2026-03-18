@@ -430,40 +430,49 @@
 }
 
 .sidebarStats {
-  align-items: center;
   display: grid;
-  gap: 1rem;
-  grid-template-columns: 5.8rem minmax(0, 1fr);
+  gap: 0.9rem;
 }
 
 .mobileSupportStats {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-}
-
-.progressCluster {
   display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-}
-
-.progressRing {
-  display: inline-flex;
-  height: 6.2rem;
-  width: 6.2rem;
-}
-
-.progressValue {
-  color: var(--wa-color-text-normal);
-  font-size: 1.3rem;
-  font-weight: 800;
+  gap: 0.9rem;
 }
 
 .supportSummary {
   display: grid;
   gap: 0.35rem;
   min-width: 0;
+}
+
+.progressBarGroup {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.progressBarLabel {
+  color: var(--wa-color-text-quiet);
+  font-size: 0.92rem;
+  font-weight: var(--wa-font-weight-semibold);
+  margin: 0;
+}
+
+.progressBar {
+  --indicator-color: var(--wa-color-brand-fill-loud);
+  --track-color: color-mix(
+    in srgb,
+    var(--wa-color-brand-fill-loud) 14%,
+    var(--wa-color-surface-border)
+  );
+  --track-height: 0.75rem;
+
+  display: block;
+  width: 100%;
+}
+
+.progressBar::part(base),
+.progressBar::part(indicator) {
+  border-radius: 999px;
 }
 
 .supportAmount {
@@ -479,15 +488,6 @@
   font-size: 0.98rem;
 }
 
-.sidebarStats .progressRing {
-  height: 5.8rem;
-  width: 5.8rem;
-}
-
-.sidebarStats .supportSummary {
-  align-content: start;
-}
-
 .sidebarStats .supportAmount {
   font-size: clamp(1.5rem, 2.1vw, 2rem);
   line-height: 1.04;
@@ -495,6 +495,10 @@
 
 .sidebarStats .supportMeta {
   line-height: 1.55;
+}
+
+.sidebarStats .progressBarLabel {
+  font-size: 0.88rem;
 }
 
 .sidebarActions {
@@ -644,20 +648,6 @@
 
   .headlineBadges {
     justify-content: flex-start;
-  }
-
-  .sidebarStats {
-    align-items: start;
-    flex-direction: column;
-  }
-
-  .mobileSupportStats {
-    align-items: start;
-    flex-direction: column;
-  }
-
-  .supportAmount {
-    max-width: 10ch;
   }
 }
 
