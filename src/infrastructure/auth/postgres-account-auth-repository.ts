@@ -1,25 +1,20 @@
-import {
-  randomBytes,
-  randomUUID,
-  scrypt as scryptCallback,
-  timingSafeEqual,
-} from "node:crypto";
-import { promisify } from "node:util";
+import { randomUUID } from "node:crypto";
 
 import type { AccountAuthRepository } from "@/application/accounts";
 import { createUser, normalizeEmail } from "@/domain";
 import { createPersistenceBootstrapper, createPostgresPool } from "@/infrastructure/persistence";
 import type { SqlClient } from "@/infrastructure/persistence";
 
-import { prototypeLoginAccounts, prototypeLoginPassword } from "./prototype-login-accounts";
-import { loadAuthSchemaSql } from "./schema";
+import { hashPassword, verifyPassword } from "./password-hashing";
+import {
+  ensureAuthSchemaReady,
+  seedPrototypeLoginCredentials,
+} from "./postgres-auth-bootstrap";
 
 type Dependencies = {
   sqlClient?: SqlClient;
 };
 
-const scrypt = promisify(scryptCallback);
-const passwordHashLabel = "scrypt";
 const sessionDurationInDays = 30;
 
 export const createPostgresAccountAuthRepository = (
@@ -33,7 +28,7 @@ export const createPostgresAccountAuthRepository = (
     await persistenceBootstrapper.ensureReady();
 
     if (!authSchemaInitializationPromise) {
-      authSchemaInitializationPromise = ensureAuthSchemaReady(sqlClient);
+      authSchemaInitializationPromise = initializeAuthSupport(sqlClient);
     }
 
     await authSchemaInitializationPromise;
@@ -176,95 +171,7 @@ const asDate = (value: string | Date, fieldName: string): Date => {
   return parsed;
 };
 
-const ensureAuthSchemaReady = async (sqlClient: SqlClient): Promise<void> => {
-  const hasCredentialsTable = await checkTableExists(sqlClient, "auth_credentials");
-  const hasSessionsTable = await checkTableExists(sqlClient, "auth_sessions");
-
-  if (!hasCredentialsTable || !hasSessionsTable) {
-    await sqlClient.query(loadAuthSchemaSql());
-  }
-
-  await seedPrototypeLoginCredentials(sqlClient);
-};
-
-const checkTableExists = async (
-  sqlClient: SqlClient,
-  tableName: string,
-): Promise<boolean> => {
-  const result = await sqlClient.query<{ has_table: boolean }>(
-    `SELECT EXISTS (
-       SELECT 1
-       FROM information_schema.tables
-       WHERE table_schema = 'public' AND table_name = $1
-     ) AS has_table`,
-    [tableName],
-  );
-
-  return Boolean(result.rows[0]?.has_table);
-};
-
-const seedPrototypeLoginCredentials = async (
-  sqlClient: SqlClient,
-): Promise<void> => {
-  for (const account of prototypeLoginAccounts) {
-    const existingCredential = await sqlClient.query<{ user_id: string }>(
-      `SELECT user_id
-       FROM auth_credentials
-       WHERE user_id = $1
-       LIMIT 1`,
-      [account.userId],
-    );
-
-    if (existingCredential.rows[0]) {
-      continue;
-    }
-
-    const matchingUser = await sqlClient.query<{ id: string }>(
-      `SELECT id
-       FROM users
-       WHERE id = $1 AND email = $2
-       LIMIT 1`,
-      [account.userId, normalizeEmail(account.email)],
-    );
-
-    if (!matchingUser.rows[0]) {
-      continue;
-    }
-
-    const passwordHash = await hashPassword(prototypeLoginPassword);
-    await sqlClient.query(
-      `INSERT INTO auth_credentials (user_id, password_hash)
-       VALUES ($1, $2)
-       ON CONFLICT (user_id) DO NOTHING`,
-      [account.userId, passwordHash],
-    );
-  }
-};
-
-const hashPassword = async (password: string): Promise<string> => {
-  const salt = randomBytes(16);
-  const derivedKey = (await scrypt(password, salt, 64)) as Buffer;
-
-  return `${passwordHashLabel}$${salt.toString("hex")}$${derivedKey.toString("hex")}`;
-};
-
-const verifyPassword = async (
-  password: string,
-  passwordHash: string,
-): Promise<boolean> => {
-  const [algorithm, saltHex, hashHex] = passwordHash.split("$");
-
-  if (algorithm !== passwordHashLabel || !saltHex || !hashHex) {
-    return false;
-  }
-
-  const salt = Buffer.from(saltHex, "hex");
-  const expectedHash = Buffer.from(hashHex, "hex");
-  const computedHash = (await scrypt(password, salt, expectedHash.length)) as Buffer;
-
-  if (computedHash.length !== expectedHash.length) {
-    return false;
-  }
-
-  return timingSafeEqual(computedHash, expectedHash);
+const initializeAuthSupport = async (sqlClient: SqlClient): Promise<void> => {
+  await ensureAuthSchemaReady(sqlClient);
+  await seedPrototypeLoginCredentials(sqlClient, hashPassword);
 };

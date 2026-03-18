@@ -4,13 +4,14 @@ import { newDb } from "pg-mem";
 
 import { createApplicationApi } from "@/application";
 import {
+  createPostgresPrototypeDataResetRepository,
   createPostgresPublicContentEngagementRepository,
   createStaticSessionViewerGateway,
 } from "@/infrastructure";
 
 describe("MVP end-to-end journeys", () => {
   it("supports browse, engagement actions, reporting, and moderation resolution", async () => {
-    const applicationApi = createJourneyApplicationApi();
+    const applicationApi = await createJourneyApplicationApi();
 
     const publicBefore = await applicationApi.getPublicCommunityBySlug({
       slug: "neighbors-helping-neighbors",
@@ -123,13 +124,18 @@ describe("MVP end-to-end journeys", () => {
   });
 });
 
-const createJourneyApplicationApi = () => {
+const createJourneyApplicationApi = async () => {
   const db = newDb({ autoCreateForeignKeyIndices: true });
   const pg = db.adapters.createPg();
   const pool = new pg.Pool();
   const persistence = createPostgresPublicContentEngagementRepository({
     sqlClient: pool,
   });
+  const resetRepository = createPostgresPrototypeDataResetRepository({
+    sqlClient: pool,
+  });
+
+  await resetRepository.resetPrototypeData();
 
   return createApplicationApi({
     publicContentReadRepository: persistence,

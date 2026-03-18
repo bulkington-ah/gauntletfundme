@@ -379,8 +379,8 @@ describe("PublicCommunityPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Tried slug:/)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "View seeded community" }),
-    ).toHaveAttribute("href", "/communities/neighbors-helping-neighbors");
+      screen.getByRole("link", { name: "Browse communities" }),
+    ).toHaveAttribute("href", "/communities");
 
     rerender(
       <PublicCommunityPage

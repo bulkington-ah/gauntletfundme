@@ -45,6 +45,10 @@ import {
   type PublicContentReadRepository,
 } from "../public-content";
 import {
+  resetPrototypeData,
+  type PrototypeDataResetRepository,
+} from "../persistence";
+import {
   resolveReport,
   type ReportReviewLookup,
   type ReportReviewWriteRepository,
@@ -64,6 +68,7 @@ import type {
   FollowWriteRepository,
   SessionViewerGateway,
 } from "../engagement";
+import { createPostgresPrototypeDataResetRepository } from "@/infrastructure/persistence";
 
 type Dependencies = {
   publicContentReadRepository?: PublicContentReadRepository;
@@ -83,6 +88,7 @@ type Dependencies = {
   analyticsEventPublisher?: AnalyticsEventPublisher;
   sessionViewerGateway?: SessionViewerGateway;
   accountAuthRepository?: AccountAuthRepository;
+  prototypeDataResetRepository?: PrototypeDataResetRepository;
 };
 
 export const createApplicationApi = (dependencies: Dependencies = {}) => {
@@ -140,6 +146,9 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     dependencies.followWriteRepository ?? resolvePersistenceAdapter();
   const getAccountAuthRepository = () =>
     dependencies.accountAuthRepository ?? resolveAccountAuthRepository();
+  const getPrototypeDataResetRepository = () =>
+    dependencies.prototypeDataResetRepository ??
+    createPostgresPrototypeDataResetRepository();
   const analyticsEventPublisher =
     dependencies.analyticsEventPublisher ?? createNoopAnalyticsEventPublisher();
   const sessionViewerGateway =
@@ -157,6 +166,10 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
       logout({ accountAuthRepository: getAccountAuthRepository() }, request),
     getSession: (request: LookupSessionRequest) =>
       getSession({ accountAuthRepository: getAccountAuthRepository() }, request),
+    resetPrototypeData: () =>
+      resetPrototypeData({
+        prototypeDataResetRepository: getPrototypeDataResetRepository(),
+      }),
     getPublicProfileBySlug: (request: LookupBySlugRequest) =>
       getPublicProfileBySlug(
         { publicContentReadRepository, analyticsEventPublisher },

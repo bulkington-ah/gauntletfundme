@@ -247,6 +247,10 @@ const createApplicationApiStub = ({
       role: "supporter" as const,
     },
   },
+  resetPrototypeDataResult = {
+    status: "success" as const,
+    message: "Prototype data reset complete.",
+  },
 }: {
   signUpResult?: Awaited<ReturnType<ReturnType<typeof createApplicationApi>["signUp"]>>;
   loginResult?: Awaited<ReturnType<ReturnType<typeof createApplicationApi>["login"]>>;
@@ -256,11 +260,15 @@ const createApplicationApiStub = ({
   sessionResult?: Awaited<
     ReturnType<ReturnType<typeof createApplicationApi>["getSession"]>
   >;
+  resetPrototypeDataResult?: Awaited<
+    ReturnType<ReturnType<typeof createApplicationApi>["resetPrototypeData"]>
+  >;
 } = {}): ReturnType<typeof createApplicationApi> => ({
   signUp: vi.fn().mockResolvedValue(signUpResult),
   login: vi.fn().mockResolvedValue(loginResult),
   logout: vi.fn().mockResolvedValue(logoutResult),
   getSession: vi.fn().mockResolvedValue(sessionResult),
+  resetPrototypeData: vi.fn().mockResolvedValue(resetPrototypeDataResult),
   getPublicProfileBySlug: vi.fn().mockResolvedValue({
     status: "not_found",
     message: "not configured for this test",

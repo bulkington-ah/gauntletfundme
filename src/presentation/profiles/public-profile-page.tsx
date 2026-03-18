@@ -117,8 +117,8 @@ export const PublicProfilePage = ({
               <Link className={styles.primaryAction} href="/">
                 Back home
               </Link>
-              <Link className={styles.secondaryAction} href="/profiles/avery-johnson">
-                View seeded profile
+              <Link className={styles.secondaryAction} href="/communities">
+                Browse communities
               </Link>
             </div>
           </section>
@@ -145,8 +145,8 @@ export const PublicProfilePage = ({
               <Link className={styles.primaryAction} href="/">
                 Back home
               </Link>
-              <Link className={styles.secondaryAction} href="/profiles/avery-johnson">
-                View seeded profile
+              <Link className={styles.secondaryAction} href="/communities">
+                Browse communities
               </Link>
             </div>
           </section>

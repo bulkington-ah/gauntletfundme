@@ -13,6 +13,7 @@ export * from "./engagement/post-unfollow-target-route";
 export * from "./http";
 export * from "./moderation/post-resolve-report-route";
 export * from "./moderation/post-submit-report-route";
+export * from "./prototype/post-reset-prototype-data-route";
 export * from "./public/get-public-community-route";
 export * from "./public/get-public-fundraiser-route";
 export * from "./public/get-public-profile-route";

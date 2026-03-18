@@ -34,7 +34,7 @@ Copy `.env.example` to your local environment config and set:
 - `PORT`: runtime HTTP port (default `3000`)
 - `HOSTNAME`: runtime bind address (default `0.0.0.0`)
 
-The persistence layer bootstraps schema and seeds prototype data from `src/infrastructure/demo-data/` when tables are missing, which keeps local development and tests predictable.
+The persistence layer bootstraps schema and storage automatically. Prototype data is restored manually through the hidden `/prototype/reset` page so local changes are not silently overwritten on refresh.
 
 Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API routes still accept the legacy `x-session-token` request header for tests and non-browser callers.
 
@@ -67,14 +67,16 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
   npm install
   npm run dev
   ```
-- On first database connection, the app bootstraps its schema and seeds the prototype catalog automatically.
+- On first database connection, the app bootstraps its schema automatically.
+- Visit `http://localhost:3000/prototype/reset` and click `Reset prototype data` to restore the demo catalog and prototype login accounts.
 - Verify the app locally:
   - `http://localhost:3000/api/health`
+  - `http://localhost:3000/prototype/reset`
   - `http://localhost:3000/login`
   - `http://localhost:3000/profiles/avery-johnson`
   - `http://localhost:3000/fundraisers/warm-meals-2026`
   - `http://localhost:3000/communities/neighbors-helping-neighbors`
-- Seeded prototype login credentials for local development:
+- Prototype login credentials available after reset:
   - `avery.organizer@example.com` / `Prototype123!`
   - `jordan.supporter@example.com` / `Prototype123!`
   - `morgan.moderator@example.com` / `Prototype123!`

@@ -12,7 +12,6 @@ describe("PlaceholderHomePage", () => {
     expect(screen.getByText("Public surface foundation")).toBeInTheDocument();
     expect(screen.getByText("Browse fundraisers")).toBeInTheDocument();
     expect(screen.getByText("Browse communities")).toBeInTheDocument();
-    expect(screen.getByText("View featured profile")).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Fundraisers" })[0]).toHaveAttribute(
       "href",
       "/fundraisers",

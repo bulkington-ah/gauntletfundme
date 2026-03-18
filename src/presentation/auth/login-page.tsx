@@ -20,9 +20,9 @@ export function LoginPage({
           <p className={styles.eyebrow}>Account access</p>
           <h1 className={styles.heading}>Sign in to GoFundMe V2</h1>
           <p className={styles.lead}>
-            Use your seeded prototype account to access protected actions like
-            following, posting, commenting, moderation, and donation
-            submission.
+            Use a prototype account to access protected actions like following,
+            posting, commenting, moderation, and donation submission after demo
+            data has been restored.
           </p>
 
           <LoginForm nextPath={nextPath} />

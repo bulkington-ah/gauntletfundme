@@ -1,0 +1,60 @@
+.page {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: calc(100vh - 9rem);
+  padding: 3rem 0;
+}
+
+.card {
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--wa-color-success-fill-quiet) 55%, transparent), transparent 50%),
+    var(--wa-color-surface-raised);
+  border: 1px solid var(--wa-color-surface-border);
+  border-radius: 2rem;
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--wa-color-neutral-fill-loud) 12%, transparent);
+  display: grid;
+  gap: 1rem;
+  max-width: 42rem;
+  padding: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.eyebrow {
+  color: var(--wa-color-success-fill-loud);
+  font-size: 0.82rem;
+  font-weight: var(--wa-font-weight-semibold);
+  letter-spacing: 0.16em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.heading {
+  font-family: var(--wa-font-family-heading);
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  margin: 0;
+}
+
+.lead,
+.warning {
+  color: var(--wa-color-text-quiet);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.warning {
+  background: color-mix(in srgb, var(--wa-color-warning-fill-quiet) 52%, transparent);
+  border: 1px solid color-mix(in srgb, var(--wa-color-warning-fill-loud) 22%, transparent);
+  border-radius: 1rem;
+  padding: 1rem 1.1rem;
+}
+
+.warning strong {
+  color: var(--wa-color-text-normal);
+}
+
+.control {
+  margin-top: 0.5rem;
+}

@@ -359,8 +359,8 @@ describe("PublicFundraiserPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Tried slug:/)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "View seeded fundraiser" }),
-    ).toHaveAttribute("href", "/fundraisers/warm-meals-2026");
+      screen.getByRole("link", { name: "Browse fundraisers" }),
+    ).toHaveAttribute("href", "/fundraisers");
 
     rerender(
       <PublicFundraiserPage

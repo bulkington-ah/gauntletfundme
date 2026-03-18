@@ -105,9 +105,9 @@ export const PublicCommunityPage = ({
               </Link>
               <Link
                 className={styles.secondaryAction}
-                href="/communities/neighbors-helping-neighbors"
+                href="/communities"
               >
-                View seeded community
+                Browse communities
               </Link>
             </div>
           </section>
@@ -136,9 +136,9 @@ export const PublicCommunityPage = ({
               </Link>
               <Link
                 className={styles.secondaryAction}
-                href="/communities/neighbors-helping-neighbors"
+                href="/communities"
               >
-                View seeded community
+                Browse communities
               </Link>
             </div>
           </section>

@@ -4,6 +4,7 @@ import { newDb } from "pg-mem";
 
 import {
   createPostgresAccountAuthRepository,
+  createPostgresPrototypeDataResetRepository,
   prototypeLoginPassword,
 } from "@/infrastructure";
 import { createUser } from "@/domain";
@@ -75,7 +76,9 @@ describe("PostgresAccountAuthRepository", () => {
   });
 
   it("seeds prototype login credentials for the public demo accounts", async () => {
-    const repository = createRepository();
+    const { repository, resetRepository } = createRepositoryHarness();
+
+    await resetRepository.resetPrototypeData();
 
     const avery = await repository.findUserByEmail("avery.organizer@example.com");
     const jordan = await repository.findUserByEmail("jordan.supporter@example.com");
@@ -109,6 +112,9 @@ describe("PostgresAccountAuthRepository", () => {
     const db = newDb({ autoCreateForeignKeyIndices: true });
     const pg = db.adapters.createPg();
     const pool = new pg.Pool();
+    const resetRepository = createPostgresPrototypeDataResetRepository({
+      sqlClient: pool,
+    });
 
     const firstRepository = createPostgresAccountAuthRepository({
       sqlClient: pool,
@@ -117,6 +123,7 @@ describe("PostgresAccountAuthRepository", () => {
       sqlClient: pool,
     });
 
+    await resetRepository.resetPrototypeData();
     await firstRepository.findUserByEmail("avery.organizer@example.com");
     await secondRepository.findUserByEmail("avery.organizer@example.com");
 
@@ -130,11 +137,20 @@ describe("PostgresAccountAuthRepository", () => {
 });
 
 const createRepository = () => {
+  return createRepositoryHarness().repository;
+};
+
+const createRepositoryHarness = () => {
   const db = newDb({ autoCreateForeignKeyIndices: true });
   const pg = db.adapters.createPg();
   const pool = new pg.Pool();
 
-  return createPostgresAccountAuthRepository({
-    sqlClient: pool,
-  });
+  return {
+    repository: createPostgresAccountAuthRepository({
+      sqlClient: pool,
+    }),
+    resetRepository: createPostgresPrototypeDataResetRepository({
+      sqlClient: pool,
+    }),
+  };
 };

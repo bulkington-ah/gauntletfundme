@@ -27,8 +27,8 @@ export function PlaceholderHomePage({
           <h1 className={styles.heading}>GoFundMe V2</h1>
           <p className={styles.lead}>
             The shared shell is now in place. Use the browse routes below to
-            explore connected fundraiser and community discovery, then jump into
-            the seeded public pages for the current prototype details.
+            explore connected fundraiser and community discovery across the
+            current prototype.
           </p>
 
           <div className={styles.ctaRow}>
@@ -49,14 +49,6 @@ export function PlaceholderHomePage({
             >
               Browse communities
             </wa-button>
-            <wa-button
-              className={styles.ctaButton}
-              appearance="outlined"
-              href="/profiles/avery-johnson"
-              pill
-            >
-              View featured profile
-            </wa-button>
           </div>
         </section>
 
@@ -75,18 +67,8 @@ export function PlaceholderHomePage({
             <p className={styles.routeEyebrow}>Browse</p>
             <h2 className={styles.routeTitle}>Communities</h2>
             <p className={styles.routeBody}>
-              See the seeded public communities, follower momentum, and connected
+              See the current public communities, follower momentum, and connected
               causes before opening an individual space.
-            </p>
-            <span className={styles.routeFooter}>Open route</span>
-          </Link>
-
-          <Link className={styles.routeCard} href="/profiles/avery-johnson">
-            <p className={styles.routeEyebrow}>Profile</p>
-            <h2 className={styles.routeTitle}>Avery Johnson</h2>
-            <p className={styles.routeBody}>
-              Organizer profile with linked fundraisers and communities in the
-              shared public shell.
             </p>
             <span className={styles.routeFooter}>Open route</span>
           </Link>

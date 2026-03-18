@@ -358,8 +358,8 @@ describe("PublicProfilePage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Tried slug:/)).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "View seeded profile" }),
-    ).toHaveAttribute("href", "/profiles/avery-johnson");
+      screen.getByRole("link", { name: "Browse communities" }),
+    ).toHaveAttribute("href", "/communities");
 
     rerender(
       <PublicProfilePage

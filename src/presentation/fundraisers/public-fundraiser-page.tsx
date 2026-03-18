@@ -108,9 +108,9 @@ export const PublicFundraiserPage = ({
               </Link>
               <Link
                 className={styles.secondaryAction}
-                href="/fundraisers/warm-meals-2026"
+                href="/fundraisers"
               >
-                View seeded fundraiser
+                Browse fundraisers
               </Link>
             </div>
           </section>
@@ -139,9 +139,9 @@ export const PublicFundraiserPage = ({
               </Link>
               <Link
                 className={styles.secondaryAction}
-                href="/fundraisers/warm-meals-2026"
+                href="/fundraisers"
               >
-                View seeded fundraiser
+                Browse fundraisers
               </Link>
             </div>
           </section>

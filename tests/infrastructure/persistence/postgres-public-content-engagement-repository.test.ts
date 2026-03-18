@@ -2,12 +2,15 @@
 
 import { newDb } from "pg-mem";
 
-import { createPostgresPublicContentEngagementRepository } from "@/infrastructure";
+import {
+  createPostgresPrototypeDataResetRepository,
+  createPostgresPublicContentEngagementRepository,
+} from "@/infrastructure";
 import { loadCoreSchemaSql } from "@/infrastructure/persistence/schema";
 
 describe("PostgresPublicContentEngagementRepository", () => {
   it("returns seeded public profile snapshots", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     const snapshot = await repository.findProfileBySlug({
       slug: "avery-johnson",
@@ -43,7 +46,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
   });
 
   it("lists seeded fundraiser browse summaries with related organizer context", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     const fundraisers = await repository.listFundraisers();
 
@@ -61,7 +64,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
   });
 
   it("lists seeded communities with derived follower and fundraiser counts", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     const communities = await repository.listCommunities();
 
@@ -86,7 +89,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
   });
 
   it("finds a public profile slug by user id", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     await expect(
       repository.findProfileSlugByUserId("user_organizer_avery"),
@@ -97,7 +100,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
   });
 
   it("derives viewer follow state for public detail snapshots", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     const profileSnapshot = await repository.findProfileBySlug({
       slug: "avery-johnson",
@@ -135,7 +138,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
   });
 
   it("creates follows idempotently", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     const target = await repository.findTargetBySlug(
       "community",
@@ -170,7 +173,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
   });
 
   it("removes follows idempotently and returns the latest follower count", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     const target = await repository.findTargetBySlug(
       "community",
@@ -203,8 +206,120 @@ describe("PostgresPublicContentEngagementRepository", () => {
     ).toBe(3);
   });
 
+  it("does not restore removed follows until prototype data is manually reset", async () => {
+    const harness = createRepositoryHarness();
+    await harness.resetRepository.resetPrototypeData();
+
+    const profileTarget = await harness.repository.findTargetBySlug(
+      "profile",
+      "avery-johnson",
+    );
+    const fundraiserTarget = await harness.repository.findTargetBySlug(
+      "fundraiser",
+      "warm-meals-2026",
+    );
+    const communityTarget = await harness.repository.findTargetBySlug(
+      "community",
+      "neighbors-helping-neighbors",
+    );
+
+    expect(profileTarget).not.toBeNull();
+    expect(fundraiserTarget).not.toBeNull();
+    expect(communityTarget).not.toBeNull();
+
+    await harness.repository.removeFollowIfPresent({
+      userId: "user_supporter_jordan",
+      targetType: "profile",
+      targetId: profileTarget!.id,
+    });
+    await harness.repository.removeFollowIfPresent({
+      userId: "user_supporter_jordan",
+      targetType: "fundraiser",
+      targetId: fundraiserTarget!.id,
+    });
+    await harness.repository.removeFollowIfPresent({
+      userId: "user_supporter_jordan",
+      targetType: "community",
+      targetId: communityTarget!.id,
+    });
+
+    const freshRepository = createPostgresPublicContentEngagementRepository({
+      sqlClient: harness.pool,
+    });
+
+    expect(
+      (
+        await freshRepository.findProfileBySlug({
+          slug: "avery-johnson",
+          viewerUserId: "user_supporter_jordan",
+        })
+      )?.viewerFollowState,
+    ).toEqual({
+      isFollowing: false,
+      isOwnTarget: false,
+    });
+    expect(
+      (
+        await freshRepository.findFundraiserBySlug({
+          slug: "warm-meals-2026",
+          viewerUserId: "user_supporter_jordan",
+        })
+      )?.viewerFollowState,
+    ).toEqual({
+      isFollowing: false,
+      isOwnTarget: false,
+    });
+    expect(
+      (
+        await freshRepository.findCommunityBySlug({
+          slug: "neighbors-helping-neighbors",
+          viewerUserId: "user_supporter_jordan",
+        })
+      )?.viewerFollowState,
+    ).toEqual({
+      isFollowing: false,
+      isOwnTarget: false,
+    });
+
+    await harness.resetRepository.resetPrototypeData();
+
+    expect(
+      (
+        await freshRepository.findProfileBySlug({
+          slug: "avery-johnson",
+          viewerUserId: "user_supporter_jordan",
+        })
+      )?.viewerFollowState,
+    ).toEqual({
+      isFollowing: true,
+      isOwnTarget: false,
+    });
+    expect(
+      (
+        await freshRepository.findFundraiserBySlug({
+          slug: "warm-meals-2026",
+          viewerUserId: "user_supporter_jordan",
+        })
+      )?.viewerFollowState,
+    ).toEqual({
+      isFollowing: true,
+      isOwnTarget: false,
+    });
+    expect(
+      (
+        await freshRepository.findCommunityBySlug({
+          slug: "neighbors-helping-neighbors",
+          viewerUserId: "user_supporter_jordan",
+        })
+      )?.viewerFollowState,
+    ).toEqual({
+      isFollowing: true,
+      isOwnTarget: false,
+    });
+  });
+
   it("resolves target owners for self-follow checks", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     const profileTarget = await repository.findTargetBySlug("profile", "avery-johnson");
     const fundraiserTarget = await repository.findTargetBySlug(
@@ -232,7 +347,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
   });
 
   it("persists created posts and comments for public discussion reads", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     const communityTarget = await repository.findCommunityBySlugForPostCreation(
       "neighbors-helping-neighbors",
@@ -280,7 +395,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
   });
 
   it("persists completed donations and increments fundraiser engagement counts", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     const fundraiserTarget = await repository.findFundraiserBySlugForDonation(
       "warm-meals-2026",
@@ -315,7 +430,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
   });
 
   it("returns derived fundraiser and community engagement summaries for seeded content", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     const fundraiserSnapshot = await repository.findFundraiserBySlug({
       slug: "warm-meals-2026",
@@ -411,7 +526,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
   });
 
   it("resolves report targets and writes reports idempotently", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     expect(
       await repository.findReportTargetById("post", "post_kickoff_update"),
@@ -440,7 +555,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
   });
 
   it("applies moderation actions so removed content is excluded from public feeds", async () => {
-    const repository = createRepository();
+    const repository = await createSeededRepository();
 
     const reportWrite = await repository.createReportIfAbsent({
       reporterUserId: "user_moderator_morgan",
@@ -473,8 +588,10 @@ describe("PostgresPublicContentEngagementRepository", () => {
   });
 });
 
-const createRepository = () => {
-  return createRepositoryHarness().repository;
+const createSeededRepository = async () => {
+  const harness = createRepositoryHarness();
+  await harness.resetRepository.resetPrototypeData();
+  return harness.repository;
 };
 
 const createRepositoryHarness = () => {
@@ -484,6 +601,9 @@ const createRepositoryHarness = () => {
 
   return {
     pool,
+    resetRepository: createPostgresPrototypeDataResetRepository({
+      sqlClient: pool,
+    }),
     repository: createPostgresPublicContentEngagementRepository({
       sqlClient: pool,
     }),

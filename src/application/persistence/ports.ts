@@ -76,3 +76,7 @@ export interface ReportRepository {
   findById(reportId: string): Promise<Report | null>;
   save(report: Report): Promise<void>;
 }
+
+export interface PrototypeDataResetRepository {
+  resetPrototypeData(): Promise<void>;
+}
