@@ -156,7 +156,6 @@ export const PublicFundraiserPage = ({
     model.fundraiser.amountRaised,
     model.fundraiser.goalAmount,
   );
-  const storyParagraphs = buildStoryParagraphs(model);
   const organizerFirstName = getFirstName(model.organizer.displayName);
 
   return (
@@ -329,18 +328,10 @@ export const PublicFundraiserPage = ({
             <section className={styles.storyCard}>
               <div className={styles.storyHeader}>
                 <h2 className={styles.storyTitle}>Story</h2>
-                <p className={styles.storyLead}>
-                  A focused public fundraiser experience built for clarity,
-                  momentum, and community trust.
-                </p>
               </div>
 
               <div className={styles.storyBody}>
-                {storyParagraphs.map((paragraph) => (
-                  <p className={styles.storyParagraph} key={paragraph}>
-                    {paragraph}
-                  </p>
-                ))}
+                <p className={styles.storyParagraph}>{model.fundraiser.story}</p>
               </div>
 
               <wa-divider className={styles.divider} />
@@ -542,22 +533,6 @@ const SupporterListItem = ({ supporter }: SupporterListItemProps) => (
     )}
   </li>
 );
-
-const buildStoryParagraphs = (model: SuccessfulFundraiserPageModel): string[] => {
-  const paragraphs = [model.fundraiser.story];
-
-  if (model.community) {
-    paragraphs.push(
-      `Every donation helps ${model.community.name} stay stocked, scheduled, and ready for the next round of neighborhood meal deliveries.`,
-    );
-  }
-
-  paragraphs.push(
-    `${model.fundraiser.supporterCount} supporters have already made ${model.fundraiser.donationCount} public donations toward the ${formatCurrency(model.fundraiser.goalAmount)} goal. Payment processing stays mocked in v1, but the donations and totals are persisted across the product.`,
-  );
-
-  return paragraphs;
-};
 
 const getFirstName = (displayName: string): string => displayName.split(" ")[0] ?? displayName;
 

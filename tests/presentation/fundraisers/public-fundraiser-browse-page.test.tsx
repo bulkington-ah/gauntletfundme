@@ -27,7 +27,8 @@ describe("PublicFundraiserBrowsePage", () => {
             amountRaised: 22000,
             supporterCount: 5,
             donationCount: 5,
-            storyExcerpt: "Funding weekly hot meal deliveries and pantry restocks.",
+            storyExcerpt:
+              "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
             organizer: {
               displayName: "Avery Johnson",
               role: "organizer",
@@ -60,7 +61,8 @@ describe("PublicFundraiserBrowsePage", () => {
           amountRaised: 22000,
           supporterCount: 5,
           donationCount: 5,
-          storyExcerpt: "Funding weekly hot meal deliveries and pantry restocks.",
+          storyExcerpt:
+            "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
           organizer: {
             displayName: "Avery Johnson",
             role: "organizer",
@@ -92,7 +94,7 @@ describe("PublicFundraiserBrowsePage", () => {
               supporterCount: 5,
               donationCount: 5,
               storyExcerpt:
-                "Funding weekly hot meal deliveries and pantry restocks for families across the neighborhood.",
+                "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
               organizer: {
                 displayName: "Avery Johnson",
                 role: "organizer",
@@ -114,7 +116,7 @@ describe("PublicFundraiserBrowsePage", () => {
               supporterCount: 2,
               donationCount: 2,
               storyExcerpt:
-                "Funding new coats, gloves, and cold-weather gear for neighbors preparing for severe weather.",
+                "We are buying coats, gloves, and thermal layers before the next cold snap so neighbors can stay warm on school and work commutes.",
               organizer: {
                 displayName: "Avery Johnson",
                 role: "organizer",

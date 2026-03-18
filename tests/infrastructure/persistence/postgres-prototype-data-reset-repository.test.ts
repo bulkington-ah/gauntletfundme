@@ -19,8 +19,14 @@ describe("PostgresPrototypeDataResetRepository", () => {
     const profileSnapshot = await publicContentRepository.findProfileBySlug({
       slug: "avery-johnson",
     });
+    const fundraiserSnapshot = await publicContentRepository.findFundraiserBySlug({
+      slug: "warm-meals-2026",
+    });
 
     expect(profileSnapshot?.user.displayName).toBe("Avery Johnson");
+    expect(fundraiserSnapshot?.summary.fundraiser.story).toBe(
+      "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
+    );
     expect(
       await authRepository.verifyPasswordCredential(
         "user_organizer_avery",

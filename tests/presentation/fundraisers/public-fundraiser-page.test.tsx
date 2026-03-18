@@ -36,7 +36,8 @@ describe("PublicFundraiserPage", () => {
           fundraiser: {
             slug: "warm-meals-2026",
             title: "Warm Meals 2026",
-            story: "Funding hot meals for families all winter.",
+            story:
+              "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
             status: "active",
             goalAmount: 250000,
             amountRaised: 7800,
@@ -88,7 +89,8 @@ describe("PublicFundraiserPage", () => {
       fundraiser: {
         slug: "warm-meals-2026",
         title: "Warm Meals 2026",
-        story: "Funding hot meals for families all winter.",
+        story:
+          "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
         status: "active",
         goalAmount: 250000,
         amountRaised: 7800,
@@ -131,7 +133,8 @@ describe("PublicFundraiserPage", () => {
           fundraiser: {
             slug: "warm-meals-2026",
             title: "Warm Meals 2026",
-            story: "Funding hot meals for families all winter.",
+            story:
+              "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
             status: "active",
             goalAmount: 250000,
             amountRaised: 7800,
@@ -175,8 +178,19 @@ describe("PublicFundraiserPage", () => {
       screen.getByRole("heading", { name: "Warm Meals 2026" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Funding hot meals for families all winter."),
+      screen.getByText(
+        "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
+      ),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /A focused public fundraiser experience built for clarity, momentum, and community trust\./,
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Every donation helps/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Payment processing stays mocked in v1/),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("img", {
         name: "Warm meal deliveries staged for neighborhood pickup",
@@ -248,7 +262,8 @@ describe("PublicFundraiserPage", () => {
           fundraiser: {
             slug: "warm-meals-2026",
             title: "Warm Meals 2026",
-            story: "Funding hot meals for families all winter.",
+            story:
+              "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
             status: "active",
             goalAmount: 250000,
             amountRaised: 7800,
@@ -311,7 +326,8 @@ describe("PublicFundraiserPage", () => {
           fundraiser: {
             slug: "warm-meals-2026",
             title: "Warm Meals 2026",
-            story: "Funding hot meals for families all winter.",
+            story:
+              "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
             status: "active",
             goalAmount: 250000,
             amountRaised: 7800,

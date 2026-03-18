@@ -57,8 +57,8 @@ describe("Persistence bootstrapper", () => {
       `INSERT INTO fundraisers
          (id, owner_user_id, slug, title, story, status, goal_amount, created_at)
        VALUES
-         ('fundraiser_warm_meals_2026', 'user_organizer_avery', 'warm-meals-2026', 'Warm Meals 2026', 'Funding weekly hot meal deliveries and pantry restocks for families across the neighborhood.', 'active', 250000, '2026-03-16T09:00:00.000Z'),
-         ('fundraiser_community_fridge_expansion', 'user_organizer_avery', 'community-fridge-expansion', 'Community Fridge Expansion', 'Adding storage, signage, and restock support for the neighborhood community fridge.', 'active', 200000, '2026-03-16T09:25:00.000Z')`,
+         ('fundraiser_warm_meals_2026', 'user_organizer_avery', 'warm-meals-2026', 'Warm Meals 2026', 'We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.', 'active', 250000, '2026-03-16T09:00:00.000Z'),
+         ('fundraiser_community_fridge_expansion', 'user_organizer_avery', 'community-fridge-expansion', 'Community Fridge Expansion', 'We are expanding the neighborhood fridge with more cold storage, clearer signage, and regular restock coverage for busy weekends.', 'active', 200000, '2026-03-16T09:25:00.000Z')`,
     );
 
     await bootstrapper.ensureReady();

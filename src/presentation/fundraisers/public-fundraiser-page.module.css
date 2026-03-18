@@ -219,7 +219,6 @@
 
 .organizerLine,
 .organizerMeta,
-.storyLead,
 .storyParagraph,
 .supportMeta,
 .supportersCount,
@@ -271,11 +270,6 @@
 
 .storyTitle {
   font-size: 1.8rem;
-}
-
-.storyLead {
-  color: var(--wa-color-text-quiet);
-  max-width: 42rem;
 }
 
 .storyBody {

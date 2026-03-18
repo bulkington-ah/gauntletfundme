@@ -180,7 +180,7 @@ const prototypeCatalog: PrototypeCatalog = {
       slug: "warm-meals-2026",
       title: "Warm Meals 2026",
       story:
-        "Funding weekly hot meal deliveries and pantry restocks for families across the neighborhood.",
+        "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
       status: "active",
       goalAmount: 250000,
       createdAt: fundraiserCreatedAt,
@@ -192,7 +192,7 @@ const prototypeCatalog: PrototypeCatalog = {
       slug: "winter-coat-drive-2026",
       title: "Winter Coat Drive 2026",
       story:
-        "Funding new coats, gloves, and cold-weather gear for neighbors preparing for severe weather.",
+        "We are buying coats, gloves, and thermal layers before the next cold snap so neighbors can stay warm on school and work commutes.",
       status: "active",
       goalAmount: 180000,
       createdAt: winterCoatFundraiserCreatedAt,
@@ -204,7 +204,7 @@ const prototypeCatalog: PrototypeCatalog = {
       slug: "school-supplies-spring",
       title: "School Supplies Spring",
       story:
-        "Building take-home supply kits for families preparing for the spring semester.",
+        "We are packing take-home school supply kits so students start the spring semester with notebooks, pencils, and classroom basics.",
       status: "active",
       goalAmount: 150000,
       createdAt: schoolSuppliesFundraiserCreatedAt,
@@ -216,7 +216,7 @@ const prototypeCatalog: PrototypeCatalog = {
       slug: "community-fridge-expansion",
       title: "Community Fridge Expansion",
       story:
-        "Adding storage, signage, and restock support for the neighborhood community fridge.",
+        "We are expanding the neighborhood fridge with more cold storage, clearer signage, and regular restock coverage for busy weekends.",
       status: "active",
       goalAmount: 200000,
       createdAt: communityFridgeFundraiserCreatedAt,

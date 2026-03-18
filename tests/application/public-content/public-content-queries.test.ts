@@ -497,7 +497,7 @@ describe("public content queries", () => {
           slug: "warm-meals-2026",
           title: "Warm Meals 2026",
           story:
-            "Funding weekly hot meal deliveries and pantry restocks for families across the neighborhood with evening volunteer support included.",
+            "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
           status: "active",
           goalAmount: 250000,
           createdAt: new Date("2026-03-16T12:00:00.000Z"),
@@ -527,7 +527,7 @@ describe("public content queries", () => {
           supporterCount: 3,
           donationCount: 4,
           storyExcerpt:
-            "Funding weekly hot meal deliveries and pantry restocks for families across the neighborhood with evening volunteer support included.",
+            "We are funding weekly hot meal deliveries, pantry restocks, and volunteer prep shifts so families can count on reliable meals each week.",
           organizer: {
             displayName: "Avery Johnson",
             role: "organizer",
