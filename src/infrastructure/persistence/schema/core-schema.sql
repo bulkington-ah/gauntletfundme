@@ -80,6 +80,13 @@ CREATE TABLE follows (
   UNIQUE (user_id, target_type, target_id)
 );
 
+CREATE TABLE supporter_digest_state (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  last_viewed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE donations (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -116,6 +123,7 @@ CREATE INDEX idx_posts_community_id_created_at ON posts(community_id, created_at
 CREATE INDEX idx_comments_post_id_created_at ON comments(post_id, created_at DESC);
 CREATE INDEX idx_follows_user_id ON follows(user_id);
 CREATE INDEX idx_follows_target_lookup ON follows(target_type, target_id);
+CREATE INDEX idx_supporter_digest_state_last_viewed_at ON supporter_digest_state(last_viewed_at DESC);
 CREATE INDEX idx_donations_fundraiser_id ON donations(fundraiser_id);
 CREATE INDEX idx_donations_user_id_created_at ON donations(user_id, created_at DESC);
 CREATE INDEX idx_reports_status_created_at ON reports(status, created_at DESC);

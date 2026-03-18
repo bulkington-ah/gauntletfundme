@@ -9,6 +9,9 @@ import {
   buildFundraiserPageViewedEvent,
   buildPostCreatedEvent,
   buildProfilePageViewedEvent,
+  buildSupporterDigestAcknowledgedEvent,
+  buildSupporterDigestFallbackRenderedEvent,
+  buildSupporterDigestViewedEvent,
   buildUnfollowCompletedEvent,
 } from "@/application";
 
@@ -23,6 +26,11 @@ describe("analytics event contracts", () => {
     const community = buildCommunityPageViewedEvent({
       communitySlug: "neighbors-helping-neighbors",
     });
+    const digest = buildSupporterDigestViewedEvent({
+      viewerUserId: "user_supporter_jordan",
+      generationMode: "openai",
+      highlightCount: 4,
+    });
 
     expect(profile.name).toBe(analyticsEventNames.profilePageViewed);
     expect(profile.payload).toEqual({
@@ -35,6 +43,12 @@ describe("analytics event contracts", () => {
     expect(community.name).toBe(analyticsEventNames.communityPageViewed);
     expect(community.payload).toEqual({
       communitySlug: "neighbors-helping-neighbors",
+    });
+    expect(digest.name).toBe(analyticsEventNames.supporterDigestViewed);
+    expect(digest.payload).toEqual({
+      viewerUserId: "user_supporter_jordan",
+      generationMode: "openai",
+      highlightCount: 4,
     });
   });
 
@@ -79,6 +93,14 @@ describe("analytics event contracts", () => {
       fundraiserSlug: "warm-meals-2026",
       donationId: "intent_new_123",
       amount: 2500,
+    });
+    const fallback = buildSupporterDigestFallbackRenderedEvent({
+      viewerUserId: "user_supporter_jordan",
+      highlightCount: 3,
+    });
+    const acknowledged = buildSupporterDigestAcknowledgedEvent({
+      viewerUserId: "user_supporter_jordan",
+      viewedThrough: "2026-03-18T12:00:00.000Z",
     });
 
     expect(follow.name).toBe(analyticsEventNames.followCompleted);
@@ -128,6 +150,16 @@ describe("analytics event contracts", () => {
       fundraiserSlug: "warm-meals-2026",
       donationId: "intent_new_123",
       amount: 2500,
+    });
+    expect(fallback.name).toBe(analyticsEventNames.supporterDigestFallbackRendered);
+    expect(fallback.payload).toEqual({
+      viewerUserId: "user_supporter_jordan",
+      highlightCount: 3,
+    });
+    expect(acknowledged.name).toBe(analyticsEventNames.supporterDigestAcknowledged);
+    expect(acknowledged.payload).toEqual({
+      viewerUserId: "user_supporter_jordan",
+      viewedThrough: "2026-03-18T12:00:00.000Z",
     });
   });
 });

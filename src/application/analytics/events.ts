@@ -2,6 +2,9 @@ export const analyticsEventNames = {
   profilePageViewed: "page_view.profile",
   fundraiserPageViewed: "page_view.fundraiser",
   communityPageViewed: "page_view.community",
+  supporterDigestViewed: "page_view.supporter_digest",
+  supporterDigestFallbackRendered: "supporter_digest.rendered_fallback",
+  supporterDigestAcknowledged: "supporter_digest.acknowledged",
   followCompleted: "engagement.follow.completed",
   unfollowCompleted: "engagement.unfollow.completed",
   communityCreated: "community.created",
@@ -51,6 +54,35 @@ export const buildCommunityPageViewedEvent = (input: {
 }): AnalyticsEvent =>
   toEvent(analyticsEventNames.communityPageViewed, {
     communitySlug: input.communitySlug,
+  });
+
+export const buildSupporterDigestViewedEvent = (input: {
+  viewerUserId: string;
+  generationMode: "openai" | "deterministic";
+  highlightCount: number;
+}): AnalyticsEvent =>
+  toEvent(analyticsEventNames.supporterDigestViewed, {
+    viewerUserId: input.viewerUserId,
+    generationMode: input.generationMode,
+    highlightCount: input.highlightCount,
+  });
+
+export const buildSupporterDigestFallbackRenderedEvent = (input: {
+  viewerUserId: string;
+  highlightCount: number;
+}): AnalyticsEvent =>
+  toEvent(analyticsEventNames.supporterDigestFallbackRendered, {
+    viewerUserId: input.viewerUserId,
+    highlightCount: input.highlightCount,
+  });
+
+export const buildSupporterDigestAcknowledgedEvent = (input: {
+  viewerUserId: string;
+  viewedThrough: string;
+}): AnalyticsEvent =>
+  toEvent(analyticsEventNames.supporterDigestAcknowledged, {
+    viewerUserId: input.viewerUserId,
+    viewedThrough: input.viewedThrough,
   });
 
 export const buildFollowCompletedEvent = (input: {

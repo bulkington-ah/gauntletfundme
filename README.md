@@ -28,6 +28,7 @@ Implemented foundations currently include:
 - moderation report submission command with authenticated, idempotent post/comment reporting semantics
 - moderator/owner report resolution actions (`hide`, `remove`, `dismiss`) with public discussion visibility updates for moderated content
 - Postgres-backed analytics capture for page views, follows, unfollows, community/fundraiser creation, post/comment creation, and completed donations, plus historical backfill and an unlinked `/analytics` dashboard
+- authenticated supporter digest page with deterministic ranking across followed fundraisers and communities plus OpenAI-backed narration and fallback copy
 - public profile page route with slug-based lookup, relationship navigation, and connected fundraiser/community links
 - public fundraiser page route with organizer context, story rendering, real donation entry, supporter-rail controls, and an in-place share modal
 - public community page route with connected links and an interactive activity tab for update posting and commenting
@@ -39,6 +40,9 @@ Copy `.env.example` to your local environment config and set:
 - `DATABASE_URL`: PostgreSQL connection string used by runtime persistence adapters
 - `PORT`: runtime HTTP port (default `3000`)
 - `HOSTNAME`: runtime bind address (default `0.0.0.0`)
+- `OPENAI_API_KEY`: optional local key for Supporter Digest AI narration
+- `OPENAI_DIGEST_MODEL`: optional OpenAI model override for digest narration (default `gpt-5-mini`)
+- `OPENAI_DIGEST_TIMEOUT_MS`: optional request timeout for digest narration (default `8000`)
 
 The persistence layer bootstraps schema and storage automatically. Prototype data is restored manually through the hidden `/prototype/reset` page so local changes are not silently overwritten on refresh.
 
@@ -67,6 +71,9 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
   DATABASE_URL=postgres://postgres:postgres@localhost:5432/gofundme_v2
   PORT=3000
   HOSTNAME=0.0.0.0
+  OPENAI_API_KEY=
+  OPENAI_DIGEST_MODEL=gpt-5-mini
+  OPENAI_DIGEST_TIMEOUT_MS=8000
   ```
 - Install dependencies and start the app:
   ```bash
@@ -79,6 +86,7 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
   - `http://localhost:3000/api/health`
   - `http://localhost:3000/prototype/reset`
   - `http://localhost:3000/login`
+  - `http://localhost:3000/digest`
   - `http://localhost:3000/profiles/avery-johnson`
   - `http://localhost:3000/fundraisers/warm-meals-2026`
   - `http://localhost:3000/communities/neighbors-helping-neighbors`
@@ -87,6 +95,7 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
   - `jordan.supporter@example.com` / `Prototype123!`
   - `morgan.moderator@example.com` / `Prototype123!`
 - This workflow is local-only and does not change production deployment, which remains the existing Docker image plus AWS App Runner and private RDS path.
+- If `OPENAI_API_KEY` is absent locally, the digest still renders with deterministic fallback copy.
 
 ## Common Commands
 - `npm install`
@@ -100,11 +109,12 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
 - Build a production image:
   - `docker build -t gofundme-v2:local .`
 - Run the container with managed environment variables:
-  - `docker run --rm -p 3000:3000 --env DATABASE_URL=<your-managed-db-url> gofundme-v2:local`
+  - `docker run --rm -p 3000:3000 --env DATABASE_URL=<your-managed-db-url> --env OPENAI_DIGEST_MODEL=gpt-5-mini --env OPENAI_DIGEST_TIMEOUT_MS=8000 gofundme-v2:local`
 - Runtime health check endpoint:
   - `GET /api/health`
 - Secrets guidance:
-  - keep secrets in managed environment configuration (AWS ECS task definition / App Runner / Parameter Store / Secrets Manager), never in source files.
+  - keep secrets in managed environment configuration (AWS ECS task definition / App Runner / Parameter Store / Secrets Manager), never in source files
+  - store `OPENAI_API_KEY` in a managed secret and inject it into App Runner as a secret-backed environment variable
 
 ## Terraform AWS Deployment (Task 018)
 - Terraform infrastructure lives in `infra/terraform`.
@@ -120,8 +130,8 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
   - `terraform fmt -check`
   - `terraform init`
   - `terraform validate`
-  - `terraform plan -var="app_image_tag=<image-tag>"`
-  - `terraform apply -var="app_image_tag=<image-tag>"`
+  - `terraform plan -var="app_image_tag=<image-tag>" -var="openai_api_key_secret_arn=<secret-arn>"`
+  - `terraform apply -var="app_image_tag=<image-tag>" -var="openai_api_key_secret_arn=<secret-arn>"`
 - Post-deploy smoke check:
   - `GET https://<apprunner_service_url>/api/health`
 - State note:
@@ -130,6 +140,7 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
 ## Known Limitations
 - Payment processing is intentionally mocked, but donations themselves are persisted and propagated through the product.
 - Historical analytics backfill reconstructs persisted follows, posts, comments, and donations, but it cannot recover page views or unfollows that were never recorded before real analytics persistence was enabled.
+- Supporter Digest AI falls back to deterministic copy whenever OpenAI is not configured or returns invalid output.
 - Moderation actions update current statuses but do not yet persist a separate historical moderation event log.
 - Public signup UI is still deferred even though the underlying signup API exists.
 

@@ -3,6 +3,7 @@ import {
   createBestEffortAnalyticsEventPublisher,
   createPostgresAnalyticsRepository,
 } from "@/infrastructure/analytics";
+import { createOpenAiSupporterDigestNarrator } from "@/infrastructure/ai";
 import { createPostgresPublicContentEngagementRepository } from "@/infrastructure/persistence";
 
 import {
@@ -44,12 +45,19 @@ import {
 } from "../fundraisers";
 import {
   followTarget,
+  getSupporterDigest,
+  recordDigestView,
   startDonationIntent,
   submitDonation,
   type DonationTargetLookup,
   type DonationWriteRepository,
+  type SupporterDigestNarrator,
+  type SupporterDigestReadRepository,
+  type SupporterDigestStateRepository,
   unfollowTarget,
   type FollowTargetRequest,
+  type GetSupporterDigestRequest,
+  type RecordDigestViewRequest,
   type StartDonationIntentRequest,
   type SubmitDonationRequest,
   type UnfollowTargetRequest,
@@ -102,6 +110,9 @@ type Dependencies = {
   fundraiserCommunityOwnershipLookup?: FundraiserCommunityOwnershipLookup;
   donationIntentTargetLookup?: DonationIntentTargetLookup;
   donationIntentWriteRepository?: DonationIntentWriteRepository;
+  supporterDigestReadRepository?: SupporterDigestReadRepository;
+  supporterDigestStateRepository?: SupporterDigestStateRepository;
+  supporterDigestNarrator?: SupporterDigestNarrator;
   reportTargetLookup?: ReportTargetLookup;
   reportWriteRepository?: ReportWriteRepository;
   reportReviewLookup?: ReportReviewLookup;
@@ -174,6 +185,10 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     dependencies.fundraiserWriteRepository ?? resolvePersistenceAdapter();
   const getFundraiserCommunityOwnershipLookup = () =>
     dependencies.fundraiserCommunityOwnershipLookup ?? resolvePersistenceAdapter();
+  const getSupporterDigestReadRepository = () =>
+    dependencies.supporterDigestReadRepository ?? resolvePersistenceAdapter();
+  const getSupporterDigestStateRepository = () =>
+    dependencies.supporterDigestStateRepository ?? resolvePersistenceAdapter();
   const getReportTargetLookup = () =>
     dependencies.reportTargetLookup ?? resolvePersistenceAdapter();
   const getReportWriteRepository = () =>
@@ -204,6 +219,9 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     dependencies.analyticsDashboardQuery ?? {
       getDashboard: () => resolveAnalyticsRepository().getDashboard(),
     };
+  const supporterDigestNarrator =
+    dependencies.supporterDigestNarrator ??
+    createOpenAiSupporterDigestNarrator();
   const sessionViewerGateway =
     dependencies.sessionViewerGateway ?? {
       findViewerBySessionToken: (sessionToken: string | null) =>
@@ -248,6 +266,26 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
       listPublicFundraisers({ publicContentReadRepository }),
     listPublicCommunities: () =>
       listPublicCommunities({ publicContentReadRepository }),
+    getSupporterDigest: (request: GetSupporterDigestRequest) =>
+      getSupporterDigest(
+        {
+          sessionViewerGateway,
+          supporterDigestNarrator,
+          supporterDigestReadRepository: getSupporterDigestReadRepository(),
+          supporterDigestStateRepository: getSupporterDigestStateRepository(),
+          analyticsEventPublisher,
+        },
+        request,
+      ),
+    recordDigestView: (request: RecordDigestViewRequest) =>
+      recordDigestView(
+        {
+          sessionViewerGateway,
+          supporterDigestStateRepository: getSupporterDigestStateRepository(),
+          analyticsEventPublisher,
+        },
+        request,
+      ),
     listOwnedCommunitiesForViewer: (ownerUserId: string) =>
       listOwnedCommunitiesForViewer(
         {

@@ -1,6 +1,7 @@
 import type {
   Donation,
   Follow,
+  RankedSupporterDigestCandidate,
   FollowTargetType,
   UserRole,
 } from "@/domain";
@@ -93,4 +94,107 @@ export interface DonationIntentWriteRepository extends DonationWriteRepository {
     fundraiserId: string;
     amount: number;
   }): Promise<Donation>;
+}
+
+export type SupporterDigestState = {
+  lastViewedAt: Date | null;
+};
+
+export type SupporterDigestViewerBaseline = {
+  viewerCreatedAt: Date;
+};
+
+export type SupporterDigestFundraiserActivitySnapshot = {
+  fundraiserId: string;
+  fundraiserSlug: string;
+  fundraiserTitle: string;
+  goalAmount: number;
+  amountRaisedBeforeWindow: number;
+  amountRaisedAfterWindow: number;
+  newDonationCount: number;
+  newAmountRaised: number;
+  newSupporterCount: number;
+  lastDonationAt: Date;
+};
+
+export type SupporterDigestCommunityUpdateSnapshot = {
+  communityId: string;
+  communitySlug: string;
+  communityName: string;
+  organizerDisplayName: string;
+  postId: string;
+  postTitle: string;
+  publishedAt: Date;
+};
+
+export type SupporterDigestDiscussionBurstSnapshot = {
+  communityId: string;
+  communitySlug: string;
+  communityName: string;
+  postId: string;
+  postTitle: string;
+  newCommentCount: number;
+  participantCount: number;
+  lastCommentAt: Date;
+};
+
+export interface SupporterDigestReadRepository {
+  findSupporterDigestViewerBaseline(
+    userId: string,
+  ): Promise<SupporterDigestViewerBaseline | null>;
+  listSupporterDigestFundraiserActivity(input: {
+    userId: string;
+    windowStart: Date;
+    windowEnd: Date;
+  }): Promise<SupporterDigestFundraiserActivitySnapshot[]>;
+  listSupporterDigestCommunityUpdates(input: {
+    userId: string;
+    windowStart: Date;
+    windowEnd: Date;
+  }): Promise<SupporterDigestCommunityUpdateSnapshot[]>;
+  listSupporterDigestDiscussionBursts(input: {
+    userId: string;
+    windowStart: Date;
+    windowEnd: Date;
+  }): Promise<SupporterDigestDiscussionBurstSnapshot[]>;
+}
+
+export interface SupporterDigestStateRepository {
+  findSupporterDigestStateByUserId(
+    userId: string,
+  ): Promise<SupporterDigestState | null>;
+  recordSupporterDigestView(input: {
+    userId: string;
+    viewedThrough: Date;
+  }): Promise<void>;
+}
+
+export type SupporterDigestNarration = {
+  candidateId: string;
+  headline: string;
+  body: string;
+  ctaLabel: string;
+};
+
+export type SupporterDigestNarrationResult =
+  | {
+      status: "success";
+      items: SupporterDigestNarration[];
+    }
+  | {
+      status: "unavailable";
+      reason:
+        | "missing_configuration"
+        | "provider_error"
+        | "invalid_response";
+      message: string;
+    };
+
+export interface SupporterDigestNarrator {
+  narrateDigest(input: {
+    viewerUserId: string;
+    windowStart: Date;
+    windowEnd: Date;
+    highlights: RankedSupporterDigestCandidate[];
+  }): Promise<SupporterDigestNarrationResult>;
 }

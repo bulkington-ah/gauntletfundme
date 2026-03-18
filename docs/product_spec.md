@@ -45,6 +45,9 @@ GoFundMe's profile, fundraiser, and community surfaces can feel disconnected, wh
 - Providing advanced moderation governance, trust-and-safety operations, or complex policy workflows.
 - Building a full internal admin or operator backoffice.
 
+## Post-v1 Extensions
+- Supporter Digest AI is an approved post-v1 extension focused on repeat engagement. It may use grounded AI narration over followed fundraiser and community activity, provided the experience keeps deterministic fallback behavior and source-linked summaries.
+
 ## System Constraints
 - v1 is a web-first MVP built under a one-week prototype timeline.
 - The system should be scoped as a thin full-stack product with room for later expansion.

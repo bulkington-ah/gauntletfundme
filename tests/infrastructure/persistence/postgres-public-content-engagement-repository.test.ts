@@ -516,6 +516,100 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(fundraiserSnapshot.summary.supporterCount).toBe(5);
   });
 
+  it("returns supporter digest activity scoped to followed, visible content only", async () => {
+    const harness = createRepositoryHarness();
+    await harness.resetRepository.resetPrototypeData();
+    const { pool, repository } = harness;
+    const windowStart = new Date("2026-03-16T13:21:00.000Z");
+    const windowEnd = new Date("2026-03-16T14:30:00.000Z");
+
+    await pool.query(`
+      INSERT INTO posts
+        (id, community_id, author_user_id, title, body, status, moderation_status, created_at)
+      VALUES
+        ('post_digest_visible', 'community_neighbors_helping_neighbors', 'user_organizer_avery', 'Evening prep update', 'Tonight''s prep plan is ready.', 'published', 'visible', '2026-03-16T14:00:00.000Z'),
+        ('post_digest_removed', 'community_neighbors_helping_neighbors', 'user_organizer_avery', 'Removed update', 'This should stay hidden.', 'published', 'removed', '2026-03-16T14:05:00.000Z'),
+        ('post_digest_unfollowed', 'community_school_success_network', 'user_organizer_avery', 'School organizer update', 'This should not appear for Jordan.', 'published', 'visible', '2026-03-16T14:10:00.000Z')
+    `);
+    await pool.query(`
+      INSERT INTO comments
+        (id, post_id, author_user_id, body, status, moderation_status, created_at)
+      VALUES
+        ('comment_digest_visible', 'post_volunteer_reminder', 'user_supporter_sam', 'I can cover a shift.', 'published', 'visible', '2026-03-16T14:02:00.000Z'),
+        ('comment_digest_archived', 'post_volunteer_reminder', 'user_supporter_priya', 'Please ignore this one.', 'archived', 'visible', '2026-03-16T14:03:00.000Z'),
+        ('comment_digest_removed', 'post_volunteer_reminder', 'user_supporter_noah', 'This comment was removed.', 'published', 'removed', '2026-03-16T14:04:00.000Z'),
+        ('comment_digest_unfollowed', 'post_school_supply_dropoff', 'user_supporter_noah', 'School thread activity.', 'published', 'visible', '2026-03-16T14:05:00.000Z')
+    `);
+    await pool.query(`
+      INSERT INTO donations
+        (id, user_id, fundraiser_id, amount, status, created_at)
+      VALUES
+        ('donation_digest_warm_meals_one', 'user_supporter_elena', 'fundraiser_warm_meals_2026', 6000, 'completed', '2026-03-16T13:40:00.000Z'),
+        ('donation_digest_warm_meals_two', 'user_moderator_morgan', 'fundraiser_warm_meals_2026', 2500, 'completed', '2026-03-16T13:45:00.000Z'),
+        ('donation_digest_unfollowed', 'user_supporter_elena', 'fundraiser_school_supplies_spring', 9000, 'completed', '2026-03-16T13:50:00.000Z')
+    `);
+
+    const baseline = await repository.findSupporterDigestViewerBaseline(
+      "user_supporter_jordan",
+    );
+    const fundraiserActivity =
+      await repository.listSupporterDigestFundraiserActivity({
+        userId: "user_supporter_jordan",
+        windowStart,
+        windowEnd,
+      });
+    const communityUpdates = await repository.listSupporterDigestCommunityUpdates({
+      userId: "user_supporter_jordan",
+      windowStart,
+      windowEnd,
+    });
+    const discussionBursts = await repository.listSupporterDigestDiscussionBursts({
+      userId: "user_supporter_jordan",
+      windowStart,
+      windowEnd,
+    });
+
+    expect(baseline).toEqual({
+      viewerCreatedAt: new Date("2026-03-16T08:05:00.000Z"),
+    });
+    expect(fundraiserActivity).toEqual([
+      {
+        fundraiserId: "fundraiser_warm_meals_2026",
+        fundraiserSlug: "warm-meals-2026",
+        fundraiserTitle: "Warm Meals 2026",
+        goalAmount: 250000,
+        amountRaisedBeforeWindow: 22000,
+        amountRaisedAfterWindow: 30500,
+        newDonationCount: 2,
+        newAmountRaised: 8500,
+        newSupporterCount: 2,
+        lastDonationAt: new Date("2026-03-16T13:45:00.000Z"),
+      },
+    ]);
+    expect(communityUpdates).toEqual([
+      {
+        communityId: "community_neighbors_helping_neighbors",
+        communitySlug: "neighbors-helping-neighbors",
+        communityName: "Neighbors Helping Neighbors",
+        organizerDisplayName: "Avery Johnson",
+        postId: "post_digest_visible",
+        postTitle: "Evening prep update",
+        publishedAt: new Date("2026-03-16T14:00:00.000Z"),
+      },
+    ]);
+    expect(discussionBursts).toEqual([
+      expect.objectContaining({
+        communitySlug: "neighbors-helping-neighbors",
+        communityName: "Neighbors Helping Neighbors",
+        postId: "post_volunteer_reminder",
+        postTitle: "Volunteer reminder",
+        newCommentCount: 1,
+        participantCount: 1,
+        lastCommentAt: new Date("2026-03-16T14:02:00.000Z"),
+      }),
+    ]);
+  });
+
   it("returns derived fundraiser and community engagement summaries for seeded content", async () => {
     const repository = await createSeededRepository();
 
@@ -672,6 +766,25 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(
       community?.discussion.some((entry) => entry.post.id === "post_kickoff_update"),
     ).toBe(false);
+  });
+
+  it("records supporter digest state without moving the cursor backward", async () => {
+    const repository = await createSeededRepository();
+
+    await repository.recordSupporterDigestView({
+      userId: "user_supporter_jordan",
+      viewedThrough: new Date("2026-03-18T12:00:00.000Z"),
+    });
+    await repository.recordSupporterDigestView({
+      userId: "user_supporter_jordan",
+      viewedThrough: new Date("2026-03-17T12:00:00.000Z"),
+    });
+
+    expect(
+      await repository.findSupporterDigestStateByUserId("user_supporter_jordan"),
+    ).toEqual({
+      lastViewedAt: new Date("2026-03-18T12:00:00.000Z"),
+    });
   });
 });
 

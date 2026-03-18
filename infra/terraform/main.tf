@@ -10,6 +10,16 @@ locals {
     ManagedBy   = "terraform"
   }
   merged_tags = merge(local.default_tags, var.tags)
+  apprunner_runtime_environment_variables = {
+    DATABASE_URL             = local.database_url
+    HOSTNAME                 = "0.0.0.0"
+    PORT                     = tostring(var.app_port)
+    OPENAI_DIGEST_MODEL      = var.openai_digest_model
+    OPENAI_DIGEST_TIMEOUT_MS = tostring(var.openai_digest_timeout_ms)
+  }
+  apprunner_runtime_environment_secrets = trimspace(var.openai_api_key_secret_arn) == "" ? {} : {
+    OPENAI_API_KEY = trimspace(var.openai_api_key_secret_arn)
+  }
 }
 
 resource "aws_vpc" "main" {
@@ -192,6 +202,44 @@ resource "aws_iam_role" "apprunner_ecr_access" {
   tags = local.merged_tags
 }
 
+resource "aws_iam_role" "apprunner_instance" {
+  name = "${local.resource_prefix}-apprunner-instance"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "tasks.apprunner.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = local.merged_tags
+}
+
+resource "aws_iam_role_policy" "apprunner_openai_secret_access" {
+  count = trimspace(var.openai_api_key_secret_arn) == "" ? 0 : 1
+  name  = "${local.resource_prefix}-apprunner-openai-secret-access"
+  role  = aws_iam_role.apprunner_instance.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = trimspace(var.openai_api_key_secret_arn)
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role_policy_attachment" "apprunner_ecr_access" {
   role       = aws_iam_role.apprunner_ecr_access.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess"
@@ -224,18 +272,16 @@ resource "aws_apprunner_service" "app" {
 
       image_configuration {
         port = tostring(var.app_port)
-        runtime_environment_variables = {
-          DATABASE_URL = local.database_url
-          HOSTNAME     = "0.0.0.0"
-          PORT         = tostring(var.app_port)
-        }
+        runtime_environment_variables = local.apprunner_runtime_environment_variables
+        runtime_environment_secrets   = local.apprunner_runtime_environment_secrets
       }
     }
   }
 
   instance_configuration {
-    cpu    = var.app_cpu
-    memory = var.app_memory
+    cpu               = var.app_cpu
+    memory            = var.app_memory
+    instance_role_arn = aws_iam_role.apprunner_instance.arn
   }
 
   health_check_configuration {

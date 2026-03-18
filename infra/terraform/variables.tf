@@ -44,6 +44,24 @@ variable "app_memory" {
   default     = "2048"
 }
 
+variable "openai_api_key_secret_arn" {
+  description = "Optional Secrets Manager ARN injected into App Runner as OPENAI_API_KEY."
+  type        = string
+  default     = ""
+}
+
+variable "openai_digest_model" {
+  description = "OpenAI model used for supporter digest narration."
+  type        = string
+  default     = "gpt-5-mini"
+}
+
+variable "openai_digest_timeout_ms" {
+  description = "OpenAI request timeout in milliseconds for supporter digest narration."
+  type        = number
+  default     = 8000
+}
+
 variable "vpc_cidr_block" {
   description = "CIDR block for the deployment VPC."
   type        = string

@@ -719,3 +719,30 @@ Standalone incremental tasks tracked only in `tasks/` after Task 043:
 - Task 044 made the fundraiser supporter-rail controls functional without changing contracts.
 - Task 045 replaced inert fundraiser share buttons with an in-place share modal and copy-link flow.
 - Task 046 replaced the no-op analytics publisher with Postgres-backed persistence, historical backfill, unfollow tracking, and an unlinked public analytics dashboard.
+
+## Milestone 12: AI Re-engagement
+
+### Task 047: Supporter Digest AI
+- Description: Add an authenticated in-app digest that summarizes meaningful changes across followed fundraisers and communities since the viewer last opened the digest, using deterministic ranking plus OpenAI-backed narration with fallback copy.
+- Expected files affected:
+  - `docs/**`
+  - `tasks/task_047_supporter_digest_ai.md`
+  - `src/application/**`
+  - `src/domain/**`
+  - `src/infrastructure/**`
+  - `src/presentation/**`
+  - `src/app/**`
+  - `infra/terraform/**`
+  - `tests/**`
+- Acceptance criteria:
+  - authenticated viewers can open `/digest` and see ranked highlights based only on followed fundraisers and communities
+  - digest state persists `last_viewed_at` and defines the digest window as “since last digest open”
+  - candidate selection and ranking remain deterministic and exclude moderated content
+  - OpenAI generates structured highlight narration through an infrastructure adapter, with deterministic fallback when unavailable or invalid
+  - `POST /api/engagement/digest-views` acknowledges the rendered digest and advances the cursor only forward
+  - production configuration supports secret-backed `OPENAI_API_KEY` plus runtime model and timeout env vars
+- Tests required:
+  - application, domain, infrastructure, and presentation tests for digest ranking, narration fallback, persistence, and page rendering
+  - `npm test`
+  - `npm run lint`
+  - `npm run build`

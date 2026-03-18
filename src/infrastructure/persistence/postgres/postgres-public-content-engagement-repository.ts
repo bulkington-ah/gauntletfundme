@@ -26,6 +26,9 @@ import type {
   ReportTargetLookup,
   ReportWriteRepository,
   ReportWriteResult,
+  SupporterDigestReadRepository,
+  SupporterDigestStateRepository,
+  SupporterDigestViewerBaseline,
   ViewerOwnedCommunityQuery,
   ViewerFollowStateSnapshot,
 } from "@/application";
@@ -70,6 +73,8 @@ export const createPostgresPublicContentEngagementRepository = (
   ReportReviewWriteRepository &
   ReportTargetLookup &
   ReportWriteRepository &
+  SupporterDigestReadRepository &
+  SupporterDigestStateRepository &
   FollowTargetLookup &
   FollowOwnerLookup &
   ViewerOwnedCommunityQuery &
@@ -679,6 +684,249 @@ export const createPostgresPublicContentEngagementRepository = (
       : null;
   };
 
+  const findSupporterDigestViewerBaseline = async (
+    userId: string,
+  ): Promise<SupporterDigestViewerBaseline | null> => {
+    const viewer = await findUserById(userId);
+
+    return viewer
+      ? {
+          viewerCreatedAt: viewer.createdAt,
+        }
+      : null;
+  };
+
+  const findSupporterDigestStateByUserId = async (userId: string) => {
+    const result = await query<SupporterDigestStateRow>(
+      `SELECT user_id, last_viewed_at, created_at, updated_at
+       FROM supporter_digest_state
+       WHERE user_id = $1
+       LIMIT 1`,
+      [userId],
+    );
+    const row = result.rows[0];
+
+    return row
+      ? {
+          lastViewedAt: row.last_viewed_at
+            ? asDate(row.last_viewed_at, "last_viewed_at")
+            : null,
+        }
+      : null;
+  };
+
+  const listSupporterDigestFundraiserActivity = async (input: {
+    userId: string;
+    windowStart: Date;
+    windowEnd: Date;
+  }) => {
+    const result = await query<SupporterDigestFundraiserActivityRow>(
+      `SELECT *
+       FROM (
+         SELECT
+           f.id AS fundraiser_id,
+           f.slug AS fundraiser_slug,
+           f.title AS fundraiser_title,
+           f.goal_amount,
+           COALESCE(SUM(CASE WHEN d.created_at < $2 THEN d.amount ELSE 0 END), 0)::text AS amount_raised_before_window,
+           COALESCE(SUM(d.amount), 0)::text AS amount_raised_after_window,
+           COALESCE(
+             SUM(
+               CASE
+                 WHEN d.created_at >= $2
+                   AND d.created_at <= $3
+                 THEN 1
+                 ELSE 0
+               END
+             ),
+             0
+           )::text AS new_donation_count,
+           COALESCE(
+             SUM(
+               CASE
+                 WHEN d.created_at >= $2
+                   AND d.created_at <= $3
+                 THEN d.amount
+                 ELSE 0
+               END
+             ),
+             0
+           )::text AS new_amount_raised,
+           COUNT(DISTINCT CASE
+             WHEN d.created_at >= $2
+               AND d.created_at <= $3
+             THEN d.user_id
+             ELSE NULL
+           END)::text AS new_supporter_count,
+           MAX(
+             CASE
+               WHEN d.created_at >= $2
+                 AND d.created_at <= $3
+               THEN d.created_at
+               ELSE NULL
+             END
+           ) AS last_donation_at
+         FROM follows fo
+         INNER JOIN fundraisers f
+           ON f.id = fo.target_id
+          AND fo.target_type = 'fundraiser'
+         LEFT JOIN donations d
+           ON d.fundraiser_id = f.id
+         WHERE fo.user_id = $1
+         GROUP BY f.id, f.slug, f.title, f.goal_amount
+       ) fundraiser_activity
+       WHERE last_donation_at IS NOT NULL
+       ORDER BY last_donation_at DESC`,
+      [input.userId, input.windowStart, input.windowEnd],
+    );
+
+    return result.rows.flatMap((row) => {
+      if (!row.last_donation_at) {
+        return [];
+      }
+
+      return [
+        {
+          fundraiserId: row.fundraiser_id,
+          fundraiserSlug: row.fundraiser_slug,
+          fundraiserTitle: row.fundraiser_title,
+          goalAmount: Number(row.goal_amount),
+          amountRaisedBeforeWindow: Number(row.amount_raised_before_window),
+          amountRaisedAfterWindow: Number(row.amount_raised_after_window),
+          newDonationCount: Number(row.new_donation_count),
+          newAmountRaised: Number(row.new_amount_raised),
+          newSupporterCount: Number(row.new_supporter_count),
+          lastDonationAt: asDate(row.last_donation_at, "last_donation_at"),
+        },
+      ];
+    });
+  };
+
+  const listSupporterDigestCommunityUpdates = async (input: {
+    userId: string;
+    windowStart: Date;
+    windowEnd: Date;
+  }) => {
+    const result = await query<SupporterDigestCommunityUpdateRow>(
+      `SELECT
+         c.id AS community_id,
+         c.slug AS community_slug,
+         c.name AS community_name,
+         u.display_name AS organizer_display_name,
+         p.id AS post_id,
+         p.title AS post_title,
+         p.created_at AS published_at
+       FROM follows fo
+       INNER JOIN communities c
+         ON c.id = fo.target_id
+        AND fo.target_type = 'community'
+       INNER JOIN posts p
+         ON p.community_id = c.id
+       INNER JOIN users u
+         ON u.id = p.author_user_id
+       WHERE fo.user_id = $1
+         AND p.author_user_id = c.owner_user_id
+         AND p.status = 'published'
+         AND p.moderation_status = 'visible'
+         AND p.created_at >= $2
+         AND p.created_at <= $3
+       ORDER BY p.created_at DESC`,
+      [input.userId, input.windowStart, input.windowEnd],
+    );
+
+    return result.rows.map((row) => ({
+      communityId: row.community_id,
+      communitySlug: row.community_slug,
+      communityName: row.community_name,
+      organizerDisplayName: row.organizer_display_name,
+      postId: row.post_id,
+      postTitle: row.post_title,
+      publishedAt: asDate(row.published_at, "published_at"),
+    }));
+  };
+
+  const listSupporterDigestDiscussionBursts = async (input: {
+    userId: string;
+    windowStart: Date;
+    windowEnd: Date;
+  }) => {
+    const result = await query<SupporterDigestDiscussionBurstRow>(
+      `SELECT
+         c.id AS community_id,
+         c.slug AS community_slug,
+         c.name AS community_name,
+         p.id AS post_id,
+         p.title AS post_title,
+         COUNT(*)::text AS new_comment_count,
+         COUNT(DISTINCT cm.author_user_id)::text AS participant_count,
+         MAX(cm.created_at) AS last_comment_at
+       FROM follows fo
+       INNER JOIN communities c
+         ON c.id = fo.target_id
+        AND fo.target_type = 'community'
+       INNER JOIN posts p
+         ON p.community_id = c.id
+       INNER JOIN comments cm
+         ON cm.post_id = p.id
+       WHERE fo.user_id = $1
+         AND p.status = 'published'
+         AND p.moderation_status = 'visible'
+         AND cm.status <> 'archived'
+         AND cm.moderation_status = 'visible'
+         AND cm.created_at >= $2
+         AND cm.created_at <= $3
+       GROUP BY c.id, c.slug, c.name, p.id, p.title
+       ORDER BY last_comment_at DESC`,
+      [input.userId, input.windowStart, input.windowEnd],
+    );
+
+    return result.rows.flatMap((row) => {
+      if (!row.last_comment_at) {
+        return [];
+      }
+
+      return [
+        {
+          communityId: row.community_id,
+          communitySlug: row.community_slug,
+          communityName: row.community_name,
+          postId: row.post_id,
+          postTitle: row.post_title,
+          newCommentCount: Number(row.new_comment_count),
+          participantCount: Number(row.participant_count),
+          lastCommentAt: asDate(row.last_comment_at, "last_comment_at"),
+        },
+      ];
+    });
+  };
+
+  const recordSupporterDigestView = async (input: {
+    userId: string;
+    viewedThrough: Date;
+  }) => {
+    await query(
+      `INSERT INTO supporter_digest_state
+         (user_id, last_viewed_at, created_at, updated_at)
+       VALUES
+         ($1, $2, NOW(), NOW())
+       ON CONFLICT (user_id)
+       DO UPDATE SET
+         last_viewed_at = CASE
+           WHEN supporter_digest_state.last_viewed_at IS NULL
+             OR supporter_digest_state.last_viewed_at < EXCLUDED.last_viewed_at
+           THEN EXCLUDED.last_viewed_at
+           ELSE supporter_digest_state.last_viewed_at
+         END,
+         updated_at = CASE
+           WHEN supporter_digest_state.last_viewed_at IS NULL
+             OR supporter_digest_state.last_viewed_at < EXCLUDED.last_viewed_at
+           THEN NOW()
+           ELSE supporter_digest_state.updated_at
+         END`,
+      [input.userId, input.viewedThrough],
+    );
+  };
+
   const persistCommunity = async (input: {
     ownerUserId: string;
     slug: string;
@@ -810,6 +1058,30 @@ export const createPostgresPublicContentEngagementRepository = (
 
     async listOwnedCommunitiesByOwnerUserId(ownerUserId) {
       return (await findCommunityRowsByOwnerUserId(ownerUserId)).map(mapCommunity);
+    },
+
+    async findSupporterDigestViewerBaseline(userId) {
+      return findSupporterDigestViewerBaseline(userId);
+    },
+
+    async findSupporterDigestStateByUserId(userId) {
+      return findSupporterDigestStateByUserId(userId);
+    },
+
+    async listSupporterDigestFundraiserActivity(input) {
+      return listSupporterDigestFundraiserActivity(input);
+    },
+
+    async listSupporterDigestCommunityUpdates(input) {
+      return listSupporterDigestCommunityUpdates(input);
+    },
+
+    async listSupporterDigestDiscussionBursts(input) {
+      return listSupporterDigestDiscussionBursts(input);
+    },
+
+    async recordSupporterDigestView(input) {
+      await recordSupporterDigestView(input);
     },
 
     async findProfileSlugByUserId(userId) {
@@ -1522,6 +1794,13 @@ type FollowRow = {
   created_at: Date | string;
 };
 
+type SupporterDigestStateRow = {
+  user_id: string;
+  last_viewed_at: Date | string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
 type DonationRow = {
   id: string;
   user_id: string;
@@ -1529,6 +1808,40 @@ type DonationRow = {
   amount: number | string;
   status: "completed";
   created_at: Date | string;
+};
+
+type SupporterDigestFundraiserActivityRow = {
+  fundraiser_id: string;
+  fundraiser_slug: string;
+  fundraiser_title: string;
+  goal_amount: number | string;
+  amount_raised_before_window: string;
+  amount_raised_after_window: string;
+  new_donation_count: string;
+  new_amount_raised: string;
+  new_supporter_count: string;
+  last_donation_at: Date | string | null;
+};
+
+type SupporterDigestCommunityUpdateRow = {
+  community_id: string;
+  community_slug: string;
+  community_name: string;
+  organizer_display_name: string;
+  post_id: string;
+  post_title: string;
+  published_at: Date | string;
+};
+
+type SupporterDigestDiscussionBurstRow = {
+  community_id: string;
+  community_slug: string;
+  community_name: string;
+  post_id: string;
+  post_title: string;
+  new_comment_count: string;
+  participant_count: string;
+  last_comment_at: Date | string | null;
 };
 
 type ReportRow = {

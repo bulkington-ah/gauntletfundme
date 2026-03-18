@@ -24,6 +24,7 @@ export function PublicSiteShell({
     ...(viewer && viewerProfileSlug
       ? [{ href: `/profiles/${viewerProfileSlug}`, label: "Profile" }]
       : []),
+    ...(viewer ? [{ href: "/digest", label: "Digest" }] : []),
     { href: "/communities", label: "Communities" },
     { href: "/fundraisers", label: "Fundraisers" },
   ];

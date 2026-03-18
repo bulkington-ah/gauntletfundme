@@ -30,6 +30,7 @@ const initializePersistence = async (sqlClient: SqlClient): Promise<void> => {
     await sqlClient.query(loadCoreSchemaSql());
   } else {
     await ensureFundraiserCommunityLinkage(sqlClient);
+    await ensureSupporterDigestStateStorage(sqlClient);
     await ensureDonationStorage(sqlClient);
   }
 };
@@ -146,4 +147,23 @@ const ensureDonationStorage = async (sqlClient: SqlClient): Promise<void> => {
       ON CONFLICT (id) DO NOTHING
     `);
   }
+};
+
+const ensureSupporterDigestStateStorage = async (
+  sqlClient: SqlClient,
+): Promise<void> => {
+  if (!(await checkTableExists(sqlClient, "supporter_digest_state"))) {
+    await sqlClient.query(`
+      CREATE TABLE supporter_digest_state (
+        user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        last_viewed_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+  }
+
+  await sqlClient.query(
+    `CREATE INDEX IF NOT EXISTS idx_supporter_digest_state_last_viewed_at ON supporter_digest_state(last_viewed_at DESC)`,
+  );
 };

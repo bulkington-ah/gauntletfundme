@@ -15,6 +15,7 @@ describe("Persistence bootstrapper", () => {
     await expect(countRows(pool, "users")).resolves.toBe(0);
     await expect(countRows(pool, "fundraisers")).resolves.toBe(0);
     await expect(countRows(pool, "communities")).resolves.toBe(0);
+    await expect(hasTable(pool, "supporter_digest_state")).resolves.toBe(true);
     await expect(hasTable(pool, "donations")).resolves.toBe(true);
   });
 
@@ -26,6 +27,7 @@ describe("Persistence bootstrapper", () => {
     await bootstrapper.ensureReady();
 
     await expect(countRows(pool, "users")).resolves.toBe(0);
+    await expect(hasTable(pool, "supporter_digest_state")).resolves.toBe(true);
     await expect(hasTable(pool, "donations")).resolves.toBe(true);
   });
 

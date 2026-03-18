@@ -293,7 +293,11 @@ export function CommunityActivityPanel({
               post.comments.length === 1 ? "1 comment" : `${post.comments.length} comments`;
 
             return (
-              <article className={styles.postCard} key={post.id}>
+              <article
+                className={styles.postCard}
+                id={`post-${post.id}`}
+                key={post.id}
+              >
                 <div className={styles.postHeader}>
                   {post.authorProfileSlug ? (
                     <Link

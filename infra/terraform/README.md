@@ -28,8 +28,8 @@ From this directory:
 terraform fmt -check
 terraform init
 terraform validate
-terraform plan -var="app_image_tag=<image-tag>"
-terraform apply -var="app_image_tag=<image-tag>"
+terraform plan -var="app_image_tag=<image-tag>" -var="openai_api_key_secret_arn=<secret-arn>"
+terraform apply -var="app_image_tag=<image-tag>" -var="openai_api_key_secret_arn=<secret-arn>"
 ```
 
 After apply:
@@ -44,6 +44,12 @@ After apply:
 ## Seeding Behavior with Private RDS
 
 This application bootstraps persistence schema and prototype seed data on startup when required tables are absent. Because App Runner reaches the database through the private VPC connector, initial schema and seed bootstrapping still work with private-only RDS connectivity.
+
+## AI Runtime Configuration
+
+- `OPENAI_API_KEY` should be stored in AWS Secrets Manager and passed to App Runner through `runtime_environment_secrets`.
+- `OPENAI_DIGEST_MODEL` and `OPENAI_DIGEST_TIMEOUT_MS` are standard App Runner runtime environment variables.
+- Updating the referenced secret value requires a service redeploy before the new value is visible in the running container.
 
 ## Local State Caveat
 

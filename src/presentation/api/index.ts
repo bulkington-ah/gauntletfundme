@@ -8,6 +8,7 @@ export * from "./communities/post-create-community-route";
 export * from "./discussion/post-create-comment-route";
 export * from "./discussion/post-create-post-route";
 export * from "./engagement/post-follow-target-route";
+export * from "./engagement/post-record-digest-view-route";
 export * from "./engagement/post-submit-donation-route";
 export * from "./engagement/post-start-donation-intent-route";
 export * from "./engagement/post-unfollow-target-route";
