@@ -5,7 +5,7 @@ import type {
   SupporterDigestNarrator,
 } from "@/application/engagement";
 
-const defaultModel = "gpt-5-mini";
+const defaultModel = "gpt-5-nano";
 const defaultTimeoutMs = 8_000;
 const defaultMaxOutputTokens = 2_500;
 const maxAttempts = 3;
