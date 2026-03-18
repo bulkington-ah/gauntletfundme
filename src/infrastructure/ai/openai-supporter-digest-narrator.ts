@@ -7,6 +7,7 @@ import type {
 
 const defaultModel = "gpt-5-mini";
 const defaultTimeoutMs = 8_000;
+const defaultMaxOutputTokens = 1_200;
 const maxAttempts = 3;
 
 type ResponsesClient = {
@@ -75,7 +76,10 @@ export const createOpenAiSupporterDigestNarrator = (
             null,
             2,
           ),
-          max_output_tokens: 700,
+          max_output_tokens: defaultMaxOutputTokens,
+          reasoning: {
+            effort: "minimal",
+          },
           text: {
             format: {
               type: "json_schema",

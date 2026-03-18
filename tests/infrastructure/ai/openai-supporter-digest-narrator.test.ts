@@ -57,7 +57,10 @@ describe("OpenAI supporter digest narrator", () => {
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "gpt-5-mini",
-        max_output_tokens: 700,
+        max_output_tokens: 1200,
+        reasoning: {
+          effort: "minimal",
+        },
         instructions: expect.stringContaining("Rewrite only the supplied facts"),
         input: expect.stringContaining("community_update:post_evening_update"),
         text: expect.objectContaining({
