@@ -44,6 +44,9 @@ After apply:
    - `rds_endpoint`
 2. Verify health:
    - `GET https://<apprunner_service_url>/api/health`
+   - `GET https://<apprunner_service_url>/homepage-hero.png`
+   - `GET https://<apprunner_service_url>/_next/image?url=%2Fhomepage-hero.png&w=3840&q=75`
+   - load `https://<apprunner_service_url>/fundraisers` to confirm App Runner can reach RDS without Postgres `no encryption` failures
 
 ## Demo-Specific Caveat
 
@@ -53,6 +56,12 @@ After apply:
 ## Seeding Behavior with Private RDS
 
 This application bootstraps persistence schema and prototype seed data on startup when required tables are absent. Because App Runner reaches the database through the private VPC connector, initial schema and seed bootstrapping still work with private-only RDS connectivity.
+
+## Database Connection TLS
+
+- The Terraform-managed App Runner `DATABASE_URL` is emitted with `?sslmode=no-verify` so the demo App Runner to RDS connection uses encrypted Postgres.
+- This is the fast internal-demo path and does not perform strict certificate verification.
+- If an operator manages App Runner configuration outside Terraform, they should append the same query suffix to the deployed `DATABASE_URL` before restarting the service.
 
 ## AI Runtime Configuration
 

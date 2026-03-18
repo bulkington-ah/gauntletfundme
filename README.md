@@ -112,9 +112,19 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
   - `docker run --rm -p 3000:3000 --env DATABASE_URL=<your-managed-db-url> --env OPENAI_DIGEST_MODEL=gpt-5-mini --env OPENAI_DIGEST_TIMEOUT_MS=8000 gofundme-v2:local`
 - Runtime health check endpoint:
   - `GET /api/health`
+- Static asset note:
+  - the runtime image now copies the full `public/` directory so repo-owned assets such as `/homepage-hero.png` and `/fundraiser-hero-warm-meals.svg` are available in App Runner
+- Database TLS note:
+  - local development can keep a plain `postgres://...` `DATABASE_URL`
+  - App Runner to private RDS must use an SSL-enabled `DATABASE_URL`; for the current internal demo baseline the managed URL should include `?sslmode=no-verify`
 - Secrets guidance:
   - keep secrets in managed environment configuration (AWS ECS task definition / App Runner / Parameter Store / Secrets Manager), never in source files
   - store `OPENAI_API_KEY` in a managed secret and inject it into App Runner as a secret-backed environment variable
+- Local image smoke checks after `docker build`:
+  - `docker run --rm -p 3000:3000 --env DATABASE_URL=<your-managed-db-url> --env OPENAI_DIGEST_MODEL=gpt-5-mini --env OPENAI_DIGEST_TIMEOUT_MS=8000 gofundme-v2:local`
+  - `curl -I http://127.0.0.1:3000/api/health`
+  - `curl -I http://127.0.0.1:3000/homepage-hero.png`
+  - `curl -I "http://127.0.0.1:3000/_next/image?url=%2Fhomepage-hero.png&w=3840&q=75"`
 
 ## Terraform AWS Deployment (Task 018)
 - Terraform infrastructure lives in `infra/terraform`.
@@ -132,6 +142,9 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
 - Two-phase operator flow:
   - phase 1: bootstrap only the ECR repository so there is a target for the first image push
   - phase 2: push the image tag to ECR, then run the full Terraform plan/apply for App Runner and RDS
+- Runtime environment note:
+  - the Terraform-managed App Runner `DATABASE_URL` now includes `?sslmode=no-verify` so the App Runner to RDS connection is encrypted for the internal demo deployment
+  - if the live App Runner service was configured manually instead of via Terraform, append the same query suffix to the current AWS-side `DATABASE_URL` before redeploying, then realign Terraform afterward
 - Core commands:
   - `cd infra/terraform`
   - `terraform fmt -check`
@@ -144,6 +157,9 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
   - `terraform apply -var="app_image_tag=<image-tag>" -var="openai_api_key_secret_arn=<secret-arn>"`
 - Post-deploy smoke check:
   - `GET https://<apprunner_service_url>/api/health`
+  - `GET https://<apprunner_service_url>/homepage-hero.png`
+  - `GET https://<apprunner_service_url>/_next/image?url=%2Fhomepage-hero.png&w=3840&q=75`
+  - load `https://<apprunner_service_url>/` and `https://<apprunner_service_url>/fundraisers` to confirm both the homepage image and DB-backed pages render without runtime errors
 - Internal demo setup note:
   - this environment intentionally leaves `/prototype/reset` open so the demo catalog can be restored manually after deploy
   - do not reuse this exact setup for a public launch until the reset tooling is protected or disabled

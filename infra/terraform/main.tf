@@ -257,7 +257,7 @@ resource "aws_db_instance" "postgres" {
 
 locals {
   database_url = format(
-    "postgres://%s:%s@%s:%d/%s",
+    "postgres://%s:%s@%s:%d/%s?sslmode=no-verify",
     var.database_username,
     random_password.database.result,
     aws_db_instance.postgres.address,
