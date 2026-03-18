@@ -1,0 +1,239 @@
+.page {
+  margin: 0 auto;
+  width: min(1120px, calc(100% - 48px));
+  padding: 48px 0 88px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 32px;
+}
+
+.heroCopy {
+  display: grid;
+  gap: 14px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #466341;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 4.3rem);
+  line-height: 0.95;
+}
+
+.description {
+  margin: 0;
+  max-width: 54rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #4e5550;
+}
+
+.heroStats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.heroStat {
+  display: grid;
+  gap: 4px;
+  padding: 18px 20px;
+  border: 1px solid rgba(41, 55, 46, 0.12);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.heroStatValue {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1f4129;
+}
+
+.heroStatLabel {
+  font-size: 0.92rem;
+  color: #5a625d;
+}
+
+.gridSection {
+  display: grid;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  display: grid;
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid rgba(41, 55, 46, 0.12);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(200, 244, 161, 0.32), transparent 38%),
+    rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 48px rgba(31, 65, 41, 0.08);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 56px rgba(31, 65, 41, 0.12);
+  border-color: rgba(41, 55, 46, 0.2);
+}
+
+.cardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cardBody {
+  display: grid;
+  gap: 10px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.cardDescription {
+  margin: 0;
+  line-height: 1.6;
+  color: #58615c;
+}
+
+.metricBlock {
+  display: grid;
+  gap: 12px;
+}
+
+.metricHeadline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.metricValue {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #1d3f28;
+}
+
+.metricContext {
+  font-size: 1.05rem;
+  color: #6a726d;
+}
+
+.progressTrack {
+  position: relative;
+  overflow: hidden;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(41, 55, 46, 0.08);
+}
+
+.progressFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #39b54a 0%, #8dd940 100%);
+}
+
+.metricMeta {
+  margin: 0;
+  color: #58615c;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+}
+
+.footerLabel {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #66706a;
+}
+
+.footerValue {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.cardArrow {
+  font-size: 1.35rem;
+  color: #1f4129;
+}
+
+.emptyState {
+  display: grid;
+  gap: 10px;
+  padding: 40px;
+  border: 1px solid rgba(41, 55, 46, 0.12);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.92);
+  text-align: center;
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.emptyBody {
+  margin: 0;
+  color: #5a625d;
+}
+
+@media (max-width: 860px) {
+  .page {
+    width: min(100% - 32px, 1120px);
+    padding: 36px 0 72px;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .heroStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .heroStats {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 20px;
+  }
+}
