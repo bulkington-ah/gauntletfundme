@@ -8,10 +8,12 @@ import type {
   PublicCommunitySnapshot,
   PublicCommunitySummarySnapshot,
   PublicContentReadRepository,
+  PublicDetailLookup,
   PublicFundraiserSnapshot,
   PublicFundraiserSummarySnapshot,
   PublicProfileSnapshot,
   PublicProfileActivitySnapshot,
+  ViewerFollowStateSnapshot,
 } from "@/application/public-content";
 import type {
   Comment,
@@ -153,6 +155,36 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
     catalog.follows.filter(
       (follow) => follow.targetType === targetType && follow.targetId === targetId,
     ).length;
+
+  const buildViewerFollowState = (
+    viewerUserId: string | null | undefined,
+    input: {
+      ownerUserId: string;
+      targetType: FollowTargetType;
+      targetId: string;
+    },
+  ): ViewerFollowStateSnapshot | null => {
+    if (!viewerUserId) {
+      return null;
+    }
+
+    if (viewerUserId === input.ownerUserId) {
+      return {
+        isFollowing: false,
+        isOwnTarget: true,
+      };
+    }
+
+    return {
+      isFollowing: catalog.follows.some(
+        (follow) =>
+          follow.userId === viewerUserId &&
+          follow.targetType === input.targetType &&
+          follow.targetId === input.targetId,
+      ),
+      isOwnTarget: false,
+    };
+  };
 
   const findProfileFollowers = (profileId: string): PublicActorSnapshot[] =>
     catalog.follows
@@ -370,8 +402,10 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
     async findProfileSlugByUserId(userId: string): Promise<string | null> {
       return findUserProfileByUserId(userId)?.slug ?? null;
     },
-    async findProfileBySlug(slug: string): Promise<PublicProfileSnapshot | null> {
-      const profile = catalog.userProfiles.find((entry) => entry.slug === slug);
+    async findProfileBySlug(
+      input: PublicDetailLookup,
+    ): Promise<PublicProfileSnapshot | null> {
+      const profile = catalog.userProfiles.find((entry) => entry.slug === input.slug);
 
       if (!profile) {
         return null;
@@ -391,6 +425,11 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
       return {
         user,
         profile,
+        viewerFollowState: buildViewerFollowState(input.viewerUserId, {
+          ownerUserId: user.id,
+          targetType: "profile",
+          targetId: profile.id,
+        }),
         followerCount: followers.length,
         followingCount: following.length,
         inspiredSupporterCount: countInspiredSupporters(
@@ -410,9 +449,11 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
       };
     },
     async findFundraiserBySlug(
-      slug: string,
+      input: PublicDetailLookup,
     ): Promise<PublicFundraiserSnapshot | null> {
-      const fundraiser = catalog.fundraisers.find((entry) => entry.slug === slug);
+      const fundraiser = catalog.fundraisers.find(
+        (entry) => entry.slug === input.slug,
+      );
 
       if (!fundraiser) {
         return null;
@@ -432,6 +473,11 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
 
       return {
         summary,
+        viewerFollowState: buildViewerFollowState(input.viewerUserId, {
+          ownerUserId: owner.id,
+          targetType: "fundraiser",
+          targetId: fundraiser.id,
+        }),
         recentDonations: findDonationsForFundraiser(fundraiser.id).flatMap(
           (donation) => {
             const actor = buildActorSnapshotByUserId(donation.userId);
@@ -441,8 +487,12 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
         ),
       };
     },
-    async findCommunityBySlug(slug: string): Promise<PublicCommunitySnapshot | null> {
-      const community = catalog.communities.find((entry) => entry.slug === slug);
+    async findCommunityBySlug(
+      input: PublicDetailLookup,
+    ): Promise<PublicCommunitySnapshot | null> {
+      const community = catalog.communities.find(
+        (entry) => entry.slug === input.slug,
+      );
 
       if (!community) {
         return null;
@@ -460,6 +510,11 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
         community,
         owner,
         ownerProfile: findUserProfileByUserId(owner.id),
+        viewerFollowState: buildViewerFollowState(input.viewerUserId, {
+          ownerUserId: owner.id,
+          targetType: "community",
+          targetId: community.id,
+        }),
         featuredFundraiser: fundraisers[0] ?? null,
         fundraisers,
         followerCount: countFollowers("community", community.id),

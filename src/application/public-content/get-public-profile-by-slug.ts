@@ -14,6 +14,7 @@ import {
   toPublicCommunityReference,
   toPublicFundraiserSummary,
   toPublicProfileRelationshipMember,
+  toPublicViewerFollowState,
 } from "./mappers";
 import type { PublicContentReadRepository } from "./ports";
 
@@ -33,7 +34,10 @@ export const getPublicProfileBySlug = async (
   }
 
   const snapshot = await dependencies.publicContentReadRepository.findProfileBySlug(
-    slugResult,
+    {
+      slug: slugResult,
+      viewerUserId: request.viewerUserId ?? null,
+    },
   );
 
   if (!snapshot) {
@@ -53,6 +57,9 @@ export const getPublicProfileBySlug = async (
     status: "success",
     data: {
       kind: "profile",
+      viewerFollowState: snapshot.viewerFollowState
+        ? toPublicViewerFollowState(snapshot.viewerFollowState)
+        : null,
       profile: {
         slug: snapshot.profile.slug,
         displayName: snapshot.user.displayName,

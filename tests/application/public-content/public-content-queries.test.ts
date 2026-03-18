@@ -51,6 +51,10 @@ describe("public content queries", () => {
         profileType: "organizer",
         createdAt,
       }),
+      viewerFollowState: {
+        isFollowing: false,
+        isOwnTarget: false,
+      },
       followerCount: 4,
       followingCount: 2,
       inspiredSupporterCount: 5,
@@ -273,14 +277,21 @@ describe("public content queries", () => {
 
     const result = await getPublicProfileBySlug(
       { publicContentReadRepository: repository, analyticsEventPublisher },
-      { slug: " Avery Johnson " },
+      { slug: " Avery Johnson ", viewerUserId: "user_viewer_123" },
     );
 
-    expect(findProfileBySlug).toHaveBeenCalledWith("avery-johnson");
+    expect(findProfileBySlug).toHaveBeenCalledWith({
+      slug: "avery-johnson",
+      viewerUserId: "user_viewer_123",
+    });
     expect(result).toEqual({
       status: "success",
       data: {
         kind: "profile",
+        viewerFollowState: {
+          isFollowing: false,
+          isOwnTarget: false,
+        },
         profile: {
           slug: "avery-johnson",
           displayName: "Avery Johnson",
@@ -771,6 +782,10 @@ describe("public content queries", () => {
         supporterCount: 2,
         amountRaised: 7800,
       },
+      viewerFollowState: {
+        isFollowing: true,
+        isOwnTarget: false,
+      },
       recentDonations: [
         {
           actor: {
@@ -807,14 +822,21 @@ describe("public content queries", () => {
 
     const result = await getPublicFundraiserBySlug(
       { publicContentReadRepository: repository, analyticsEventPublisher },
-      { slug: " warm meals 2026 " },
+      { slug: " warm meals 2026 ", viewerUserId: "user_viewer_123" },
     );
 
-    expect(findFundraiserBySlug).toHaveBeenCalledWith("warm-meals-2026");
+    expect(findFundraiserBySlug).toHaveBeenCalledWith({
+      slug: "warm-meals-2026",
+      viewerUserId: "user_viewer_123",
+    });
     expect(result).toEqual({
       status: "success",
       data: {
         kind: "fundraiser",
+        viewerFollowState: {
+          isFollowing: true,
+          isOwnTarget: false,
+        },
         fundraiser: {
           slug: "warm-meals-2026",
           title: "Warm Meals 2026",
@@ -920,6 +942,10 @@ describe("public content queries", () => {
         profileType: "organizer",
         createdAt,
       }),
+      viewerFollowState: {
+        isFollowing: false,
+        isOwnTarget: true,
+      },
       featuredFundraiser: {
         fundraiser: createFundraiser({
           id: "fundraiser_123",
@@ -1039,7 +1065,10 @@ describe("public content queries", () => {
 
     const result = await getPublicCommunityBySlug(
       { publicContentReadRepository: repository, analyticsEventPublisher },
-      { slug: "neighbors-helping-neighbors" },
+      {
+        slug: "neighbors-helping-neighbors",
+        viewerUserId: "user_owner_123",
+      },
     );
 
     expect(result.status).toBe("success");
@@ -1047,6 +1076,14 @@ describe("public content queries", () => {
       throw new Error("Expected success result.");
     }
 
+    expect(findCommunityBySlug).toHaveBeenCalledWith({
+      slug: "neighbors-helping-neighbors",
+      viewerUserId: "user_owner_123",
+    });
+    expect(result.data.viewerFollowState).toEqual({
+      isFollowing: false,
+      isOwnTarget: true,
+    });
     expect(result.data.community.followerCount).toBe(12);
     expect(result.data.community.fundraiserCount).toBe(2);
     expect(result.data.community.amountRaised).toBe(18700);

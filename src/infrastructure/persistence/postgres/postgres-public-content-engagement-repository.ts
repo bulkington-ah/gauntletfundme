@@ -13,6 +13,7 @@ import type {
   PublicActorSnapshot,
   PublicCommunitySummarySnapshot,
   PublicContentReadRepository,
+  PublicDetailLookup,
   PublicFundraiserSnapshot,
   PublicFundraiserSummarySnapshot,
   PublicProfileSnapshot,
@@ -22,6 +23,7 @@ import type {
   ReportTargetLookup,
   ReportWriteRepository,
   ReportWriteResult,
+  ViewerFollowStateSnapshot,
 } from "@/application";
 import {
   createComment,
@@ -218,6 +220,42 @@ export const createPostgresPublicContentEngagementRepository = (
     );
 
     return Number(result.rows[0]?.follower_count ?? "0");
+  };
+
+  const buildViewerFollowState = async (
+    viewerUserId: string | null | undefined,
+    input: {
+      ownerUserId: string;
+      targetType: FollowTargetType;
+      targetId: string;
+    },
+  ): Promise<ViewerFollowStateSnapshot | null> => {
+    if (!viewerUserId) {
+      return null;
+    }
+
+    if (viewerUserId === input.ownerUserId) {
+      return {
+        isFollowing: false,
+        isOwnTarget: true,
+      };
+    }
+
+    const result = await query<{ is_following: boolean }>(
+      `SELECT EXISTS(
+         SELECT 1
+         FROM follows
+         WHERE user_id = $1
+           AND target_type = $2
+           AND target_id = $3
+       ) AS is_following`,
+      [viewerUserId, input.targetType, input.targetId],
+    );
+
+    return {
+      isFollowing: result.rows[0]?.is_following ?? false,
+      isOwnTarget: false,
+    };
   };
 
   const findProfileFollowers = async (
@@ -606,7 +644,7 @@ export const createPostgresPublicContentEngagementRepository = (
       return profile?.slug ?? null;
     },
 
-    async findProfileBySlug(slug) {
+    async findProfileBySlug(input: PublicDetailLookup) {
       const profileResult = await query<UserProfileWithUserRow>(
         `SELECT
            p.id,
@@ -625,7 +663,7 @@ export const createPostgresPublicContentEngagementRepository = (
          INNER JOIN users u ON u.id = p.user_id
          WHERE p.slug = $1
          LIMIT 1`,
-        [slug],
+        [input.slug],
       );
 
       const profileRow = profileResult.rows[0];
@@ -647,6 +685,11 @@ export const createPostgresPublicContentEngagementRepository = (
       return {
         user,
         profile,
+        viewerFollowState: await buildViewerFollowState(input.viewerUserId, {
+          ownerUserId: profileRow.user_id,
+          targetType: "profile",
+          targetId: profileRow.id,
+        }),
         followerCount: followers.length,
         followingCount: following.length,
         inspiredSupporterCount: await countInspiredSupporters(
@@ -665,7 +708,7 @@ export const createPostgresPublicContentEngagementRepository = (
       } satisfies PublicProfileSnapshot;
     },
 
-    async findFundraiserBySlug(slug) {
+    async findFundraiserBySlug(input: PublicDetailLookup) {
       const fundraiserResult = await query<FundraiserWithOwnerRow>(
         `SELECT
            f.id,
@@ -685,7 +728,7 @@ export const createPostgresPublicContentEngagementRepository = (
          INNER JOIN users u ON u.id = f.owner_user_id
          WHERE f.slug = $1
          LIMIT 1`,
-        [slug],
+        [input.slug],
       );
 
       const fundraiserRow = fundraiserResult.rows[0];
@@ -709,6 +752,11 @@ export const createPostgresPublicContentEngagementRepository = (
           ownerProfile,
           relatedCommunity,
         ),
+        viewerFollowState: await buildViewerFollowState(input.viewerUserId, {
+          ownerUserId: fundraiserRow.owner_user_id,
+          targetType: "fundraiser",
+          targetId: fundraiserRow.id,
+        }),
         recentDonations: (
           await Promise.all(
             donationRows.map(async (donationRow) => {
@@ -728,7 +776,7 @@ export const createPostgresPublicContentEngagementRepository = (
       } satisfies PublicFundraiserSnapshot;
     },
 
-    async findCommunityBySlug(slug) {
+    async findCommunityBySlug(input: PublicDetailLookup) {
       const communityResult = await query<CommunityWithOwnerRow>(
         `SELECT
            c.id,
@@ -747,7 +795,7 @@ export const createPostgresPublicContentEngagementRepository = (
          INNER JOIN users u ON u.id = c.owner_user_id
          WHERE c.slug = $1
          LIMIT 1`,
-        [slug],
+        [input.slug],
       );
 
       const communityRow = communityResult.rows[0];
@@ -763,6 +811,11 @@ export const createPostgresPublicContentEngagementRepository = (
         community: mapCommunity(communityRow),
         owner: mapJoinedUser(communityRow),
         ownerProfile: await findUserProfileByUserId(communityRow.owner_user_id),
+        viewerFollowState: await buildViewerFollowState(input.viewerUserId, {
+          ownerUserId: communityRow.owner_user_id,
+          targetType: "community",
+          targetId: communityRow.id,
+        }),
         featuredFundraiser: fundraisers[0] ?? null,
         fundraisers,
         followerCount: await countFollowersByTarget("community", communityRow.id),

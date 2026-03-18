@@ -9,7 +9,9 @@ describe("PostgresPublicContentEngagementRepository", () => {
   it("returns seeded public profile snapshots", async () => {
     const repository = createRepository();
 
-    const snapshot = await repository.findProfileBySlug("avery-johnson");
+    const snapshot = await repository.findProfileBySlug({
+      slug: "avery-johnson",
+    });
 
     expect(snapshot).not.toBeNull();
     if (!snapshot) {
@@ -17,6 +19,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
     }
 
     expect(snapshot.user.displayName).toBe("Avery Johnson");
+    expect(snapshot.viewerFollowState).toBeNull();
     expect(snapshot.followerCount).toBe(5);
     expect(snapshot.followingCount).toBe(2);
     expect(snapshot.followers.map((entry) => entry.user.displayName)).toEqual([
@@ -91,6 +94,44 @@ describe("PostgresPublicContentEngagementRepository", () => {
     await expect(
       repository.findProfileSlugByUserId("user_missing"),
     ).resolves.toBeNull();
+  });
+
+  it("derives viewer follow state for public detail snapshots", async () => {
+    const repository = createRepository();
+
+    const profileSnapshot = await repository.findProfileBySlug({
+      slug: "avery-johnson",
+      viewerUserId: "user_supporter_jordan",
+    });
+    const fundraiserSnapshot = await repository.findFundraiserBySlug({
+      slug: "warm-meals-2026",
+      viewerUserId: "user_supporter_jordan",
+    });
+    const communitySnapshot = await repository.findCommunityBySlug({
+      slug: "neighbors-helping-neighbors",
+      viewerUserId: "user_supporter_jordan",
+    });
+    const ownedCommunitySnapshot = await repository.findCommunityBySlug({
+      slug: "neighbors-helping-neighbors",
+      viewerUserId: "user_organizer_avery",
+    });
+
+    expect(profileSnapshot?.viewerFollowState).toEqual({
+      isFollowing: true,
+      isOwnTarget: false,
+    });
+    expect(fundraiserSnapshot?.viewerFollowState).toEqual({
+      isFollowing: true,
+      isOwnTarget: false,
+    });
+    expect(communitySnapshot?.viewerFollowState).toEqual({
+      isFollowing: true,
+      isOwnTarget: false,
+    });
+    expect(ownedCommunitySnapshot?.viewerFollowState).toEqual({
+      isFollowing: false,
+      isOwnTarget: true,
+    });
   });
 
   it("creates follows idempotently", async () => {
@@ -214,9 +255,9 @@ describe("PostgresPublicContentEngagementRepository", () => {
       body: "I can help cover that shift.",
     });
 
-    const communitySnapshot = await repository.findCommunityBySlug(
-      "neighbors-helping-neighbors",
-    );
+    const communitySnapshot = await repository.findCommunityBySlug({
+      slug: "neighbors-helping-neighbors",
+    });
 
     expect(communitySnapshot).not.toBeNull();
     if (!communitySnapshot) {
@@ -259,9 +300,9 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(createdDonation.status).toBe("completed");
     expect(createdDonation.amount).toBe(4200);
 
-    const fundraiserSnapshot = await repository.findFundraiserBySlug(
-      "warm-meals-2026",
-    );
+    const fundraiserSnapshot = await repository.findFundraiserBySlug({
+      slug: "warm-meals-2026",
+    });
 
     expect(fundraiserSnapshot).not.toBeNull();
     if (!fundraiserSnapshot) {
@@ -276,12 +317,12 @@ describe("PostgresPublicContentEngagementRepository", () => {
   it("returns derived fundraiser and community engagement summaries for seeded content", async () => {
     const repository = createRepository();
 
-    const fundraiserSnapshot = await repository.findFundraiserBySlug(
-      "warm-meals-2026",
-    );
-    const communitySnapshot = await repository.findCommunityBySlug(
-      "neighbors-helping-neighbors",
-    );
+    const fundraiserSnapshot = await repository.findFundraiserBySlug({
+      slug: "warm-meals-2026",
+    });
+    const communitySnapshot = await repository.findCommunityBySlug({
+      slug: "neighbors-helping-neighbors",
+    });
 
     expect(fundraiserSnapshot).not.toBeNull();
     expect(communitySnapshot).not.toBeNull();
@@ -340,7 +381,9 @@ describe("PostgresPublicContentEngagementRepository", () => {
          ('intent_legacy_drive_support', 'user_supporter_legacy', 'fundraiser_legacy_drive', 2400, 'started', '2026-03-10T10:15:00.000Z')`,
     );
 
-    const fundraiserSnapshot = await repository.findFundraiserBySlug("legacy-drive");
+    const fundraiserSnapshot = await repository.findFundraiserBySlug({
+      slug: "legacy-drive",
+    });
 
     expect(fundraiserSnapshot).not.toBeNull();
     expect(fundraiserSnapshot?.summary.amountRaised).toBe(2400);
@@ -417,9 +460,9 @@ describe("PostgresPublicContentEngagementRepository", () => {
     });
 
     const report = await repository.findReportById(reportWrite.report.id);
-    const community = await repository.findCommunityBySlug(
-      "neighbors-helping-neighbors",
-    );
+    const community = await repository.findCommunityBySlug({
+      slug: "neighbors-helping-neighbors",
+    });
 
     expect(report).not.toBeNull();
     expect(report?.status).toBe("actioned");

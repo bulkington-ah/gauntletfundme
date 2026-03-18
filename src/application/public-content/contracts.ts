@@ -10,6 +10,12 @@ import type {
 
 export type LookupBySlugRequest = {
   slug: string;
+  viewerUserId?: string | null;
+};
+
+export type ViewerFollowState = {
+  isFollowing: boolean;
+  isOwnTarget: boolean;
 };
 
 export type PublicActorSummary = {
@@ -77,6 +83,7 @@ export type PublicProfileActivity = {
 
 export type PublicProfileResponse = {
   kind: "profile";
+  viewerFollowState: ViewerFollowState | null;
   profile: {
     slug: string;
     displayName: string;
@@ -101,6 +108,7 @@ export type PublicProfileResponse = {
 
 export type PublicFundraiserResponse = {
   kind: "fundraiser";
+  viewerFollowState: ViewerFollowState | null;
   fundraiser: PublicFundraiserSummary & {
     story: string;
   };
@@ -118,6 +126,7 @@ export type PublicFundraiserListResponse = {
 
 export type PublicCommunityResponse = {
   kind: "community";
+  viewerFollowState: ViewerFollowState | null;
   community: {
     slug: string;
     name: string;

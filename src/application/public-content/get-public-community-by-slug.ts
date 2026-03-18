@@ -9,7 +9,10 @@ import type {
   PublicCommunityResponse,
   PublicQueryResult,
 } from "./contracts";
-import { toPublicFundraiserSummary } from "./mappers";
+import {
+  toPublicFundraiserSummary,
+  toPublicViewerFollowState,
+} from "./mappers";
 import type { PublicContentReadRepository } from "./ports";
 
 type Dependencies = {
@@ -28,7 +31,10 @@ export const getPublicCommunityBySlug = async (
   }
 
   const snapshot = await dependencies.publicContentReadRepository.findCommunityBySlug(
-    slugResult,
+    {
+      slug: slugResult,
+      viewerUserId: request.viewerUserId ?? null,
+    },
   );
 
   if (!snapshot) {
@@ -62,6 +68,9 @@ export const getPublicCommunityBySlug = async (
     status: "success",
     data: {
       kind: "community",
+      viewerFollowState: snapshot.viewerFollowState
+        ? toPublicViewerFollowState(snapshot.viewerFollowState)
+        : null,
       community: {
         slug: snapshot.community.slug,
         name: snapshot.community.name,

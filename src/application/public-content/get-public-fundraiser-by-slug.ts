@@ -12,6 +12,7 @@ import type {
 import {
   toPublicCommunityReference,
   toPublicFundraiserSummary,
+  toPublicViewerFollowState,
 } from "./mappers";
 import type { PublicContentReadRepository } from "./ports";
 
@@ -31,7 +32,10 @@ export const getPublicFundraiserBySlug = async (
   }
 
   const snapshot =
-    await dependencies.publicContentReadRepository.findFundraiserBySlug(slugResult);
+    await dependencies.publicContentReadRepository.findFundraiserBySlug({
+      slug: slugResult,
+      viewerUserId: request.viewerUserId ?? null,
+    });
 
   if (!snapshot) {
     return {
@@ -50,6 +54,9 @@ export const getPublicFundraiserBySlug = async (
     status: "success",
     data: {
       kind: "fundraiser",
+      viewerFollowState: snapshot.viewerFollowState
+        ? toPublicViewerFollowState(snapshot.viewerFollowState)
+        : null,
       fundraiser: {
         ...toPublicFundraiserSummary(snapshot.summary),
         story: snapshot.summary.fundraiser.story,

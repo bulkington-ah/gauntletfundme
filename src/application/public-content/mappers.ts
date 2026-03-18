@@ -7,11 +7,13 @@ import type {
   PublicFundraiserBrowseEntry,
   PublicProfileRelationshipMember,
   PublicFundraiserSummary,
+  ViewerFollowState,
 } from "./contracts";
 import type {
   PublicActorSnapshot,
   PublicCommunitySummarySnapshot,
   PublicFundraiserSummarySnapshot,
+  ViewerFollowStateSnapshot,
 } from "./ports";
 
 export const toPublicActorSummary = (
@@ -80,6 +82,13 @@ export const toPublicCommunitySummary = (
     profileSlug: snapshot.ownerProfile?.slug ?? null,
     avatarUrl: snapshot.ownerProfile?.avatarUrl ?? null,
   },
+});
+
+export const toPublicViewerFollowState = (
+  snapshot: ViewerFollowStateSnapshot,
+): ViewerFollowState => ({
+  isFollowing: snapshot.isFollowing,
+  isOwnTarget: snapshot.isOwnTarget,
 });
 
 const toExcerpt = (value: string, maxLength: number): string => {

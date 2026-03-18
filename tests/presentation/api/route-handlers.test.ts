@@ -23,6 +23,7 @@ describe("API route handlers", () => {
     setApplicationApiForTesting(
       createApplicationApi({
         publicContentReadRepository: staticRepository,
+        accountAuthRepository: createAccountAuthRepositoryStub(),
         followTargetLookup: staticRepository,
         sessionViewerGateway: createStaticSessionViewerGateway(),
         followOwnerLookup: {
@@ -200,6 +201,7 @@ describe("API route handlers", () => {
 
     expect(body).toMatchObject({
       kind: "profile",
+      viewerFollowState: null,
       profile: {
         slug: "avery-johnson",
         displayName: "Avery Johnson",
@@ -243,6 +245,28 @@ describe("API route handlers", () => {
         }),
       ]),
     );
+  });
+
+  it("includes viewer follow state for a signed-in public profile request", async () => {
+    const response = await handleGetPublicProfileRoute(
+      new Request("http://test", {
+        headers: {
+          cookie: createBrowserSessionCookieHeader("demo-supporter-session"),
+        },
+      }),
+      {
+        slug: "avery-johnson",
+      },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      kind: "profile",
+      viewerFollowState: {
+        isFollowing: true,
+        isOwnTarget: false,
+      },
+    });
   });
 
   it("returns a 404 for an unknown fundraiser slug", async () => {
@@ -300,6 +324,50 @@ describe("API route handlers", () => {
           ],
         },
       ],
+    });
+  });
+
+  it("includes self-owned viewer follow state for a signed-in public community request", async () => {
+    const response = await handleGetPublicCommunityRoute(
+      new Request("http://test", {
+        headers: {
+          "x-session-token": "demo-organizer-session",
+        },
+      }),
+      {
+        slug: "neighbors-helping-neighbors",
+      },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      kind: "community",
+      viewerFollowState: {
+        isFollowing: false,
+        isOwnTarget: true,
+      },
+    });
+  });
+
+  it("includes viewer follow state for a signed-in public fundraiser request", async () => {
+    const response = await handleGetPublicFundraiserRoute(
+      new Request("http://test", {
+        headers: {
+          "x-session-token": "demo-supporter-session",
+        },
+      }),
+      {
+        slug: "warm-meals-2026",
+      },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      kind: "fundraiser",
+      viewerFollowState: {
+        isFollowing: true,
+        isOwnTarget: false,
+      },
     });
   });
 
@@ -1142,3 +1210,45 @@ describe("API route handlers", () => {
 
 const createBrowserSessionCookieHeader = (sessionToken: string): string =>
   `${browserSessionCookieName}=${encodeURIComponent(sessionToken)}`;
+
+const createAccountAuthRepositoryStub = () => ({
+  async findViewerBySessionToken(sessionToken: string | null) {
+    switch (sessionToken) {
+      case "demo-organizer-session":
+        return {
+          userId: "user_organizer_avery",
+          role: "organizer" as const,
+        };
+      case "demo-supporter-session":
+        return {
+          userId: "user_supporter_jordan",
+          role: "supporter" as const,
+        };
+      case "demo-moderator-session":
+        return {
+          userId: "user_moderator_morgan",
+          role: "moderator" as const,
+        };
+      default:
+        return null;
+    }
+  },
+  async findUserByEmail() {
+    return null;
+  },
+  async saveUser() {
+    return;
+  },
+  async setPasswordCredential() {
+    return;
+  },
+  async verifyPasswordCredential() {
+    return false;
+  },
+  async createSession() {
+    return "session_unused";
+  },
+  async invalidateSession() {
+    return;
+  },
+});

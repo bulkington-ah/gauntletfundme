@@ -1,16 +1,20 @@
 import { getApplicationApi } from "../application-api";
 import { jsonResponse } from "../http";
+import { resolveViewerUserIdFromRequest } from "./resolve-viewer-user-id";
 
 type SlugRouteContext = {
   slug: string;
 };
 
 export const handleGetPublicCommunityRoute = async (
-  _request: Request,
+  request: Request,
   context: SlugRouteContext,
 ): Promise<Response> => {
-  const result = await getApplicationApi().getPublicCommunityBySlug({
+  const applicationApi = getApplicationApi();
+  const viewerUserId = await resolveViewerUserIdFromRequest(request, applicationApi);
+  const result = await applicationApi.getPublicCommunityBySlug({
     slug: context.slug,
+    viewerUserId,
   });
 
   switch (result.status) {

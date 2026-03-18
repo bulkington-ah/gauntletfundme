@@ -13,6 +13,16 @@ export type PublicActorSnapshot = {
   profile: UserProfile | null;
 };
 
+export type ViewerFollowStateSnapshot = {
+  isFollowing: boolean;
+  isOwnTarget: boolean;
+};
+
+export type PublicDetailLookup = {
+  slug: string;
+  viewerUserId?: string | null;
+};
+
 export type PublicFundraiserSummarySnapshot = {
   fundraiser: Fundraiser;
   owner: User;
@@ -54,6 +64,7 @@ export type PublicProfileActivitySnapshot =
 export type PublicProfileSnapshot = {
   user: User;
   profile: UserProfile;
+  viewerFollowState: ViewerFollowStateSnapshot | null;
   followerCount: number;
   followingCount: number;
   inspiredSupporterCount: number;
@@ -66,6 +77,7 @@ export type PublicProfileSnapshot = {
 
 export type PublicFundraiserSnapshot = {
   summary: PublicFundraiserSummarySnapshot;
+  viewerFollowState: ViewerFollowStateSnapshot | null;
   recentDonations: PublicFundraiserDonationSnapshot[];
 };
 
@@ -84,6 +96,7 @@ export type PublicCommunitySnapshot = {
   community: Community;
   owner: User;
   ownerProfile: UserProfile | null;
+  viewerFollowState: ViewerFollowStateSnapshot | null;
   featuredFundraiser: PublicFundraiserSummarySnapshot | null;
   fundraisers: PublicFundraiserSummarySnapshot[];
   followerCount: number;
@@ -93,9 +106,15 @@ export type PublicCommunitySnapshot = {
 };
 
 export interface PublicContentReadRepository {
-  findProfileBySlug(slug: string): Promise<PublicProfileSnapshot | null>;
-  findFundraiserBySlug(slug: string): Promise<PublicFundraiserSnapshot | null>;
-  findCommunityBySlug(slug: string): Promise<PublicCommunitySnapshot | null>;
+  findProfileBySlug(
+    input: PublicDetailLookup,
+  ): Promise<PublicProfileSnapshot | null>;
+  findFundraiserBySlug(
+    input: PublicDetailLookup,
+  ): Promise<PublicFundraiserSnapshot | null>;
+  findCommunityBySlug(
+    input: PublicDetailLookup,
+  ): Promise<PublicCommunitySnapshot | null>;
   listFundraisers(): Promise<PublicFundraiserSummarySnapshot[]>;
   listCommunities(): Promise<PublicCommunitySummarySnapshot[]>;
   findProfileSlugByUserId(userId: string): Promise<string | null>;
