@@ -12,6 +12,7 @@ import {
   FundraiserDonationButton,
   FundraiserDonationForm,
 } from "./fundraiser-donation-controls";
+import { FundraiserShareControl } from "./fundraiser-share-control";
 import { FundraiserSupporterRail } from "./fundraiser-supporter-rail";
 import styles from "./public-fundraiser-page.module.css";
 
@@ -243,9 +244,10 @@ export const PublicFundraiserPage = ({
                   targetType="fundraiser"
                   viewer={viewer}
                 />
-                <button className={styles.secondaryAction} type="button">
-                  Share
-                </button>
+                <FundraiserShareControl
+                  buttonClassName={styles.secondaryAction}
+                  sharePath={`/fundraisers/${model.fundraiser.slug}`}
+                />
               </div>
             </section>
 
@@ -339,9 +341,10 @@ export const PublicFundraiserPage = ({
                 <FundraiserDonationButton className={styles.primaryAction}>
                   Donate now
                 </FundraiserDonationButton>
-                <button className={styles.secondaryAction} type="button">
-                  Share
-                </button>
+                <FundraiserShareControl
+                  buttonClassName={styles.secondaryAction}
+                  sharePath={`/fundraisers/${model.fundraiser.slug}`}
+                />
               </div>
             </section>
 
@@ -404,9 +407,10 @@ export const PublicFundraiserPage = ({
                   targetType="fundraiser"
                   viewer={viewer}
                 />
-                <button className={styles.sidebarSecondaryAction} type="button">
-                  Share
-                </button>
+                <FundraiserShareControl
+                  buttonClassName={styles.sidebarSecondaryAction}
+                  sharePath={`/fundraisers/${model.fundraiser.slug}`}
+                />
               </div>
 
               <FundraiserSupporterRail donations={model.recentDonations} />

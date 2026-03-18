@@ -20,6 +20,7 @@ vi.mock("next/navigation", () => ({
 describe("PublicFundraiserPage", () => {
   afterEach(() => {
     refreshSpy.mockReset();
+    Reflect.deleteProperty(window.navigator, "clipboard");
     vi.unstubAllGlobals();
   });
 
@@ -210,6 +211,7 @@ describe("PublicFundraiserPage", () => {
 
     const donateButtons = screen.getAllByRole("button", { name: "Donate now" });
     expect(donateButtons).toHaveLength(3);
+    expect(screen.getAllByRole("button", { name: "Share" })).toHaveLength(3);
     expect(screen.getAllByRole("button", { name: "Follow" })).toHaveLength(2);
 
     expect(
@@ -335,6 +337,74 @@ describe("PublicFundraiserPage", () => {
         "listitem",
       ),
     ).toHaveLength(0);
+  });
+
+  it("opens the share modal and copies the canonical fundraiser URL", async () => {
+    const writeTextSpy = vi.fn().mockResolvedValue(undefined);
+    setClipboardStub({ writeText: writeTextSpy });
+
+    render(<PublicFundraiserPage model={createSuccessfulPageModel([])} />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Share" })[0]!);
+
+    const dialog = screen.getByRole("dialog", { name: "Share fundraiser" });
+    const shareUrl = `${window.location.origin}/fundraisers/warm-meals-2026`;
+
+    expect(within(dialog).getByLabelText("Fundraiser URL")).toHaveValue(shareUrl);
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Copy link" }));
+
+    await waitFor(() => expect(writeTextSpy).toHaveBeenCalledWith(shareUrl));
+    expect(await within(dialog).findByText("Link copied to clipboard.")).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Close" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Share fundraiser" }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("shows manual copy guidance when clipboard copy fails or is unavailable", async () => {
+    const writeTextSpy = vi.fn().mockRejectedValue(new Error("clipboard denied"));
+    setClipboardStub({ writeText: writeTextSpy });
+
+    render(<PublicFundraiserPage model={createSuccessfulPageModel([])} />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Share" })[0]!);
+
+    let dialog = screen.getByRole("dialog", { name: "Share fundraiser" });
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Copy link" }));
+
+    expect(
+      await within(dialog).findByText("Select the link and copy it manually."),
+    ).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Close" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Share fundraiser" }),
+      ).not.toBeInTheDocument(),
+    );
+
+    setClipboardStub(undefined);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Share" })[1]!);
+
+    dialog = screen.getByRole("dialog", { name: "Share fundraiser" });
+
+    expect(
+      within(dialog).queryByText("Select the link and copy it manually."),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Copy link" }));
+
+    expect(
+      await within(dialog).findByText("Select the link and copy it manually."),
+    ).toBeInTheDocument();
   });
 
   it("reveals the donation form from the shared CTA and submits a persisted donation", async () => {
@@ -542,3 +612,14 @@ const createSuccessfulPageModel = (
   },
   recentDonations,
 });
+
+const setClipboardStub = (
+  clipboard: {
+    writeText: (value: string) => Promise<void>;
+  } | undefined,
+) => {
+  Object.defineProperty(window.navigator, "clipboard", {
+    configurable: true,
+    value: clipboard,
+  });
+};

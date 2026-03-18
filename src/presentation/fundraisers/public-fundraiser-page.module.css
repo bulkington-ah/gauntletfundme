@@ -667,6 +667,95 @@
   opacity: 0.7;
 }
 
+.shareModalBackdrop {
+  align-items: center;
+  background: color-mix(in srgb, #10251a 58%, transparent);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1.5rem;
+  position: fixed;
+  z-index: 1000;
+}
+
+.shareModalCard {
+  background: var(--wa-color-surface-default);
+  border: 1px solid var(--wa-color-surface-border);
+  border-radius: 1.5rem;
+  box-shadow: 0 28px 72px color-mix(in srgb, var(--wa-color-shadow) 18%, transparent);
+  display: grid;
+  gap: 1rem;
+  max-width: 32rem;
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+  width: min(100%, 32rem);
+}
+
+.shareModalHeader,
+.shareField {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.shareModalTitle {
+  font-family: var(--wa-font-family-heading);
+  font-size: clamp(1.55rem, 3vw, 1.95rem);
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.shareModalDescription,
+.shareHint,
+.shareSuccess {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.shareModalDescription,
+.shareHint {
+  color: var(--wa-color-text-quiet);
+}
+
+.shareLabel {
+  font-size: 0.92rem;
+  font-weight: var(--wa-font-weight-semibold);
+}
+
+.shareInput {
+  background: color-mix(
+    in srgb,
+    var(--wa-color-surface-muted) 65%,
+    var(--wa-color-surface-default)
+  );
+  border: 1px solid var(--wa-color-surface-border);
+  border-radius: 1rem;
+  color: var(--wa-color-text-normal);
+  font: inherit;
+  min-height: 3.25rem;
+  padding: 0.85rem 1rem;
+  width: 100%;
+}
+
+.shareInput:focus {
+  border-color: var(--wa-color-success-border-normal);
+  outline: 2px solid color-mix(
+    in srgb,
+    var(--wa-color-success-fill-normal) 28%,
+    transparent
+  );
+  outline-offset: 2px;
+}
+
+.shareSuccess {
+  color: var(--wa-color-success-fill-loud);
+}
+
+.shareModalActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
 .sidebarFooter {
   display: grid;
   gap: 0.75rem;
@@ -775,7 +864,8 @@
 
   .actionRow,
   .promoActions,
-  .errorActions {
+  .errorActions,
+  .shareModalActions {
     flex-direction: column;
   }
 
@@ -784,7 +874,13 @@
   .promoActions .primaryAction,
   .promoActions .secondaryAction,
   .errorActions .primaryAction,
-  .errorActions .secondaryAction {
+  .errorActions .secondaryAction,
+  .shareModalActions .primaryAction,
+  .shareModalActions .secondaryAction {
     width: 100%;
+  }
+
+  .shareModalBackdrop {
+    padding: 1rem;
   }
 }
