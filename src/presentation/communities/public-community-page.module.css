@@ -292,19 +292,12 @@
   --padding: 0;
 }
 
-.sortChip {
-  background: #f3f4f1;
-  border-radius: 999px;
-  color: var(--wa-color-text-quiet);
-  font-weight: var(--wa-font-weight-semibold);
-  padding: 0.8rem 1.1rem;
-}
-
 .activityFeed {
   display: grid;
   gap: 1rem;
 }
 
+.composerCard,
 .postCard,
 .fundraiserCard,
 .aboutCard {
@@ -312,6 +305,83 @@
   border: 1px solid var(--wa-color-surface-border);
   border-radius: 1.6rem;
   box-shadow: 0 18px 42px color-mix(in srgb, var(--wa-color-shadow) 7%, transparent);
+}
+
+.composerCard {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1.35rem;
+}
+
+.composerHeader,
+.composerForm,
+.formField,
+.commentComposer {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.composerEyebrow {
+  color: var(--wa-color-success-fill-loud);
+  font-size: var(--wa-font-size-s);
+  font-weight: var(--wa-font-weight-semibold);
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.composerTitle {
+  font-family: var(--wa-font-family-heading);
+  font-size: 1.6rem;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  margin: 0;
+}
+
+.formLabel {
+  font-weight: var(--wa-font-weight-semibold);
+}
+
+.textInput,
+.textareaInput,
+.commentTextarea {
+  background: #fbfcfa;
+  border: 1px solid var(--wa-color-surface-border);
+  border-radius: 1rem;
+  color: var(--wa-color-text-normal);
+  font: inherit;
+  padding: 0.9rem 1rem;
+  resize: vertical;
+  width: 100%;
+}
+
+.textInput:focus,
+.textareaInput:focus,
+.commentTextarea:focus {
+  border-color: #1f5d3a;
+  outline: 2px solid rgba(31, 93, 58, 0.14);
+  outline-offset: 1px;
+}
+
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.formError,
+.formSuccess,
+.commentAuthHint {
+  margin: 0;
+}
+
+.formError {
+  color: #9a2e2e;
+}
+
+.formSuccess {
+  color: #1f5d3a;
 }
 
 .postCard {
@@ -391,6 +461,12 @@
 
 .commentBody {
   margin: 0;
+}
+
+.commentAuthHint a {
+  color: var(--wa-color-success-fill-loud);
+  font-weight: var(--wa-font-weight-semibold);
+  text-decoration: none;
 }
 
 .fundraiserGrid,

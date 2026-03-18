@@ -21,6 +21,17 @@ describe("MVP end-to-end journeys", () => {
       throw new Error("Expected initial community browse to succeed.");
     }
 
+    const post = await applicationApi.createPost({
+      sessionToken: "demo-organizer-session",
+      communitySlug: "neighbors-helping-neighbors",
+      title: "Friday route reminder",
+      body: "Please group pantry bags by block before the 5pm pickup window.",
+    });
+    expect(post.status).toBe("success");
+    if (post.status !== "success") {
+      throw new Error("Expected post creation to succeed.");
+    }
+
     const follow = await applicationApi.followTarget({
       sessionToken: "demo-supporter-session",
       targetType: "community",
@@ -105,7 +116,10 @@ describe("MVP end-to-end journeys", () => {
     const visibleCommentIds = publicAfter.data.discussion.flatMap((entry) =>
       entry.comments.map((commentEntry) => commentEntry.id),
     );
+    const visiblePostIds = publicAfter.data.discussion.map((entry) => entry.id);
 
+    expect(publicAfter.data.discussion[0]?.id).toBe(post.post.id);
+    expect(visiblePostIds).toContain(post.post.id);
     expect(visibleCommentIds).not.toContain(comment.comment.id);
     expect(fundraiserAfter.data.fundraiser.amountRaised).toBe(
       fundraiserBefore.data.fundraiser.amountRaised + 3500,

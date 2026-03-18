@@ -7,6 +7,7 @@ import type {
 import { FollowTargetControl } from "@/presentation/engagement";
 import { PublicSiteShell } from "@/presentation/shared";
 
+import { CommunityActivityPanel } from "./community-activity-panel";
 import styles from "./public-community-page.module.css";
 
 type PublicCommunityQuery = Pick<ApplicationApi, "getPublicCommunityBySlug">;
@@ -149,6 +150,10 @@ export const PublicCommunityPage = ({
 
   const ownerInitials = toInitials(model.owner.displayName);
   const communityInitials = toInitials(model.community.name);
+  const canCreatePost =
+    model.viewerFollowState?.isOwnTarget === true ||
+    viewer?.role === "moderator" ||
+    viewer?.role === "admin";
 
   return (
     <PublicSiteShell
@@ -268,94 +273,13 @@ export const PublicCommunityPage = ({
             <wa-tab panel="about">About</wa-tab>
 
             <wa-tab-panel active className={styles.tabPanel} name="activity">
-              <div className={styles.activityHeader}>
-                <div>
-                  <p className={styles.sectionEyebrow}>Activity</p>
-                  <h2 className={styles.panelTitle}>Community updates</h2>
-                </div>
-                <div className={styles.sortChip}>Sorting by: Latest</div>
-              </div>
-
-              <div className={styles.activityFeed}>
-                {model.discussion.length > 0 ? (
-                  model.discussion.map((post) => (
-                    <article className={styles.postCard} key={post.id}>
-                      <div className={styles.postHeader}>
-                        {post.authorProfileSlug ? (
-                          <Link
-                            className={styles.postIdentityLink}
-                            href={`/profiles/${post.authorProfileSlug}`}
-                          >
-                            <div className={styles.postAvatar} aria-hidden="true">
-                              {toInitials(post.authorDisplayName)}
-                            </div>
-                            <div className={styles.postMeta}>
-                              <p className={styles.postAuthor}>
-                                {post.authorDisplayName}
-                              </p>
-                              <p className={styles.postDate}>
-                                {formatDate(post.createdAt)} ·{" "}
-                                {toTitleCase(post.moderationStatus)}
-                              </p>
-                            </div>
-                          </Link>
-                        ) : (
-                          <>
-                            <div className={styles.postAvatar} aria-hidden="true">
-                              {toInitials(post.authorDisplayName)}
-                            </div>
-                            <div className={styles.postMeta}>
-                              <p className={styles.postAuthor}>
-                                {post.authorDisplayName}
-                              </p>
-                              <p className={styles.postDate}>
-                                {formatDate(post.createdAt)} ·{" "}
-                                {toTitleCase(post.moderationStatus)}
-                              </p>
-                            </div>
-                          </>
-                        )}
-                      </div>
-
-                      <div className={styles.postContent}>
-                        <p className={styles.postTitle}>{post.title}</p>
-                        <p className={styles.postBody}>{post.body}</p>
-                      </div>
-
-                      {post.comments.length > 0 ? (
-                        <div className={styles.commentThread}>
-                          <p className={styles.commentHeading}>
-                            {post.comments.length} comments
-                          </p>
-                          <ul className={styles.commentList}>
-                            {post.comments.map((comment) => (
-                              <li className={styles.commentItem} key={comment.id}>
-                                <p className={styles.commentBody}>{comment.body}</p>
-                                <p className={styles.commentMeta}>
-                                  {comment.authorProfileSlug ? (
-                                    <Link
-                                      className={styles.inlineAuthorLink}
-                                      href={`/profiles/${comment.authorProfileSlug}`}
-                                    >
-                                      {comment.authorDisplayName}
-                                    </Link>
-                                  ) : (
-                                    comment.authorDisplayName
-                                  )}{" "}
-                                  ·{" "}
-                                  {formatDate(comment.createdAt)}
-                                </p>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ) : null}
-                    </article>
-                  ))
-                ) : (
-                  <p className={styles.emptyState}>No discussion posts yet.</p>
-                )}
-              </div>
+              <CommunityActivityPanel
+                canCreatePost={canCreatePost}
+                communitySlug={model.community.slug}
+                discussion={model.discussion}
+                nextPath={returnTo}
+                viewer={viewer}
+              />
             </wa-tab-panel>
 
             <wa-tab-panel className={styles.tabPanel} name="fundraisers">
@@ -517,14 +441,6 @@ const formatCompactCurrency = (value: number): string =>
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);
-
-const formatDate = (value: string): string =>
-  new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(value));
 
 const toGoalProgressPercentage = (supportAmount: number, goalAmount: number): number => {
   if (goalAmount <= 0) {
