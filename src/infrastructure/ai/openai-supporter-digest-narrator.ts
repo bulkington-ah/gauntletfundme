@@ -7,7 +7,7 @@ import type {
 
 const defaultModel = "gpt-5-mini";
 const defaultTimeoutMs = 8_000;
-const defaultMaxOutputTokens = 1_200;
+const defaultMaxOutputTokens = 2_500;
 const maxAttempts = 3;
 
 type ResponsesClient = {

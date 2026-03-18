@@ -36,15 +36,15 @@ Tune the OpenAI-backed supporter digest narrator so the seeded digest payload ca
 
 ## Completion Summary
 - Completed on 2026-03-18.
-- Updated the OpenAI digest narrator to request minimal reasoning effort and increased the response token budget from `700` to `1200`.
+- Updated the OpenAI digest narrator to request minimal reasoning effort and increased the response token budget from `700` to `2500`.
 - Confirmed the failure root cause before the change: the full Avery digest payload returned `status: "incomplete"` with `incomplete_details.reason: "max_output_tokens"` and empty `output_text` because all output tokens were consumed by reasoning.
 - Verified the tuned request shape succeeds for the same payload, returning `status: "completed"`, `itemCount: 7`, non-empty structured output, and `reasoning_tokens: 0`.
-- The implementation landed in commit `ad094cb` (`Tune digest narrator token budget`).
+- The implementation first landed as a narrator tuning change and was then finalized with a follow-up budget increase to `2500` output tokens.
 
 ## Verification
 - `npm test -- tests/infrastructure/ai/openai-supporter-digest-narrator.test.ts tests/application/engagement/supporter-digest.test.ts`
 - `npm run lint`
-- Ran a live Node/OpenAI verification from the repo with `.env.local` loaded and the full Avery digest payload. The tuned request used `model: process.env.OPENAI_DIGEST_MODEL || "gpt-5-mini"`, `reasoning: { effort: "minimal" }`, `max_output_tokens: 1200`, and the existing strict `supporter_digest_narration` JSON schema. The response completed successfully with 7 structured items.
+- Ran a live Node/OpenAI verification from the repo with `.env.local` loaded and the full Avery digest payload. The tuned request used `model: process.env.OPENAI_DIGEST_MODEL || "gpt-5-mini"`, `reasoning: { effort: "minimal" }`, `max_output_tokens: 2500`, and the existing strict `supporter_digest_narration` JSON schema. The response completed successfully with 7 structured items.
 
 ## Handoff Notes
 - This task fixes the immediate empty-output failure mode for AI narration, but it does not remove OpenAI from the initial `/digest` render path.
