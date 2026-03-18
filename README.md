@@ -13,20 +13,26 @@ Core planning and architecture references:
 Implemented foundations currently include:
 - project scaffold and test/lint/build workflow
 - domain models and persistence schema for core MVP entities
-- application and presentation API boundaries for public read routes
-- Postgres-backed repository adapters for public reads and follow persistence
-- account and session auth foundations (sign up, login, logout, session lookup)
+- application and presentation API boundaries for public reads plus authenticated write flows
+- Postgres-backed repository adapters for public reads, follow persistence, donation persistence, and owned-resource creation
+- account and session auth foundations with browser-cookie and header-based session lookup
 - centralized authorization policies for owner/member/moderator/anonymous checks
 - follow and unfollow commands with auth checks, self-follow protection, idempotent persistence semantics, and follower count state in API responses
+- dedicated `/login` page with browser session persistence and an auth-aware shared public shell
+- public fundraiser and community browse pages backed by application-layer list queries
+- public profile follower and following routes plus cross-surface clickable profile references
+- viewer-aware follow-state reads and working follow controls on public profile, community, and fundraiser detail pages
 - post and comment creation commands with authenticated route handlers and owner-aware post authorization
-- real donation submission command with authenticated API flow and persisted completed donations backed by a mocked payment processor
+- real donation submission flow with persisted completed donations backed by a mocked payment processor
+- explicit fundraiser-to-community linkage in persistence and public read models instead of owner-derived linkage
 - moderation report submission command with authenticated, idempotent post/comment reporting semantics
 - moderator/owner report resolution actions (`hide`, `remove`, `dismiss`) with public discussion visibility updates for moderated content
 - application-layer analytics instrumentation for page views, follows, post/comment creation, and completed donations
-- public profile page route with slug-based lookup and connected fundraiser/community links
-- public fundraiser page route with organizer context, story rendering, and real donation entry backed by the mocked payment processor
-- public community page route with discussion feed, comment visibility, and connected links
-- dedicated `/login` page with browser session persistence and shared-shell signed-in state
+- public profile page route with slug-based lookup, relationship navigation, and connected fundraiser/community links
+- public fundraiser page route with organizer context, story rendering, real donation entry, supporter-rail controls, and an in-place share modal
+- public community page route with connected links and an interactive activity tab for update posting and commenting
+- dedicated create flows for communities and fundraisers, including browse-page CTAs, protected create pages, and optional owner-scoped fundraiser-to-community linking
+- hidden `/prototype/reset` tooling so demo data and prototype credentials can be restored manually without automatic reseeding on page load
 
 ## Environment
 Copy `.env.example` to your local environment config and set:

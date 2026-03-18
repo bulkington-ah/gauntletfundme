@@ -11,10 +11,12 @@ GoFundMe's profile, fundraiser, and community surfaces can feel disconnected, wh
 ## Core Use Cases
 - Anonymous visitors browse public profile, fundraiser, and community pages to understand people, causes, and current activity.
 - Visitors create accounts and authenticated users log in or out to access protected actions.
+- Authenticated users create public communities and fundraisers they own, with optional fundraiser linkage to one of their own communities.
 - Supporters follow people, fundraisers, and communities to build an ongoing relationship with causes they care about.
 - Supporters submit donations through a real product flow that uses a mocked payment processor.
 - Community members read posts, comment on updates, and react to discussions.
 - Organizers publish updates, maintain their profiles, and manage the fundraiser or community spaces they own.
+- Signed-in supporters may create communities and fundraisers in v1 without a separate organizer-role promotion flow.
 - Moderators or owners review reports and remove problematic posts or comments.
 
 ## Core Features
@@ -22,6 +24,7 @@ GoFundMe's profile, fundraiser, and community surfaces can feel disconnected, wh
 - Connected navigation and relationships across profiles, fundraisers, and communities.
 - Mostly public page access, with authentication required for protected actions such as follow, comment, donate, and personalized activity.
 - Basic account system with sign up, login, logout, and ownership of protected actions.
+- Authenticated creation flows for public communities and fundraisers, including optional owner-scoped fundraiser-to-community linkage at create time.
 - Community discussion built around posts and comments.
 - Basic moderation and reporting controls for community safety.
 - Analytics and instrumentation focused on engagement, growth, and action completion.

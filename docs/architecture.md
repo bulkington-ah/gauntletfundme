@@ -5,13 +5,13 @@ The MVP should be built as a thin full-stack web application that connects profi
 
 The architecture should optimize for:
 - public page performance for profile, fundraiser, and community browsing
-- authenticated user actions such as follow, comment, and donation submission through a mocked payment processor
+- authenticated user actions such as follow, comment, donation submission, and owned community or fundraiser creation through a mocked payment processor
 - simple ownership and moderation workflows
 - modular domain logic that can later be extracted or expanded without reworking the whole system
 
 ## Major Components
 - `Web App`: React or Next.js application responsible for page rendering, navigation, authenticated experiences, and form handling.
-- `Application API`: server-side route handlers or API endpoints that expose domain operations for auth, profiles, communities, posts, comments, follows, and donations.
+- `Application API`: server-side route handlers or API endpoints that expose domain operations for auth, profiles, communities, fundraisers, posts, comments, follows, donations, and owned-resource creation.
 - `Domain Services`: business logic layer that enforces permissions, validation, workflow rules, and cross-entity behavior.
 - `Persistence Layer`: relational database access for core entities and relationships.
 - `Auth Layer`: session management, login, logout, and identity checks for protected actions.
@@ -78,6 +78,7 @@ Core relational entities for the MVP:
 Modeling assumptions:
 - `targetType` fields should be enum-based to keep cross-entity actions explicit.
 - `Fundraiser.communityId` should store the fundraiser's explicit linked community when one exists; reads must not infer community linkage from shared ownership alone.
+- Fundraiser creation may accept an optional `communityId`, but application-layer orchestration must ensure any linked community is owned by the current viewer.
 - Soft-delete or status fields are preferred over hard deletion for moderated content.
 - Roles should remain simple in v1: `supporter`, `organizer`, `moderator`, `admin`.
 
@@ -92,6 +93,8 @@ Public read endpoints:
 
 Authenticated user endpoints:
 - sign up, login, logout, session lookup
+- create a community owned by the current viewer
+- create a fundraiser owned by the current viewer, optionally linked to one of the viewer's owned communities
 - follow or unfollow a profile, fundraiser, or community
 - create, edit, or delete owned posts and comments
 - submit donation
@@ -105,6 +108,7 @@ API design guidance:
 - prefer resource-oriented JSON APIs or server actions with explicit request and response shapes
 - keep write operations small and task-focused
 - centralize authorization checks in the application layer before invoking domain logic
+- validate optional fundraiser-to-community linkage in the application layer before persistence so ownership rules do not leak into presentation or storage code
 
 ## Infrastructure Assumptions
 - Single primary deployable web application, ideally using Next.js.
