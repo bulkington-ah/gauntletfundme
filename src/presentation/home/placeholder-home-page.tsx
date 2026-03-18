@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Image from "next/image";
 import type { JSX } from "react";
 
 import type { AuthenticatedViewer } from "@/application";
@@ -21,57 +21,17 @@ export function PlaceholderHomePage({
       viewer={viewer}
       viewerProfileSlug={viewerProfileSlug}
     >
-      <main className={styles.hero}>
-        <section className={styles.heroCard}>
-          <p className={styles.eyebrow}>Public surface foundation</p>
-          <h1 className={styles.heading}>GoFundMe V2</h1>
-          <p className={styles.lead}>
-            The shared shell is now in place. Use the browse routes below to
-            explore connected fundraiser and community discovery across the
-            current prototype.
-          </p>
-
-          <div className={styles.ctaRow}>
-            <wa-button
-              className={styles.ctaButton}
-              appearance="accent"
-              href="/fundraisers"
-              pill
-              variant="brand"
-            >
-              Browse fundraisers
-            </wa-button>
-            <wa-button
-              className={styles.ctaButton}
-              appearance="outlined"
-              href="/communities"
-              pill
-            >
-              Browse communities
-            </wa-button>
-          </div>
-        </section>
-
-        <section className={styles.routeGrid}>
-          <Link className={styles.routeCard} href="/fundraisers">
-            <p className={styles.routeEyebrow}>Browse</p>
-            <h2 className={styles.routeTitle}>Fundraisers</h2>
-            <p className={styles.routeBody}>
-              Review all current public campaigns in one place, compare momentum,
-              and click through to the fundraiser that matters most.
-            </p>
-            <span className={styles.routeFooter}>Open route</span>
-          </Link>
-
-          <Link className={styles.routeCard} href="/communities">
-            <p className={styles.routeEyebrow}>Browse</p>
-            <h2 className={styles.routeTitle}>Communities</h2>
-            <p className={styles.routeBody}>
-              See the current public communities, follower momentum, and connected
-              causes before opening an individual space.
-            </p>
-            <span className={styles.routeFooter}>Open route</span>
-          </Link>
+      <main className={styles.page}>
+        <section className={styles.imageWrap}>
+          <Image
+            alt="Volunteers and children planting a young tree together outdoors"
+            className={styles.heroImage}
+            height={1024}
+            priority
+            sizes="(max-width: 1352px) calc(100vw - 3rem), 1320px"
+            src="/homepage-hero.png"
+            width={1536}
+          />
         </section>
       </main>
     </PublicSiteShell>

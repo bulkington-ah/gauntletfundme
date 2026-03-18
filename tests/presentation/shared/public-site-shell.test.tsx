@@ -27,6 +27,10 @@ describe("PublicSiteShell", () => {
 
     const signInLinks = screen.getAllByRole("link", { name: "Sign in" });
 
+    expect(screen.getByRole("link", { name: "gauntletfundme" })).toHaveAttribute(
+      "href",
+      "/",
+    );
     expect(signInLinks[0]).toHaveAttribute(
       "href",
       "/login?next=%2Ffundraisers%2Fwarm-meals-2026",
@@ -56,6 +60,10 @@ describe("PublicSiteShell", () => {
       </PublicSiteShell>,
     );
 
+    expect(screen.getByRole("link", { name: "gauntletfundme" })).toHaveAttribute(
+      "href",
+      "/",
+    );
     expect(screen.getAllByRole("link", { name: "Profile" })).toHaveLength(2);
     expect(screen.getAllByRole("link", { name: "Digest" })).toHaveLength(2);
     expect(screen.getAllByRole("link", { name: "Communities" })).toHaveLength(2);
@@ -78,6 +86,10 @@ describe("PublicSiteShell", () => {
       </PublicSiteShell>,
     );
 
+    expect(screen.getByRole("link", { name: "gauntletfundme" })).toHaveAttribute(
+      "href",
+      "/",
+    );
     expect(screen.queryByRole("link", { name: "Profile" })).not.toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Digest" })).toHaveLength(2);
     expect(screen.getAllByRole("button", { name: "Sign out" })).toHaveLength(2);

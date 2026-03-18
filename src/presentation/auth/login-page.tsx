@@ -18,7 +18,7 @@ export function LoginPage({
       <main className={styles.page}>
         <section className={styles.card}>
           <p className={styles.eyebrow}>Account access</p>
-          <h1 className={styles.heading}>Sign in to GoFundMe V2</h1>
+          <h1 className={styles.heading}>Sign in to gauntletfundme</h1>
           <p className={styles.lead}>
             Use a prototype account to access protected actions like following,
             posting, commenting, moderation, and donation submission after demo

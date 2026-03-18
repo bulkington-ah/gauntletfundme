@@ -8,7 +8,7 @@ import { WebAwesomeRegistry } from "@/presentation/shared";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GoFundMe V2",
+  title: "gauntletfundme",
   description: "Project scaffold placeholder for the modular monolith MVP.",
 };
 

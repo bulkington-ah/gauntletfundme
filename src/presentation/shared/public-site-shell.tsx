@@ -42,7 +42,7 @@ export function PublicSiteShell({
           </div>
 
           <Link className={styles.brand} href="/">
-            gofundme <span className={styles.brandAccent}>v2</span>
+            gauntletfundme
           </Link>
 
           <div

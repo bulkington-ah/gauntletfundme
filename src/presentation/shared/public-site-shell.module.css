@@ -72,10 +72,6 @@
   text-decoration: none;
 }
 
-.brandAccent {
-  color: var(--wa-color-text-normal);
-}
-
 .authCluster {
   align-items: center;
   display: flex;

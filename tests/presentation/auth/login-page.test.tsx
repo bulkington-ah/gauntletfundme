@@ -29,7 +29,7 @@ describe("LoginPage", () => {
     render(<LoginPage nextPath="/fundraisers/warm-meals-2026" />);
 
     expect(
-      screen.getByRole("heading", { name: "Sign in to GoFundMe V2" }),
+      screen.getByRole("heading", { name: "Sign in to gauntletfundme" }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/You'll return to/),
