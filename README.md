@@ -124,7 +124,7 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
   - `docker run --rm -p 3000:3000 --env DATABASE_URL=<your-managed-db-url> --env OPENAI_DIGEST_MODEL=gpt-5-mini --env OPENAI_DIGEST_TIMEOUT_MS=8000 gofundme-v2:local`
   - `curl -I http://127.0.0.1:3000/api/health`
   - `curl -I http://127.0.0.1:3000/homepage-hero.png`
-  - `curl -I "http://127.0.0.1:3000/_next/image?url=%2Fhomepage-hero.png&w=3840&q=75"`
+  - `curl -sS -o /dev/null -D - "http://127.0.0.1:3000/_next/image?url=%2Fhomepage-hero.png&w=3840&q=75"`
 
 ## Terraform AWS Deployment (Task 018)
 - Terraform infrastructure lives in `infra/terraform`.
