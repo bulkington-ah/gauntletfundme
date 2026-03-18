@@ -1,13 +1,20 @@
 import Link from "next/link";
 import type { JSX } from "react";
 
+import type { AuthenticatedViewer } from "@/application";
 import { PublicSiteShell } from "@/presentation/shared";
 
 import styles from "./placeholder-home-page.module.css";
 
-export function PlaceholderHomePage(): JSX.Element {
+type PlaceholderHomePageProps = {
+  viewer?: AuthenticatedViewer | null;
+};
+
+export function PlaceholderHomePage({
+  viewer = null,
+}: PlaceholderHomePageProps): JSX.Element {
   return (
-    <PublicSiteShell>
+    <PublicSiteShell returnTo="/" viewer={viewer}>
       <main className={styles.hero}>
         <section className={styles.heroCard}>
           <p className={styles.eyebrow}>Public surface foundation</p>

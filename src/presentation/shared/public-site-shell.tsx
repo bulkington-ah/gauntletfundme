@@ -1,15 +1,25 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import type { AuthenticatedViewer } from "@/application";
+import { SignOutButton } from "@/presentation/auth/sign-out-button";
+
 import styles from "./public-site-shell.module.css";
 
 type PublicSiteShellProps = {
   children: ReactNode;
+  returnTo: string;
+  viewer: AuthenticatedViewer | null;
 };
 
 export function PublicSiteShell({
   children,
+  returnTo,
+  viewer,
 }: PublicSiteShellProps) {
+  const signInHref = `/login?next=${encodeURIComponent(returnTo)}`;
+  const viewerRoleLabel = viewer ? toTitleCase(viewer.role) : null;
+
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
@@ -59,9 +69,23 @@ export function PublicSiteShell({
             <wa-button className={styles.navButton} appearance="plain">
               Alerts
             </wa-button>
-            <wa-button className={styles.navButton} appearance="plain">
-              Sign in
-            </wa-button>
+            {viewer ? (
+              <div className={styles.authCluster}>
+                <wa-badge
+                  className={styles.authBadge}
+                  appearance="outlined"
+                  pill
+                  variant="brand"
+                >
+                  {viewerRoleLabel}
+                </wa-badge>
+                <SignOutButton className={styles.authButton} />
+              </div>
+            ) : (
+              <Link className={styles.authLink} href={signInHref}>
+                Sign in
+              </Link>
+            )}
             <wa-button
               className={styles.ctaButton}
               appearance="outlined"
@@ -99,6 +123,16 @@ export function PublicSiteShell({
               <Link className={styles.mobileMenuLink} href="/profiles/avery-johnson">
                 Giving Funds
               </Link>
+              {viewer ? (
+                <div className={styles.mobileAuthRow}>
+                  <span className={styles.mobileAuthLabel}>{viewerRoleLabel}</span>
+                  <SignOutButton className={styles.mobileSignOutButton} />
+                </div>
+              ) : (
+                <Link className={styles.mobileMenuLink} href={signInHref}>
+                  Sign in
+                </Link>
+              )}
               <Link
                 className={styles.mobileMenuLink}
                 href="/fundraisers/warm-meals-2026?checkout=mock"
@@ -114,3 +148,6 @@ export function PublicSiteShell({
     </div>
   );
 }
+
+const toTitleCase = (value: string) =>
+  value.charAt(0).toUpperCase() + value.slice(1);

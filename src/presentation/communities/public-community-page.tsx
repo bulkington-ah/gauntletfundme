@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type {
   ApplicationApi,
+  AuthenticatedViewer,
   PublicCommunityResponse,
 } from "@/application";
 import { PublicSiteShell } from "@/presentation/shared";
@@ -70,12 +71,18 @@ export const buildPublicCommunityPageModel = async (
 
 type PublicCommunityPageProps = {
   model: PublicCommunityPageModel;
+  returnTo?: string;
+  viewer?: AuthenticatedViewer | null;
 };
 
-export const PublicCommunityPage = ({ model }: PublicCommunityPageProps) => {
+export const PublicCommunityPage = ({
+  model,
+  returnTo = "/",
+  viewer = null,
+}: PublicCommunityPageProps) => {
   if (model.status === "invalid_request") {
     return (
-      <PublicSiteShell>
+      <PublicSiteShell returnTo={returnTo} viewer={viewer}>
         <main className={styles.errorPage}>
           <section className={styles.errorCard}>
             <p className={styles.errorEyebrow}>Public community</p>
@@ -100,7 +107,7 @@ export const PublicCommunityPage = ({ model }: PublicCommunityPageProps) => {
 
   if (model.status === "not_found") {
     return (
-      <PublicSiteShell>
+      <PublicSiteShell returnTo={returnTo} viewer={viewer}>
         <main className={styles.errorPage}>
           <section className={styles.errorCard}>
             <p className={styles.errorEyebrow}>Public community</p>
@@ -130,7 +137,7 @@ export const PublicCommunityPage = ({ model }: PublicCommunityPageProps) => {
   const descriptionLead = toLeadSentence(model.community.description);
 
   return (
-    <PublicSiteShell>
+    <PublicSiteShell returnTo={returnTo} viewer={viewer}>
       <main className={styles.page}>
         <section className={styles.hero}>
           <div className={styles.heroCopy}>

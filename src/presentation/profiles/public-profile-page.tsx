@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type {
   ApplicationApi,
+  AuthenticatedViewer,
   PublicProfileResponse,
 } from "@/application";
 import { PublicSiteShell } from "@/presentation/shared";
@@ -82,12 +83,18 @@ export const buildPublicProfilePageModel = async (
 
 type PublicProfilePageProps = {
   model: PublicProfilePageModel;
+  returnTo?: string;
+  viewer?: AuthenticatedViewer | null;
 };
 
-export const PublicProfilePage = ({ model }: PublicProfilePageProps) => {
+export const PublicProfilePage = ({
+  model,
+  returnTo = "/",
+  viewer = null,
+}: PublicProfilePageProps) => {
   if (model.status === "invalid_request") {
     return (
-      <PublicSiteShell>
+      <PublicSiteShell returnTo={returnTo} viewer={viewer}>
         <main className={styles.errorPage}>
           <section className={styles.errorCard}>
             <p className={styles.errorEyebrow}>Public profile</p>
@@ -109,7 +116,7 @@ export const PublicProfilePage = ({ model }: PublicProfilePageProps) => {
 
   if (model.status === "not_found") {
     return (
-      <PublicSiteShell>
+      <PublicSiteShell returnTo={returnTo} viewer={viewer}>
         <main className={styles.errorPage}>
           <section className={styles.errorCard}>
             <p className={styles.errorEyebrow}>Public profile</p>
@@ -135,7 +142,7 @@ export const PublicProfilePage = ({ model }: PublicProfilePageProps) => {
   const discoverPeople = buildDiscoverPeople(model);
 
   return (
-    <PublicSiteShell>
+    <PublicSiteShell returnTo={returnTo} viewer={viewer}>
       <main className={styles.page}>
         <section className={styles.profileHero}>
           <div className={styles.coverArt} aria-hidden="true">

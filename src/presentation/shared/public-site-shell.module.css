@@ -68,6 +68,37 @@
   margin-left: 0.2rem;
 }
 
+.authCluster {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+}
+
+.authBadge::part(base) {
+  color: var(--wa-color-brand-fill-loud);
+  font-weight: var(--wa-font-weight-semibold);
+}
+
+.authLink,
+.authButton {
+  color: var(--wa-color-text-normal);
+  font-weight: var(--wa-font-weight-semibold);
+  text-decoration: none;
+}
+
+.authButton {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+.authButton:disabled {
+  cursor: progress;
+  opacity: 0.72;
+}
+
 .ctaButton::part(base) {
   border-color: var(--wa-color-neutral-border-normal);
   color: var(--wa-color-text-normal);
@@ -104,6 +135,32 @@
 .mobileMenuLink {
   color: var(--wa-color-text-normal);
   text-decoration: none;
+}
+
+.mobileAuthRow {
+  align-items: center;
+  display: flex;
+  gap: 0.85rem;
+}
+
+.mobileAuthLabel {
+  color: var(--wa-color-brand-fill-loud);
+  font-weight: var(--wa-font-weight-semibold);
+}
+
+.mobileSignOutButton {
+  background: none;
+  border: 0;
+  color: var(--wa-color-text-normal);
+  cursor: pointer;
+  font: inherit;
+  font-weight: var(--wa-font-weight-semibold);
+  padding: 0;
+}
+
+.mobileSignOutButton:disabled {
+  cursor: progress;
+  opacity: 0.72;
 }
 
 .content {

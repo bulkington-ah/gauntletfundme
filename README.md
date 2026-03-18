@@ -26,6 +26,7 @@ Implemented foundations currently include:
 - public profile page route with slug-based lookup and connected fundraiser/community links
 - public fundraiser page route with organizer context, story rendering, and mocked donation entry
 - public community page route with discussion feed, comment visibility, and connected links
+- dedicated `/login` page with browser session persistence and shared-shell signed-in state
 
 ## Environment
 Copy `.env.example` to your local environment config and set:
@@ -35,7 +36,7 @@ Copy `.env.example` to your local environment config and set:
 
 The persistence layer bootstraps schema and seeds prototype data from `src/infrastructure/demo-data/` when tables are missing, which keeps local development and tests predictable.
 
-Auth routes and protected commands use the `x-session-token` request header.
+Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API routes still accept the legacy `x-session-token` request header for tests and non-browser callers.
 
 ## Local Development Quickstart
 - Recommended workflow:
@@ -69,9 +70,14 @@ Auth routes and protected commands use the `x-session-token` request header.
 - On first database connection, the app bootstraps its schema and seeds the prototype catalog automatically.
 - Verify the app locally:
   - `http://localhost:3000/api/health`
+  - `http://localhost:3000/login`
   - `http://localhost:3000/profiles/avery-johnson`
   - `http://localhost:3000/fundraisers/warm-meals-2026`
   - `http://localhost:3000/communities/neighbors-helping-neighbors`
+- Seeded prototype login credentials for local development:
+  - `avery.organizer@example.com` / `Prototype123!`
+  - `jordan.supporter@example.com` / `Prototype123!`
+  - `morgan.moderator@example.com` / `Prototype123!`
 - This workflow is local-only and does not change production deployment, which remains the existing Docker image plus AWS App Runner and private RDS path.
 
 ## Common Commands
@@ -114,10 +120,10 @@ Auth routes and protected commands use the `x-session-token` request header.
   - this first version intentionally uses local Terraform state; migrate to S3 + DynamoDB locking in a follow-up task before collaborative production operations.
 
 ## Known Limitations
-- Authenticated API actions currently rely on `x-session-token` request headers and are not yet integrated with browser cookie/session middleware.
 - Donation flow is intentionally mocked and does not process real payments.
 - Analytics publisher is currently wired to a no-op provider by default; production event delivery requires a concrete adapter implementation.
 - Moderation actions update current statuses but do not yet persist a separate historical moderation event log.
+- Public signup UI is still deferred even though the underlying signup API exists.
 
 ## Workflow
 Work is organized into one scoped task at a time under `tasks/`, with completion expectations defined in:
