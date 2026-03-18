@@ -6,7 +6,6 @@ import type {
 import { rankSupporterDigestCandidates } from "@/domain";
 
 import type {
-  SupporterDigestNarration,
   SupporterDigestNarrationResult,
   SupporterDigestNarrationUnavailableReason,
   SupporterDigestReadRepository,
@@ -41,6 +40,7 @@ export type SupporterDigestResponse = {
   windowEnd: string;
   generationMode: "openai" | "deterministic";
   narration: SupporterDigestNarrationState;
+  summaryParagraph: string | null;
   highlights: SupporterDigestHighlight[];
 };
 
@@ -124,6 +124,7 @@ export const buildInitialSupporterDigestResponse = (input: {
           status: "not_requested",
           reason: null,
         },
+  summaryParagraph: null,
   highlights: input.rankedHighlights.map(toDeterministicHighlight),
 });
 
@@ -147,17 +148,15 @@ export const buildNarratedSupporterDigestResponse = (input: {
         status: "not_requested",
         reason: null,
       },
+      summaryParagraph: null,
       highlights: deterministicHighlights,
     };
   }
 
   if (input.narrationResult.status === "success") {
-    const narratedHighlights = toNarratedHighlights(
-      input.rankedHighlights,
-      input.narrationResult.items,
-    );
+    const summaryParagraph = input.narrationResult.summary.trim();
 
-    if (narratedHighlights) {
+    if (summaryParagraph) {
       return {
         kind: "supporter_digest",
         windowStart: input.windowStart.toISOString(),
@@ -167,7 +166,8 @@ export const buildNarratedSupporterDigestResponse = (input: {
           status: "completed",
           reason: null,
         },
-        highlights: narratedHighlights,
+        summaryParagraph,
+        highlights: deterministicHighlights,
       };
     }
   }
@@ -184,6 +184,7 @@ export const buildNarratedSupporterDigestResponse = (input: {
           ? "invalid_response"
           : input.narrationResult.reason,
     },
+    summaryParagraph: null,
     highlights: deterministicHighlights,
   };
 };
@@ -314,41 +315,6 @@ const toDeterministicHighlight = (
         score: candidate.score,
       };
   }
-};
-
-const toNarratedHighlights = (
-  rankedHighlights: RankedSupporterDigestCandidate[],
-  narrationItems: SupporterDigestNarration[],
-): SupporterDigestHighlight[] | null => {
-  const narrationByCandidateId = new Map(
-    narrationItems.map((item) => [item.candidateId, item]),
-  );
-
-  const highlights = rankedHighlights.map((candidate) => {
-    const narration = narrationByCandidateId.get(candidate.id);
-
-    if (
-      !narration ||
-      !narration.headline.trim() ||
-      !narration.body.trim() ||
-      !narration.ctaLabel.trim()
-    ) {
-      return null;
-    }
-
-    return {
-      id: candidate.id,
-      type: candidate.type,
-      headline: narration.headline.trim(),
-      body: narration.body.trim(),
-      ctaLabel: narration.ctaLabel.trim(),
-      href: candidate.href,
-      occurredAt: candidate.createdAt.toISOString(),
-      score: candidate.score,
-    } satisfies SupporterDigestHighlight;
-  });
-
-  return highlights.every((highlight) => highlight !== null) ? highlights : null;
 };
 
 const formatCompactCurrency = (value: number): string =>

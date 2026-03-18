@@ -42,19 +42,8 @@ describe("SupporterDigestPage", () => {
                 status: "completed",
                 reason: null,
               },
-              highlights: [
-                {
-                  id: "community_update:post_evening_update",
-                  type: "community_update",
-                  headline: "Avery shared a fresh organizer update.",
-                  body:
-                    "Supporters can now catch up on the latest evening prep details.",
-                  ctaLabel: "Read update",
-                  href: "/communities/neighbors-helping-neighbors#post-post_evening_update",
-                  occurredAt: "2026-03-18T10:30:00.000Z",
-                  score: 144,
-                },
-              ],
+              summaryParagraph:
+                "Avery shared a fresh community update, giving supporters a quick way to catch up before they jump into the latest highlight.",
             }),
           }),
           {
@@ -87,6 +76,11 @@ describe("SupporterDigestPage", () => {
     expect(
       screen.queryByText(
         "AI narration is unavailable right now, so you're seeing the deterministic digest copy instead.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Avery shared a fresh community update, giving supporters a quick way to catch up before they jump into the latest highlight.",
       ),
     ).not.toBeInTheDocument();
     expect(
@@ -126,7 +120,14 @@ describe("SupporterDigestPage", () => {
     await waitFor(() =>
       expect(screen.getByText("AI-assisted summary")).toBeVisible(),
     );
-    expect(screen.getByText("Avery shared a fresh organizer update.")).toBeVisible();
+    expect(
+      screen.getByText(
+        "Avery shared a fresh community update, giving supporters a quick way to catch up before they jump into the latest highlight.",
+      ),
+    ).toBeVisible();
+    expect(
+      screen.getByText("Avery Johnson posted a new update in Neighbors Helping Neighbors."),
+    ).toBeVisible();
   });
 
   it("keeps the deterministic digest visible when background narration fails", async () => {
@@ -171,6 +172,11 @@ describe("SupporterDigestPage", () => {
     expect(
       screen.getByText("Avery Johnson posted a new update in Neighbors Helping Neighbors."),
     ).toBeVisible();
+    expect(
+      screen.queryByText(
+        "Avery shared a fresh community update, giving supporters a quick way to catch up before they jump into the latest highlight.",
+      ),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("AI-assisted summary")).not.toBeInTheDocument();
     expect(screen.queryByText("Grounded fallback summary")).not.toBeInTheDocument();
     expect(
@@ -239,6 +245,7 @@ const createDigestModel = ({
     status: "pending" as const,
     reason: null,
   },
+  summaryParagraph = null,
   highlights = [
     {
       id: "community_update:post_evening_update",
@@ -257,6 +264,7 @@ const createDigestModel = ({
     status: "pending" | "completed" | "not_requested" | "unavailable";
     reason: "missing_configuration" | "provider_error" | "invalid_response" | null;
   };
+  summaryParagraph?: string | null;
   highlights?: {
     id: string;
     type: "community_update";
@@ -273,5 +281,6 @@ const createDigestModel = ({
   windowEnd: "2026-03-18T12:00:00.000Z",
   generationMode,
   narration,
+  summaryParagraph,
   highlights,
 });

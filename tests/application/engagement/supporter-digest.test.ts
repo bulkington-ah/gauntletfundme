@@ -111,6 +111,7 @@ describe("supporter digest application flows", () => {
       status: "pending",
       reason: null,
     });
+    expect(result.digest.summaryParagraph).toBeNull();
     expect(result.digest.highlights).toEqual([
       expect.objectContaining({
         id: "community_update:post_evening_update",
@@ -128,15 +129,8 @@ describe("supporter digest application flows", () => {
     const supporterDigestNarrator = createSupporterDigestNarratorStub({
       result: {
         status: "success",
-        items: [
-          {
-            candidateId: "community_update:post_evening_update",
-            headline: "Avery shared a fresh organizer update.",
-            body:
-              "The neighbors community has a new evening prep shift update ready to read.",
-            ctaLabel: "Read update",
-          },
-        ],
+        summary:
+          "Neighbors Helping Neighbors has a fresh organizer update, and Avery's latest evening prep post gives supporters a quick way to catch up.",
       },
     });
 
@@ -176,12 +170,16 @@ describe("supporter digest application flows", () => {
       status: "completed",
       reason: null,
     });
+    expect(result.digest.summaryParagraph).toBe(
+      "Neighbors Helping Neighbors has a fresh organizer update, and Avery's latest evening prep post gives supporters a quick way to catch up.",
+    );
     expect(result.digest.highlights).toEqual([
       expect.objectContaining({
         id: "community_update:post_evening_update",
-        headline: "Avery shared a fresh organizer update.",
+        headline:
+          "Avery Johnson posted a new update in Neighbors Helping Neighbors.",
         body:
-          "The neighbors community has a new evening prep shift update ready to read.",
+          "\"Evening prep shift\" is a fresh organizer update in Neighbors Helping Neighbors.",
         ctaLabel: "Read update",
       }),
     ]);
@@ -245,6 +243,7 @@ describe("supporter digest application flows", () => {
       status: "unavailable",
       reason: "provider_error",
     });
+    expect(result.digest.summaryParagraph).toBeNull();
     expect(result.digest.highlights[0]).toMatchObject({
       id: "fundraiser_momentum:fundraiser_warm_meals_2026",
       headline: "Warm Meals 2026 picked up momentum.",
@@ -421,7 +420,7 @@ const createSupporterDigestStateRepositoryStub = ({
 const createSupporterDigestNarratorStub = ({
   result = {
     status: "success" as const,
-    items: [],
+    summary: "Supporters saw meaningful movement across the causes they follow.",
   },
 }: {
   result?: Awaited<ReturnType<SupporterDigestNarrator["narrateDigest"]>>;

@@ -74,7 +74,7 @@ export function SupporterDigestPageClient({
           <p className={styles.eyebrow}>Supporter digest</p>
           <div className={styles.headingRow}>
             <h1 className={styles.heading}>What changed since your last check-in</h1>
-            {currentDigest.generationMode === "openai" ? (
+            {currentDigest.summaryParagraph ? (
               <span className={styles.modeBadge}>AI-assisted summary</span>
             ) : null}
           </div>
@@ -85,6 +85,11 @@ export function SupporterDigestPageClient({
           <p className={styles.windowMeta}>
             Window: {formatDigestWindow(currentDigest.windowStart, currentDigest.windowEnd)}
           </p>
+          {currentDigest.summaryParagraph ? (
+            <p className={styles.summaryParagraph}>
+              {currentDigest.summaryParagraph}
+            </p>
+          ) : null}
         </section>
 
         <section>

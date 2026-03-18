@@ -169,13 +169,6 @@ export interface SupporterDigestStateRepository {
   }): Promise<void>;
 }
 
-export type SupporterDigestNarration = {
-  candidateId: string;
-  headline: string;
-  body: string;
-  ctaLabel: string;
-};
-
 export type SupporterDigestNarrationUnavailableReason =
   | "missing_configuration"
   | "provider_error"
@@ -184,7 +177,7 @@ export type SupporterDigestNarrationUnavailableReason =
 export type SupporterDigestNarrationResult =
   | {
       status: "success";
-      items: SupporterDigestNarration[];
+      summary: string;
     }
   | {
       status: "unavailable";

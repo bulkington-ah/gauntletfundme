@@ -179,6 +179,8 @@ describe("digest API route handlers", () => {
           status: "completed",
           reason: null,
         },
+        summaryParagraph:
+          "Avery shared a fresh community update, giving supporters a quick way to catch up before the latest highlight.",
       }),
       meta: {
         sessionTokenHeader: "x-session-token",
@@ -208,6 +210,8 @@ const createApplicationApiStub = ({
         status: "completed" as const,
         reason: null,
       },
+      summaryParagraph:
+        "Avery shared a fresh community update, giving supporters a quick way to catch up before the latest highlight.",
     }),
   },
 }: {
@@ -254,6 +258,7 @@ const createDigestModel = ({
     status: "pending" as const,
     reason: null,
   },
+  summaryParagraph = null,
   highlights = [
     {
       id: "community_update:post_evening_update",
@@ -272,6 +277,7 @@ const createDigestModel = ({
     status: "pending" | "completed" | "not_requested" | "unavailable";
     reason: "missing_configuration" | "provider_error" | "invalid_response" | null;
   };
+  summaryParagraph?: string | null;
   highlights?: {
     id: string;
     type: "community_update";
@@ -288,5 +294,6 @@ const createDigestModel = ({
   windowEnd: "2026-03-18T12:00:00.000Z",
   generationMode,
   narration,
+  summaryParagraph,
   highlights,
 });

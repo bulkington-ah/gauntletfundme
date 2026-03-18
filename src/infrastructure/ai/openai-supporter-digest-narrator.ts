@@ -1,9 +1,6 @@
 import OpenAI from "openai";
 
-import type {
-  SupporterDigestNarration,
-  SupporterDigestNarrator,
-} from "@/application/engagement";
+import type { SupporterDigestNarrator } from "@/application/engagement";
 
 const defaultModel = "gpt-5-mini";
 const defaultTimeoutMs = 8_000;
@@ -94,7 +91,7 @@ export const createOpenAiSupporterDigestNarrator = (
         return parsed
           ? {
               status: "success",
-              items: parsed.items,
+              summary: parsed.summary,
             }
           : {
               status: "unavailable",
@@ -115,11 +112,10 @@ export const createOpenAiSupporterDigestNarrator = (
 const buildInstructions = (): string =>
   [
     "You write concise supporter digest copy for a fundraising and community product.",
-    "Rewrite only the supplied facts into clear, grounded highlights.",
+    "Summarize the supplied highlights into one short, grounded paragraph for the digest hero.",
     "Do not invent names, counts, links, milestones, or reasons that are not present in the input.",
     "Return short, direct copy that sounds factual and trustworthy.",
-    "Each item must keep the same candidateId from the input.",
-    "Prefer action labels like 'Read update', 'Join discussion', 'View fundraiser', or 'Support fundraiser'.",
+    "Return JSON with a single non-empty summary string.",
   ].join(" ");
 
 const toHighlightFacts = (
@@ -171,78 +167,33 @@ const toHighlightFacts = (
 const supporterDigestNarrationSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["items"],
+  required: ["summary"],
   properties: {
-    items: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["candidateId", "headline", "body", "ctaLabel"],
-        properties: {
-          candidateId: {
-            type: "string",
-          },
-          headline: {
-            type: "string",
-          },
-          body: {
-            type: "string",
-          },
-          ctaLabel: {
-            type: "string",
-          },
-        },
-      },
+    summary: {
+      type: "string",
     },
   },
 } as const;
 
 const parseNarrationResponse = (
   outputText: string | undefined,
-): { items: SupporterDigestNarration[] } | null => {
+): { summary: string } | null => {
   if (!outputText) {
     return null;
   }
 
   try {
     const parsed = JSON.parse(outputText) as {
-      items?: unknown;
+      summary?: unknown;
     };
 
-    if (!Array.isArray(parsed.items)) {
+    if (typeof parsed.summary !== "string") {
       return null;
     }
 
-    const items = parsed.items
-      .map((item) => {
-        if (!item || typeof item !== "object") {
-          return null;
-        }
+    const summary = parsed.summary.trim();
 
-        const narration = item as Record<string, unknown>;
-
-        if (
-          typeof narration.candidateId !== "string" ||
-          typeof narration.headline !== "string" ||
-          typeof narration.body !== "string" ||
-          typeof narration.ctaLabel !== "string"
-        ) {
-          return null;
-        }
-
-        return {
-          candidateId: narration.candidateId,
-          headline: narration.headline,
-          body: narration.body,
-          ctaLabel: narration.ctaLabel,
-        } satisfies SupporterDigestNarration;
-      })
-      .filter(
-        (item): item is SupporterDigestNarration => item !== null,
-      );
-
-    return items.length === parsed.items.length ? { items } : null;
+    return summary ? { summary } : null;
   } catch {
     return null;
   }

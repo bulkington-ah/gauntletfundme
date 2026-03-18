@@ -22,14 +22,8 @@ describe("OpenAI supporter digest narrator", () => {
   it("sends structured narration requests and parses valid responses", async () => {
     const create = vi.fn().mockResolvedValue({
       output_text: JSON.stringify({
-        items: [
-          {
-            candidateId: "community_update:post_evening_update",
-            headline: "Avery shared a new organizer update.",
-            body: "Supporters can now catch up on the latest evening prep details.",
-            ctaLabel: "Read update",
-          },
-        ],
+        summary:
+          "Avery posted a fresh community update, giving supporters a quick way to catch up on the latest evening prep details.",
       }),
     });
     const narrator = createOpenAiSupporterDigestNarrator({
@@ -45,14 +39,8 @@ describe("OpenAI supporter digest narrator", () => {
 
     expect(result).toEqual({
       status: "success",
-      items: [
-        {
-          candidateId: "community_update:post_evening_update",
-          headline: "Avery shared a new organizer update.",
-          body: "Supporters can now catch up on the latest evening prep details.",
-          ctaLabel: "Read update",
-        },
-      ],
+      summary:
+        "Avery posted a fresh community update, giving supporters a quick way to catch up on the latest evening prep details.",
     });
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -61,7 +49,9 @@ describe("OpenAI supporter digest narrator", () => {
         reasoning: {
           effort: "minimal",
         },
-        instructions: expect.stringContaining("Rewrite only the supplied facts"),
+        instructions: expect.stringContaining(
+          "Summarize the supplied highlights into one short, grounded paragraph",
+        ),
         input: expect.stringContaining("community_update:post_evening_update"),
         text: expect.objectContaining({
           format: expect.objectContaining({
@@ -84,14 +74,8 @@ describe("OpenAI supporter digest narrator", () => {
       )
       .mockResolvedValueOnce({
         output_text: JSON.stringify({
-          items: [
-            {
-              candidateId: "community_update:post_evening_update",
-              headline: "Avery shared a new organizer update.",
-              body: "Supporters can now catch up on the latest evening prep details.",
-              ctaLabel: "Read update",
-            },
-          ],
+          summary:
+            "Avery shared a fresh organizer update for supporters to catch up on.",
         }),
       });
     const narrator = createOpenAiSupporterDigestNarrator({
@@ -120,12 +104,7 @@ describe("OpenAI supporter digest narrator", () => {
         responses: {
           create: vi.fn().mockResolvedValue({
             output_text: JSON.stringify({
-              items: [
-                {
-                  candidateId: "community_update:post_evening_update",
-                  headline: "Missing body and CTA",
-                },
-              ],
+              summary: "   ",
             }),
           }),
         },
