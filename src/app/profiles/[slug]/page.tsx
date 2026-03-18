@@ -25,6 +25,7 @@ export default async function PublicProfileRoutePage({
       publicProfileQuery: applicationApi,
     },
     slug,
+    viewer?.userId ?? null,
   );
 
   return (

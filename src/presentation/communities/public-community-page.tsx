@@ -4,6 +4,7 @@ import type {
   AuthenticatedViewer,
   PublicCommunityResponse,
 } from "@/application";
+import { FollowTargetControl } from "@/presentation/engagement";
 import { PublicSiteShell } from "@/presentation/shared";
 
 import styles from "./public-community-page.module.css";
@@ -12,6 +13,7 @@ type PublicCommunityQuery = Pick<ApplicationApi, "getPublicCommunityBySlug">;
 
 type SuccessfulCommunityPageModel = {
   status: "success";
+  viewerFollowState: PublicCommunityResponse["viewerFollowState"];
   community: PublicCommunityResponse["community"];
   owner: PublicCommunityResponse["owner"];
   featuredFundraiser: PublicCommunityResponse["featuredFundraiser"];
@@ -39,15 +41,18 @@ type BuildDependencies = {
 export const buildPublicCommunityPageModel = async (
   dependencies: BuildDependencies,
   slug: string,
+  viewerUserId: string | null = null,
 ): Promise<PublicCommunityPageModel> => {
   const result = await dependencies.publicCommunityQuery.getPublicCommunityBySlug({
     slug,
+    viewerUserId,
   });
 
   switch (result.status) {
     case "success":
       return {
         status: "success",
+        viewerFollowState: result.data.viewerFollowState,
         community: result.data.community,
         owner: result.data.owner,
         featuredFundraiser: result.data.featuredFundraiser,
@@ -191,9 +196,14 @@ export const PublicCommunityPage = ({
                   View owner profile
                 </a>
               ) : null}
-              <button className={styles.followButton} type="button">
-                Follow
-              </button>
+              <FollowTargetControl
+                buttonClassName={styles.followButton}
+                initialFollowState={model.viewerFollowState}
+                nextPath={returnTo}
+                targetSlug={model.community.slug}
+                targetType="community"
+                viewer={viewer}
+              />
             </div>
 
             <div className={styles.statsRow}>

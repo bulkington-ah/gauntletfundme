@@ -6,13 +6,34 @@ import {
   buildPublicProfilePageModel,
 } from "@/presentation/profiles";
 
+const { pushSpy, refreshSpy } = vi.hoisted(() => ({
+  pushSpy: vi.fn(),
+  refreshSpy: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: pushSpy,
+    refresh: refreshSpy,
+  }),
+}));
+
 describe("PublicProfilePage", () => {
+  afterEach(() => {
+    pushSpy.mockReset();
+    refreshSpy.mockReset();
+  });
+
   it("builds a success page model from the public profile query", async () => {
     const query = createPublicProfileQueryStub({
       result: {
         status: "success",
         data: {
           kind: "profile",
+          viewerFollowState: {
+            isFollowing: false,
+            isOwnTarget: false,
+          },
           profile: {
             slug: "avery-johnson",
             displayName: "Avery Johnson",
@@ -80,9 +101,14 @@ describe("PublicProfilePage", () => {
 
     expect(query.getPublicProfileBySlug).toHaveBeenCalledWith({
       slug: "avery-johnson",
+      viewerUserId: null,
     });
     expect(model).toEqual({
       status: "success",
+      viewerFollowState: {
+        isFollowing: false,
+        isOwnTarget: false,
+      },
       profile: {
         slug: "avery-johnson",
         displayName: "Avery Johnson",
@@ -145,6 +171,10 @@ describe("PublicProfilePage", () => {
       <PublicProfilePage
         model={{
           status: "success",
+          viewerFollowState: {
+            isFollowing: false,
+            isOwnTarget: false,
+          },
           profile: {
             slug: "avery-johnson",
             displayName: "Avery Johnson",
@@ -272,6 +302,7 @@ describe("PublicProfilePage", () => {
     expect(
       screen.getByRole("link", { name: "2 following" }),
     ).toHaveAttribute("href", "/profiles/avery-johnson/following");
+    expect(screen.getByRole("button", { name: "Follow" })).toBeInTheDocument();
     expect(screen.getByText("Fundraiser momentum")).toBeInTheDocument();
     expect(screen.getByText("Recent public activity")).toBeInTheDocument();
 
@@ -347,6 +378,51 @@ describe("PublicProfilePage", () => {
       "href",
       "/",
     );
+  });
+
+  it("hides the follow control on a self-owned profile page", () => {
+    render(
+      <PublicProfilePage
+        model={{
+          status: "success",
+          viewerFollowState: {
+            isFollowing: false,
+            isOwnTarget: true,
+          },
+          profile: {
+            slug: "avery-johnson",
+            displayName: "Avery Johnson",
+            role: "organizer",
+            profileType: "organizer",
+            bio: "Organizer building long-term community support.",
+            avatarUrl: null,
+            followerCount: 8,
+            followingCount: 2,
+            inspiredSupporterCount: 5,
+          },
+          relationships: {
+            followers: [],
+            following: [],
+          },
+          connections: {
+            fundraisers: [],
+            communities: [],
+          },
+          recentActivity: [],
+        }}
+        viewer={{
+          userId: "user_organizer_avery",
+          role: "organizer",
+        }}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "Follow" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Unfollow" }),
+    ).not.toBeInTheDocument();
   });
 });
 

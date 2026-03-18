@@ -6,13 +6,34 @@ import {
   buildPublicCommunityPageModel,
 } from "@/presentation/communities";
 
+const { pushSpy, refreshSpy } = vi.hoisted(() => ({
+  pushSpy: vi.fn(),
+  refreshSpy: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: pushSpy,
+    refresh: refreshSpy,
+  }),
+}));
+
 describe("PublicCommunityPage", () => {
+  afterEach(() => {
+    pushSpy.mockReset();
+    refreshSpy.mockReset();
+  });
+
   it("builds a success page model from the public community query", async () => {
     const query = createPublicCommunityQueryStub({
       result: {
         status: "success",
         data: {
           kind: "community",
+          viewerFollowState: {
+            isFollowing: false,
+            isOwnTarget: false,
+          },
           community: {
             slug: "neighbors-helping-neighbors",
             name: "Neighbors Helping Neighbors",
@@ -98,9 +119,14 @@ describe("PublicCommunityPage", () => {
 
     expect(query.getPublicCommunityBySlug).toHaveBeenCalledWith({
       slug: "neighbors-helping-neighbors",
+      viewerUserId: null,
     });
     expect(model).toEqual({
       status: "success",
+      viewerFollowState: {
+        isFollowing: false,
+        isOwnTarget: false,
+      },
       community: {
         slug: "neighbors-helping-neighbors",
         name: "Neighbors Helping Neighbors",
@@ -181,6 +207,10 @@ describe("PublicCommunityPage", () => {
       <PublicCommunityPage
         model={{
           status: "success",
+          viewerFollowState: {
+            isFollowing: false,
+            isOwnTarget: false,
+          },
           community: {
             slug: "neighbors-helping-neighbors",
             name: "Neighbors Helping Neighbors",
@@ -299,6 +329,7 @@ describe("PublicCommunityPage", () => {
     expect(
       screen.getByRole("link", { name: "View featured fundraiser" }),
     ).toHaveAttribute("href", "/fundraisers/warm-meals-2026");
+    expect(screen.getByRole("button", { name: "Follow" })).toBeInTheDocument();
     expect(screen.getByText("Top fundraiser momentum")).toBeInTheDocument();
     expect(screen.getByText("$12,600")).toBeInTheDocument();
     expect(screen.getAllByText("Activity").length).toBeGreaterThan(0);
@@ -368,6 +399,51 @@ describe("PublicCommunityPage", () => {
       "href",
       "/",
     );
+  });
+
+  it("hides the follow control on a self-owned community page", () => {
+    render(
+      <PublicCommunityPage
+        model={{
+          status: "success",
+          viewerFollowState: {
+            isFollowing: false,
+            isOwnTarget: true,
+          },
+          community: {
+            slug: "neighbors-helping-neighbors",
+            name: "Neighbors Helping Neighbors",
+            description: "A public space for updates and volunteer coordination.",
+            visibility: "public",
+            followerCount: 12,
+            fundraiserCount: 2,
+            amountRaised: 18700,
+            donationCount: 6,
+          },
+          owner: {
+            displayName: "Avery Johnson",
+            role: "organizer",
+            profileSlug: "avery-johnson",
+            avatarUrl: null,
+          },
+          featuredFundraiser: null,
+          leaderboard: [],
+          fundraisers: [],
+          discussion: [],
+        }}
+        viewer={{
+          userId: "user_organizer_avery",
+          role: "organizer",
+        }}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "Follow" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Unfollow" }),
+    ).not.toBeInTheDocument();
   });
 });
 

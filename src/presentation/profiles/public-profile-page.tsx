@@ -4,6 +4,7 @@ import type {
   AuthenticatedViewer,
   PublicProfileResponse,
 } from "@/application";
+import { FollowTargetControl } from "@/presentation/engagement";
 import { PublicSiteShell } from "@/presentation/shared";
 
 import styles from "./public-profile-page.module.css";
@@ -12,6 +13,7 @@ type PublicProfileQuery = Pick<ApplicationApi, "getPublicProfileBySlug">;
 
 type SuccessfulProfilePageModel = {
   status: "success";
+  viewerFollowState: PublicProfileResponse["viewerFollowState"];
   profile: PublicProfileResponse["profile"];
   relationships: PublicProfileResponse["relationships"];
   connections: PublicProfileResponse["connections"];
@@ -55,15 +57,18 @@ const topCauseCards = [
 export const buildPublicProfilePageModel = async (
   dependencies: BuildDependencies,
   slug: string,
+  viewerUserId: string | null = null,
 ): Promise<PublicProfilePageModel> => {
   const result = await dependencies.publicProfileQuery.getPublicProfileBySlug({
     slug,
+    viewerUserId,
   });
 
   switch (result.status) {
     case "success":
       return {
         status: "success",
+        viewerFollowState: result.data.viewerFollowState,
         profile: result.data.profile,
         relationships: result.data.relationships,
         connections: result.data.connections,
@@ -209,9 +214,14 @@ export const PublicProfilePage = ({
               </div>
 
               <div className={styles.heroActions}>
-                <button className={styles.followButton} type="button">
-                  Follow
-                </button>
+                <FollowTargetControl
+                  buttonClassName={styles.followButton}
+                  initialFollowState={model.viewerFollowState}
+                  nextPath={returnTo}
+                  targetSlug={model.profile.slug}
+                  targetType="profile"
+                  viewer={viewer}
+                />
                 <button className={styles.moreButton} type="button">
                   ...
                 </button>

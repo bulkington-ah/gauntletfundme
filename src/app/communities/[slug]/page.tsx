@@ -25,6 +25,7 @@ export default async function PublicCommunityRoutePage({
       publicCommunityQuery: applicationApi,
     },
     slug,
+    viewer?.userId ?? null,
   );
 
   return (

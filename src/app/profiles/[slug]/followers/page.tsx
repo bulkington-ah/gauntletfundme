@@ -25,6 +25,7 @@ export default async function PublicProfileFollowersRoutePage({
       publicProfileQuery: applicationApi,
     },
     slug,
+    viewer?.userId ?? null,
   );
 
   return (
