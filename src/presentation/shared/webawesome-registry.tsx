@@ -1,16 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
+let registrationPromise: Promise<void> | null = null;
+
+if (canRegisterWebAwesome()) {
+  void ensureWebAwesomeRegistered();
+}
 
 export function WebAwesomeRegistry() {
-  useEffect(() => {
-    void registerWebAwesome();
-  }, []);
-
   return null;
 }
 
-const registerWebAwesome = async () => {
+function ensureWebAwesomeRegistered(): Promise<void> {
+  registrationPromise ??= registerWebAwesome();
+
+  return registrationPromise;
+}
+
+async function registerWebAwesome() {
   const [{ setBasePath }] = await Promise.all([
     import("@awesome.me/webawesome/dist/webawesome.js"),
     import("@awesome.me/webawesome/dist/components/avatar/avatar.js"),
@@ -26,4 +32,12 @@ const registerWebAwesome = async () => {
   ]);
 
   setBasePath("/");
-};
+}
+
+function canRegisterWebAwesome(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return !window.navigator.userAgent.toLowerCase().includes("jsdom");
+}
