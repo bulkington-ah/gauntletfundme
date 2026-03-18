@@ -2,6 +2,7 @@
 
 import { newDb } from "pg-mem";
 
+import { getSupporterDigest } from "@/application";
 import {
   createPostgresPrototypeDataResetRepository,
   createPostgresPublicContentEngagementRepository,
@@ -785,6 +786,86 @@ describe("PostgresPublicContentEngagementRepository", () => {
     ).toEqual({
       lastViewedAt: new Date("2026-03-18T12:00:00.000Z"),
     });
+  });
+
+  it("returns seeded digest highlights again after prototype reset clears digest state", async () => {
+    const harness = createRepositoryHarness();
+    const now = new Date("2026-03-18T12:00:00.000Z");
+
+    await harness.resetRepository.resetPrototypeData();
+    await harness.repository.recordSupporterDigestView({
+      userId: "user_supporter_jordan",
+      viewedThrough: now,
+    });
+
+    const beforeReset = await getSupporterDigest(
+      {
+        now: () => now,
+        sessionViewerGateway: {
+          findViewerBySessionToken: vi.fn().mockResolvedValue({
+            userId: "user_supporter_jordan",
+            role: "supporter",
+          }),
+        },
+        supporterDigestNarrator: {
+          narrateDigest: vi.fn().mockResolvedValue({
+            status: "unavailable",
+            reason: "provider_error",
+            message: "OpenAI is temporarily unavailable.",
+          }),
+        },
+        supporterDigestReadRepository: harness.repository,
+        supporterDigestStateRepository: harness.repository,
+      },
+      {
+        sessionToken: "demo-supporter-session",
+      },
+    );
+
+    expect(beforeReset.status).toBe("success");
+    if (beforeReset.status !== "success") {
+      throw new Error("Expected the digest before reset to resolve successfully.");
+    }
+    expect(beforeReset.digest.highlights).toEqual([]);
+
+    await harness.resetRepository.resetPrototypeData();
+
+    await expect(
+      harness.repository.findSupporterDigestStateByUserId("user_supporter_jordan"),
+    ).resolves.toBeNull();
+
+    const afterReset = await getSupporterDigest(
+      {
+        now: () => now,
+        sessionViewerGateway: {
+          findViewerBySessionToken: vi.fn().mockResolvedValue({
+            userId: "user_supporter_jordan",
+            role: "supporter",
+          }),
+        },
+        supporterDigestNarrator: {
+          narrateDigest: vi.fn().mockResolvedValue({
+            status: "unavailable",
+            reason: "provider_error",
+            message: "OpenAI is temporarily unavailable.",
+          }),
+        },
+        supporterDigestReadRepository: harness.repository,
+        supporterDigestStateRepository: harness.repository,
+      },
+      {
+        sessionToken: "demo-supporter-session",
+      },
+    );
+
+    expect(afterReset.status).toBe("success");
+    if (afterReset.status !== "success") {
+      throw new Error("Expected the digest after reset to resolve successfully.");
+    }
+    expect(afterReset.digest.highlights.length).toBeGreaterThan(0);
+    expect(afterReset.digest.highlights.map((highlight) => highlight.id)).toContain(
+      "fundraiser_momentum:fundraiser_warm_meals_2026",
+    );
   });
 });
 

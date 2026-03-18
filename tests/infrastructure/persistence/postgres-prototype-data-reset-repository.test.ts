@@ -59,6 +59,32 @@ describe("PostgresPrototypeDataResetRepository", () => {
     ).resolves.toBeNull();
   });
 
+  it("clears supporter digest cursor state during reset", async () => {
+    const { publicContentRepository, resetRepository } = createRepositoryHarness();
+
+    await resetRepository.resetPrototypeData();
+    await publicContentRepository.recordSupporterDigestView({
+      userId: "user_supporter_jordan",
+      viewedThrough: new Date("2026-03-18T12:00:00.000Z"),
+    });
+
+    await expect(
+      publicContentRepository.findSupporterDigestStateByUserId(
+        "user_supporter_jordan",
+      ),
+    ).resolves.toEqual({
+      lastViewedAt: new Date("2026-03-18T12:00:00.000Z"),
+    });
+
+    await resetRepository.resetPrototypeData();
+
+    await expect(
+      publicContentRepository.findSupporterDigestStateByUserId(
+        "user_supporter_jordan",
+      ),
+    ).resolves.toBeNull();
+  });
+
   it("clears legacy donation intents before removing seeded fundraisers", async () => {
     const { pool, resetRepository } = createRepositoryHarness();
 

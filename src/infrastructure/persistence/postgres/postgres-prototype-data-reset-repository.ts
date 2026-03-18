@@ -22,6 +22,7 @@ const prototypeResetTableNames = [
   "auth_sessions",
   "auth_credentials",
   "analytics_events",
+  "supporter_digest_state",
   "reports",
   "donation_intents",
   "donations",
