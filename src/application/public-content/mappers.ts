@@ -3,10 +3,13 @@ import type { Community } from "@/domain";
 import type {
   PublicActorSummary,
   PublicCommunityReference,
+  PublicCommunitySummary,
+  PublicFundraiserBrowseEntry,
   PublicFundraiserSummary,
 } from "./contracts";
 import type {
   PublicActorSnapshot,
+  PublicCommunitySummarySnapshot,
   PublicFundraiserSummarySnapshot,
 } from "./ports";
 
@@ -37,3 +40,44 @@ export const toPublicFundraiserSummary = (
   supporterCount: snapshot.supporterCount,
   donationIntentCount: snapshot.donationIntentCount,
 });
+
+export const toPublicFundraiserBrowseEntry = (
+  snapshot: PublicFundraiserSummarySnapshot,
+): PublicFundraiserBrowseEntry => ({
+  ...toPublicFundraiserSummary(snapshot),
+  storyExcerpt: toExcerpt(snapshot.fundraiser.story, 140),
+  organizer: {
+    displayName: snapshot.owner.displayName,
+    role: snapshot.owner.role,
+    profileSlug: snapshot.ownerProfile?.slug ?? null,
+    avatarUrl: snapshot.ownerProfile?.avatarUrl ?? null,
+  },
+  community: snapshot.relatedCommunity
+    ? toPublicCommunityReference(snapshot.relatedCommunity)
+    : null,
+});
+
+export const toPublicCommunitySummary = (
+  snapshot: PublicCommunitySummarySnapshot,
+): PublicCommunitySummary => ({
+  ...toPublicCommunityReference(snapshot.community),
+  description: snapshot.community.description,
+  followerCount: snapshot.followerCount,
+  fundraiserCount: snapshot.fundraiserCount,
+  owner: {
+    displayName: snapshot.owner.displayName,
+    role: snapshot.owner.role,
+    profileSlug: snapshot.ownerProfile?.slug ?? null,
+    avatarUrl: snapshot.ownerProfile?.avatarUrl ?? null,
+  },
+});
+
+const toExcerpt = (value: string, maxLength: number): string => {
+  const normalizedValue = value.trim().replace(/\s+/g, " ");
+
+  if (normalizedValue.length <= maxLength) {
+    return normalizedValue;
+  }
+
+  return `${normalizedValue.slice(0, maxLength - 3).trimEnd()}...`;
+};

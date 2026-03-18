@@ -1,11 +1,16 @@
 import {
   type AnalyticsEventPublisher,
+  getPublicProfileSlugByUserId,
   getPublicCommunityBySlug,
   getPublicFundraiserBySlug,
   getPublicProfileBySlug,
+  listPublicCommunities,
+  listPublicFundraisers,
   type PublicCommunitySnapshot,
+  type PublicCommunitySummarySnapshot,
   type PublicContentReadRepository,
   type PublicFundraiserSnapshot,
+  type PublicFundraiserSummarySnapshot,
   type PublicProfileSnapshot,
 } from "@/application";
 import {
@@ -339,6 +344,318 @@ describe("public content queries", () => {
       status: "invalid_request",
       message: "slug is required.",
     });
+  });
+
+  it("lists fundraisers with active campaigns first and then by support momentum", async () => {
+    const listFundraisersRepository = vi.fn<
+      PublicContentReadRepository["listFundraisers"]
+    >();
+    const repository = createRepositoryStub({
+      listFundraisers: listFundraisersRepository,
+    });
+    const owner = createUser({
+      id: "user_123",
+      email: "avery@example.com",
+      displayName: "Avery Johnson",
+      role: "organizer",
+      createdAt,
+    });
+    const ownerProfile = createUserProfile({
+      id: "profile_123",
+      userId: owner.id,
+      slug: "avery-johnson",
+      bio: "Organizer building community support.",
+      avatarUrl: "https://example.com/avery.png",
+      profileType: "organizer",
+      createdAt,
+    });
+    const community = createCommunity({
+      id: "community_123",
+      ownerUserId: owner.id,
+      slug: "neighbors-helping-neighbors",
+      name: "Neighbors Helping Neighbors",
+      description: "Volunteer coordination and updates.",
+      visibility: "public",
+      createdAt,
+    });
+
+    listFundraisersRepository.mockResolvedValue([
+      createFundraiserSummarySnapshot({
+        fundraiser: createFundraiser({
+          id: "fundraiser_draft",
+          ownerUserId: owner.id,
+          slug: "future-drive",
+          title: "Future Drive",
+          story:
+            "Planning the next big drive with plenty of prep work and a lot of volunteer coordination ahead.",
+          status: "draft",
+          goalAmount: 300000,
+          createdAt: new Date("2026-03-16T14:00:00.000Z"),
+        }),
+        owner,
+        ownerProfile,
+        relatedCommunity: community,
+        supportAmount: 99000,
+        supporterCount: 40,
+        donationIntentCount: 55,
+      }),
+      createFundraiserSummarySnapshot({
+        fundraiser: createFundraiser({
+          id: "fundraiser_active_low",
+          ownerUserId: owner.id,
+          slug: "coat-drive",
+          title: "Coat Drive",
+          story: "Funding warm coats for winter weather support.",
+          status: "active",
+          goalAmount: 120000,
+          createdAt: new Date("2026-03-16T11:00:00.000Z"),
+        }),
+        owner,
+        ownerProfile,
+        relatedCommunity: community,
+        supportAmount: 6100,
+        supporterCount: 2,
+        donationIntentCount: 2,
+      }),
+      createFundraiserSummarySnapshot({
+        fundraiser: createFundraiser({
+          id: "fundraiser_active_high",
+          ownerUserId: owner.id,
+          slug: "warm-meals-2026",
+          title: "Warm Meals 2026",
+          story:
+            "Funding weekly hot meal deliveries and pantry restocks for families across the neighborhood with evening volunteer support included.",
+          status: "active",
+          goalAmount: 250000,
+          createdAt: new Date("2026-03-16T12:00:00.000Z"),
+        }),
+        owner,
+        ownerProfile,
+        relatedCommunity: community,
+        supportAmount: 12600,
+        supporterCount: 3,
+        donationIntentCount: 4,
+      }),
+    ]);
+
+    const result = await listPublicFundraisers({
+      publicContentReadRepository: repository,
+    });
+
+    expect(result).toEqual({
+      kind: "fundraiser_list",
+      fundraisers: [
+        {
+          slug: "warm-meals-2026",
+          title: "Warm Meals 2026",
+          status: "active",
+          goalAmount: 250000,
+          supportAmount: 12600,
+          supporterCount: 3,
+          donationIntentCount: 4,
+          storyExcerpt:
+            "Funding weekly hot meal deliveries and pantry restocks for families across the neighborhood with evening volunteer support included.",
+          organizer: {
+            displayName: "Avery Johnson",
+            role: "organizer",
+            profileSlug: "avery-johnson",
+            avatarUrl: "https://example.com/avery.png",
+          },
+          community: {
+            slug: "neighbors-helping-neighbors",
+            name: "Neighbors Helping Neighbors",
+            visibility: "public",
+          },
+        },
+        {
+          slug: "coat-drive",
+          title: "Coat Drive",
+          status: "active",
+          goalAmount: 120000,
+          supportAmount: 6100,
+          supporterCount: 2,
+          donationIntentCount: 2,
+          storyExcerpt: "Funding warm coats for winter weather support.",
+          organizer: {
+            displayName: "Avery Johnson",
+            role: "organizer",
+            profileSlug: "avery-johnson",
+            avatarUrl: "https://example.com/avery.png",
+          },
+          community: {
+            slug: "neighbors-helping-neighbors",
+            name: "Neighbors Helping Neighbors",
+            visibility: "public",
+          },
+        },
+        {
+          slug: "future-drive",
+          title: "Future Drive",
+          status: "draft",
+          goalAmount: 300000,
+          supportAmount: 99000,
+          supporterCount: 40,
+          donationIntentCount: 55,
+          storyExcerpt:
+            "Planning the next big drive with plenty of prep work and a lot of volunteer coordination ahead.",
+          organizer: {
+            displayName: "Avery Johnson",
+            role: "organizer",
+            profileSlug: "avery-johnson",
+            avatarUrl: "https://example.com/avery.png",
+          },
+          community: {
+            slug: "neighbors-helping-neighbors",
+            name: "Neighbors Helping Neighbors",
+            visibility: "public",
+          },
+        },
+      ],
+    });
+  });
+
+  it("lists communities by follower count and then by recency", async () => {
+    const listCommunitiesRepository = vi.fn<
+      PublicContentReadRepository["listCommunities"]
+    >();
+    const repository = createRepositoryStub({
+      listCommunities: listCommunitiesRepository,
+    });
+    const owner = createUser({
+      id: "user_123",
+      email: "avery@example.com",
+      displayName: "Avery Johnson",
+      role: "organizer",
+      createdAt,
+    });
+    const ownerProfile = createUserProfile({
+      id: "profile_123",
+      userId: owner.id,
+      slug: "avery-johnson",
+      bio: "Organizer building community support.",
+      avatarUrl: "https://example.com/avery.png",
+      profileType: "organizer",
+      createdAt,
+    });
+
+    listCommunitiesRepository.mockResolvedValue([
+      createCommunitySummarySnapshot({
+        community: createCommunity({
+          id: "community_old",
+          ownerUserId: owner.id,
+          slug: "neighbors-helping-neighbors",
+          name: "Neighbors Helping Neighbors",
+          description: "Volunteer coordination and updates.",
+          visibility: "public",
+          createdAt: new Date("2026-03-16T09:30:00.000Z"),
+        }),
+        owner,
+        ownerProfile,
+        followerCount: 4,
+        fundraiserCount: 4,
+      }),
+      createCommunitySummarySnapshot({
+        community: createCommunity({
+          id: "community_newer",
+          ownerUserId: owner.id,
+          slug: "weekend-pantry-crew",
+          name: "Weekend Pantry Crew",
+          description: "Pantry packing, delivery help, and same-day volunteer asks.",
+          visibility: "public",
+          createdAt: new Date("2026-03-16T09:40:00.000Z"),
+        }),
+        owner,
+        ownerProfile,
+        followerCount: 4,
+        fundraiserCount: 4,
+      }),
+      createCommunitySummarySnapshot({
+        community: createCommunity({
+          id: "community_low_followers",
+          ownerUserId: owner.id,
+          slug: "school-success-network",
+          name: "School Success Network",
+          description: "Backpack drives, school support, and family updates.",
+          visibility: "public",
+          createdAt: new Date("2026-03-16T09:50:00.000Z"),
+        }),
+        owner,
+        ownerProfile,
+        followerCount: 2,
+        fundraiserCount: 4,
+      }),
+    ]);
+
+    const result = await listPublicCommunities({
+      publicContentReadRepository: repository,
+    });
+
+    expect(result).toEqual({
+      kind: "community_list",
+      communities: [
+        {
+          slug: "weekend-pantry-crew",
+          name: "Weekend Pantry Crew",
+          visibility: "public",
+          description: "Pantry packing, delivery help, and same-day volunteer asks.",
+          followerCount: 4,
+          fundraiserCount: 4,
+          owner: {
+            displayName: "Avery Johnson",
+            role: "organizer",
+            profileSlug: "avery-johnson",
+            avatarUrl: "https://example.com/avery.png",
+          },
+        },
+        {
+          slug: "neighbors-helping-neighbors",
+          name: "Neighbors Helping Neighbors",
+          visibility: "public",
+          description: "Volunteer coordination and updates.",
+          followerCount: 4,
+          fundraiserCount: 4,
+          owner: {
+            displayName: "Avery Johnson",
+            role: "organizer",
+            profileSlug: "avery-johnson",
+            avatarUrl: "https://example.com/avery.png",
+          },
+        },
+        {
+          slug: "school-success-network",
+          name: "School Success Network",
+          visibility: "public",
+          description: "Backpack drives, school support, and family updates.",
+          followerCount: 2,
+          fundraiserCount: 4,
+          owner: {
+            displayName: "Avery Johnson",
+            role: "organizer",
+            profileSlug: "avery-johnson",
+            avatarUrl: "https://example.com/avery.png",
+          },
+        },
+      ],
+    });
+  });
+
+  it("resolves a public profile slug by user id", async () => {
+    const findProfileSlugByUserId = vi.fn<
+      PublicContentReadRepository["findProfileSlugByUserId"]
+    >();
+    const repository = createRepositoryStub({
+      findProfileSlugByUserId,
+    });
+
+    findProfileSlugByUserId.mockResolvedValue("avery-johnson");
+
+    await expect(
+      getPublicProfileSlugByUserId(
+        { publicContentReadRepository: repository },
+        "user_123",
+      ),
+    ).resolves.toBe("avery-johnson");
+    expect(findProfileSlugByUserId).toHaveBeenCalledWith("user_123");
   });
 
   it("maps fundraiser organizer and community context from the repository snapshot", async () => {
@@ -697,8 +1014,19 @@ const createRepositoryStub = (
   findProfileBySlug: vi.fn().mockResolvedValue(null),
   findFundraiserBySlug: vi.fn().mockResolvedValue(null),
   findCommunityBySlug: vi.fn().mockResolvedValue(null),
+  listFundraisers: vi.fn().mockResolvedValue([]),
+  listCommunities: vi.fn().mockResolvedValue([]),
+  findProfileSlugByUserId: vi.fn().mockResolvedValue(null),
   ...overrides,
 });
+
+const createFundraiserSummarySnapshot = (
+  snapshot: PublicFundraiserSummarySnapshot,
+): PublicFundraiserSummarySnapshot => snapshot;
+
+const createCommunitySummarySnapshot = (
+  snapshot: PublicCommunitySummarySnapshot,
+): PublicCommunitySummarySnapshot => snapshot;
 
 const createAnalyticsEventPublisherStub = (): AnalyticsEventPublisher & {
   publish: ReturnType<typeof vi.fn>;

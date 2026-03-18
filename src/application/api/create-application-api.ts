@@ -31,9 +31,12 @@ import {
   type UnfollowTargetRequest,
 } from "../engagement";
 import {
+  getPublicProfileSlugByUserId,
   getPublicCommunityBySlug,
   getPublicFundraiserBySlug,
   getPublicProfileBySlug,
+  listPublicCommunities,
+  listPublicFundraisers,
   type LookupBySlugRequest,
   type PublicContentReadRepository,
 } from "../public-content";
@@ -143,6 +146,8 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
         { publicContentReadRepository, analyticsEventPublisher },
         request,
       ),
+    getPublicProfileSlugByUserId: (userId: string) =>
+      getPublicProfileSlugByUserId({ publicContentReadRepository }, userId),
     getPublicFundraiserBySlug: (request: LookupBySlugRequest) =>
       getPublicFundraiserBySlug(
         { publicContentReadRepository, analyticsEventPublisher },
@@ -153,6 +158,10 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
         { publicContentReadRepository, analyticsEventPublisher },
         request,
       ),
+    listPublicFundraisers: () =>
+      listPublicFundraisers({ publicContentReadRepository }),
+    listPublicCommunities: () =>
+      listPublicCommunities({ publicContentReadRepository }),
     createPost: (request: CreatePostRequest) =>
       createPostCommand(
         {

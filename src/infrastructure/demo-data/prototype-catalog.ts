@@ -44,10 +44,16 @@ const winterCoatFundraiserCreatedAt = new Date("2026-03-16T09:10:00.000Z");
 const schoolSuppliesFundraiserCreatedAt = new Date("2026-03-16T09:20:00.000Z");
 const communityFridgeFundraiserCreatedAt = new Date("2026-03-16T09:25:00.000Z");
 const communityCreatedAt = new Date("2026-03-16T09:30:00.000Z");
+const pantryCommunityCreatedAt = new Date("2026-03-16T09:40:00.000Z");
+const schoolCommunityCreatedAt = new Date("2026-03-16T09:50:00.000Z");
 const kickoffPostCreatedAt = new Date("2026-03-16T10:00:00.000Z");
+const pantryPostCreatedAt = new Date("2026-03-16T10:30:00.000Z");
 const volunteerPostCreatedAt = new Date("2026-03-16T11:00:00.000Z");
+const schoolPostCreatedAt = new Date("2026-03-16T11:15:00.000Z");
 const firstCommentCreatedAt = new Date("2026-03-16T10:15:00.000Z");
+const pantryCommentCreatedAt = new Date("2026-03-16T10:45:00.000Z");
 const secondCommentCreatedAt = new Date("2026-03-16T11:30:00.000Z");
+const schoolCommentCreatedAt = new Date("2026-03-16T11:35:00.000Z");
 
 const prototypeCatalog: PrototypeCatalog = {
   users: [
@@ -223,6 +229,26 @@ const prototypeCatalog: PrototypeCatalog = {
       visibility: "public",
       createdAt: communityCreatedAt,
     }),
+    createCommunity({
+      id: "community_weekend_pantry_crew",
+      ownerUserId: "user_organizer_avery",
+      slug: "weekend-pantry-crew",
+      name: "Weekend Pantry Crew",
+      description:
+        "A public hub for pantry packing schedules, volunteer asks, and same-day supply updates.",
+      visibility: "public",
+      createdAt: pantryCommunityCreatedAt,
+    }),
+    createCommunity({
+      id: "community_school_success_network",
+      ownerUserId: "user_organizer_avery",
+      slug: "school-success-network",
+      name: "School Success Network",
+      description:
+        "A public community connecting families, volunteers, and school support drives across the neighborhood.",
+      visibility: "public",
+      createdAt: schoolCommunityCreatedAt,
+    }),
   ],
   posts: [
     createPost({
@@ -245,6 +271,26 @@ const prototypeCatalog: PrototypeCatalog = {
       moderationStatus: "visible",
       createdAt: volunteerPostCreatedAt,
     }),
+    createPost({
+      id: "post_pantry_shift_board",
+      communityId: "community_weekend_pantry_crew",
+      authorUserId: "user_organizer_avery",
+      title: "Weekend shift board",
+      body: "Saturday packing now has room for two more drivers and one bilingual welcome volunteer.",
+      status: "published",
+      moderationStatus: "visible",
+      createdAt: pantryPostCreatedAt,
+    }),
+    createPost({
+      id: "post_school_supply_dropoff",
+      communityId: "community_school_success_network",
+      authorUserId: "user_supporter_priya",
+      title: "Supply drop-off update",
+      body: "We added two after-school drop-off windows this week for backpack and notebook donations.",
+      status: "published",
+      moderationStatus: "visible",
+      createdAt: schoolPostCreatedAt,
+    }),
   ],
   comments: [
     createComment({
@@ -264,6 +310,24 @@ const prototypeCatalog: PrototypeCatalog = {
       status: "published",
       moderationStatus: "visible",
       createdAt: secondCommentCreatedAt,
+    }),
+    createComment({
+      id: "comment_pantry_driver_help",
+      postId: "post_pantry_shift_board",
+      authorUserId: "user_supporter_sam",
+      body: "I can cover one of the driver spots if we still need help by Friday.",
+      status: "published",
+      moderationStatus: "visible",
+      createdAt: pantryCommentCreatedAt,
+    }),
+    createComment({
+      id: "comment_school_dropoff_followup",
+      postId: "post_school_supply_dropoff",
+      authorUserId: "user_organizer_avery",
+      body: "Thank you for organizing that. We will pin the updated drop-off windows in the community notes.",
+      status: "published",
+      moderationStatus: "visible",
+      createdAt: schoolCommentCreatedAt,
     }),
   ],
   follows: [
@@ -357,6 +421,41 @@ const prototypeCatalog: PrototypeCatalog = {
       targetType: "community",
       targetId: "community_neighbors_helping_neighbors",
       createdAt: new Date("2026-03-16T12:13:00.000Z"),
+    }),
+    createFollow({
+      id: "follow_community_jordan_to_pantry",
+      userId: "user_supporter_jordan",
+      targetType: "community",
+      targetId: "community_weekend_pantry_crew",
+      createdAt: new Date("2026-03-16T12:14:00.000Z"),
+    }),
+    createFollow({
+      id: "follow_community_elena_to_pantry",
+      userId: "user_supporter_elena",
+      targetType: "community",
+      targetId: "community_weekend_pantry_crew",
+      createdAt: new Date("2026-03-16T12:15:00.000Z"),
+    }),
+    createFollow({
+      id: "follow_community_morgan_to_pantry",
+      userId: "user_moderator_morgan",
+      targetType: "community",
+      targetId: "community_weekend_pantry_crew",
+      createdAt: new Date("2026-03-16T12:16:00.000Z"),
+    }),
+    createFollow({
+      id: "follow_community_priya_to_school",
+      userId: "user_supporter_priya",
+      targetType: "community",
+      targetId: "community_school_success_network",
+      createdAt: new Date("2026-03-16T12:17:00.000Z"),
+    }),
+    createFollow({
+      id: "follow_community_noah_to_school",
+      userId: "user_supporter_noah",
+      targetType: "community",
+      targetId: "community_school_success_network",
+      createdAt: new Date("2026-03-16T12:18:00.000Z"),
     }),
     createFollow({
       id: "follow_profile_avery_to_jordan",

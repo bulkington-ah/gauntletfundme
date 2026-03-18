@@ -11,6 +11,7 @@ import type {
   FollowWriteRepository,
   FollowWriteResult,
   PublicActorSnapshot,
+  PublicCommunitySummarySnapshot,
   PublicContentReadRepository,
   PublicFundraiserSnapshot,
   PublicFundraiserSummarySnapshot,
@@ -127,6 +128,30 @@ export const createPostgresPublicContentEngagementRepository = (
     return result.rows;
   };
 
+  const findAllFundraiserRowsWithOwners = async () => {
+    const result = await query<FundraiserWithOwnerRow>(
+      `SELECT
+         f.id,
+         f.owner_user_id,
+         f.slug,
+         f.title,
+         f.story,
+         f.status,
+         f.goal_amount,
+         f.created_at,
+         u.id AS joined_user_id,
+         u.email,
+         u.display_name,
+         u.role,
+         u.created_at AS user_created_at
+       FROM fundraisers f
+       INNER JOIN users u ON u.id = f.owner_user_id
+       ORDER BY f.created_at DESC`,
+    );
+
+    return result.rows;
+  };
+
   const findCommunityRowsByOwnerUserId = async (ownerUserId: string) => {
     const result = await query<CommunityRow>(
       `SELECT id, owner_user_id, slug, name, description, visibility, created_at
@@ -134,6 +159,29 @@ export const createPostgresPublicContentEngagementRepository = (
        WHERE owner_user_id = $1
        ORDER BY created_at DESC`,
       [ownerUserId],
+    );
+
+    return result.rows;
+  };
+
+  const findAllCommunityRowsWithOwners = async () => {
+    const result = await query<CommunityWithOwnerRow>(
+      `SELECT
+         c.id,
+         c.owner_user_id,
+         c.slug,
+         c.name,
+         c.description,
+         c.visibility,
+         c.created_at,
+         u.id AS joined_user_id,
+         u.email,
+         u.display_name,
+         u.role,
+         u.created_at AS user_created_at
+       FROM communities c
+       INNER JOIN users u ON u.id = c.owner_user_id
+       ORDER BY c.created_at DESC`,
     );
 
     return result.rows;
@@ -240,6 +288,17 @@ export const createPostgresPublicContentEngagementRepository = (
 
     return summaries.sort(compareFundraiserSummaries);
   };
+
+  const buildCommunitySummarySnapshotFromRow = async (
+    communityRow: CommunityWithOwnerRow,
+  ): Promise<PublicCommunitySummarySnapshot> => ({
+    community: mapCommunity(communityRow),
+    owner: mapJoinedUser(communityRow),
+    ownerProfile: await findUserProfileByUserId(communityRow.owner_user_id),
+    followerCount: await countFollowersByTarget("community", communityRow.id),
+    fundraiserCount: (await findFundraiserRowsByOwnerUserId(communityRow.owner_user_id))
+      .length,
+  });
 
   const findVisibleDiscussionForCommunityId = async (
     communityId: string,
@@ -432,6 +491,39 @@ export const createPostgresPublicContentEngagementRepository = (
   };
 
   return {
+    async listFundraisers() {
+      const fundraiserRows = await findAllFundraiserRowsWithOwners();
+
+      return Promise.all(
+        fundraiserRows.map(async (fundraiserRow) => {
+          const owner = mapJoinedUser(fundraiserRow);
+
+          return buildFundraiserSummarySnapshotFromRow(
+            fundraiserRow,
+            owner,
+            await findUserProfileByUserId(fundraiserRow.owner_user_id),
+            await findLatestCommunityByOwnerUserId(fundraiserRow.owner_user_id),
+          );
+        }),
+      );
+    },
+
+    async listCommunities() {
+      const communityRows = await findAllCommunityRowsWithOwners();
+
+      return Promise.all(
+        communityRows.map((communityRow) =>
+          buildCommunitySummarySnapshotFromRow(communityRow),
+        ),
+      );
+    },
+
+    async findProfileSlugByUserId(userId) {
+      const profile = await findUserProfileByUserId(userId);
+
+      return profile?.slug ?? null;
+    },
+
     async findProfileBySlug(slug) {
       const profileResult = await query<UserProfileWithUserRow>(
         `SELECT

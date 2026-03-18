@@ -24,6 +24,15 @@ export type PublicCommunityReference = {
   visibility: CommunityVisibility;
 };
 
+export type PublicCommunitySummary = PublicCommunityReference & {
+  description: string;
+  followerCount: number;
+  fundraiserCount: number;
+  owner: PublicActorSummary & {
+    role: UserRole;
+  };
+};
+
 export type PublicFundraiserSummary = {
   slug: string;
   title: string;
@@ -32,6 +41,14 @@ export type PublicFundraiserSummary = {
   supportAmount: number;
   supporterCount: number;
   donationIntentCount: number;
+};
+
+export type PublicFundraiserBrowseEntry = PublicFundraiserSummary & {
+  storyExcerpt: string;
+  organizer: PublicActorSummary & {
+    role: UserRole;
+  };
+  community: PublicCommunityReference | null;
 };
 
 export type PublicFundraiserSupporter = PublicActorSummary & {
@@ -84,6 +101,11 @@ export type PublicFundraiserResponse = {
   recentSupporters: PublicFundraiserSupporter[];
 };
 
+export type PublicFundraiserListResponse = {
+  kind: "fundraiser_list";
+  fundraisers: PublicFundraiserBrowseEntry[];
+};
+
 export type PublicCommunityResponse = {
   kind: "community";
   community: {
@@ -121,6 +143,11 @@ export type PublicCommunityResponse = {
       createdAt: string;
     }>;
   }>;
+};
+
+export type PublicCommunityListResponse = {
+  kind: "community_list";
+  communities: PublicCommunitySummary[];
 };
 
 export type PublicQueryResult<TResponse> =

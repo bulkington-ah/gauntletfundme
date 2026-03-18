@@ -22,8 +22,63 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(snapshot.featuredFundraisers).toHaveLength(4);
     expect(snapshot.featuredFundraisers[0]?.fundraiser.slug).toBe("warm-meals-2026");
     expect(snapshot.featuredFundraisers[0]?.supportAmount).toBe(22000);
-    expect(snapshot.ownedCommunities).toHaveLength(1);
+    expect(snapshot.ownedCommunities).toHaveLength(3);
+    expect(snapshot.ownedCommunities[0]?.slug).toBe("school-success-network");
     expect(snapshot.recentActivity).not.toHaveLength(0);
+  });
+
+  it("lists seeded fundraiser browse summaries with related organizer context", async () => {
+    const repository = createRepository();
+
+    const fundraisers = await repository.listFundraisers();
+
+    expect(fundraisers).toHaveLength(4);
+    expect(fundraisers[0]?.fundraiser.slug).toBe("community-fridge-expansion");
+    expect(fundraisers[0]?.owner.displayName).toBe("Avery Johnson");
+    expect(fundraisers[0]?.ownerProfile?.slug).toBe("avery-johnson");
+    expect(fundraisers[0]?.relatedCommunity?.slug).toBe("school-success-network");
+    expect(fundraisers.find((entry) => entry.fundraiser.slug === "warm-meals-2026"))
+      .toMatchObject({
+        supportAmount: 22000,
+        supporterCount: 5,
+        donationIntentCount: 5,
+      });
+  });
+
+  it("lists seeded communities with derived follower and fundraiser counts", async () => {
+    const repository = createRepository();
+
+    const communities = await repository.listCommunities();
+
+    expect(communities).toHaveLength(3);
+    expect(communities.map((entry) => entry.community.slug)).toEqual([
+      "school-success-network",
+      "weekend-pantry-crew",
+      "neighbors-helping-neighbors",
+    ]);
+    expect(
+      communities.find((entry) => entry.community.slug === "neighbors-helping-neighbors"),
+    ).toMatchObject({
+      followerCount: 4,
+      fundraiserCount: 4,
+    });
+    expect(
+      communities.find((entry) => entry.community.slug === "weekend-pantry-crew"),
+    ).toMatchObject({
+      followerCount: 3,
+      fundraiserCount: 4,
+    });
+  });
+
+  it("finds a public profile slug by user id", async () => {
+    const repository = createRepository();
+
+    await expect(
+      repository.findProfileSlugByUserId("user_organizer_avery"),
+    ).resolves.toBe("avery-johnson");
+    await expect(
+      repository.findProfileSlugByUserId("user_missing"),
+    ).resolves.toBeNull();
   });
 
   it("creates follows idempotently", async () => {

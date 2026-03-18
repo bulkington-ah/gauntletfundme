@@ -6,6 +6,7 @@ import type {
   PublicActorSnapshot,
   CommunityDiscussionSnapshot,
   PublicCommunitySnapshot,
+  PublicCommunitySummarySnapshot,
   PublicContentReadRepository,
   PublicFundraiserSnapshot,
   PublicFundraiserSummarySnapshot,
@@ -99,6 +100,45 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
     catalog.donationIntents
       .filter((intent) => intent.fundraiserId === fundraiserId)
       .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+
+  const listFundraiserSummaries = (): PublicFundraiserSummarySnapshot[] =>
+    catalog.fundraisers.flatMap((fundraiser) => {
+      const summary = buildFundraiserSummarySnapshot(fundraiser.id);
+
+      return summary ? [summary] : [];
+    });
+
+  const buildCommunitySummarySnapshot = (
+    communityId: string,
+  ): PublicCommunitySummarySnapshot | null => {
+    const community =
+      catalog.communities.find((entry) => entry.id === communityId) ?? null;
+
+    if (!community) {
+      return null;
+    }
+
+    const owner = findUserById(community.ownerUserId);
+
+    if (!owner) {
+      return null;
+    }
+
+    return {
+      community,
+      owner,
+      ownerProfile: findUserProfileByUserId(owner.id),
+      followerCount: countFollowers("community", community.id),
+      fundraiserCount: findFundraisersByOwnerUserId(community.ownerUserId).length,
+    };
+  };
+
+  const listCommunitySummaries = (): PublicCommunitySummarySnapshot[] =>
+    catalog.communities.flatMap((community) => {
+      const summary = buildCommunitySummarySnapshot(community.id);
+
+      return summary ? [summary] : [];
+    });
 
   const countFollowers = (targetType: FollowTargetType, targetId: string): number =>
     catalog.follows.filter(
@@ -277,6 +317,15 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
   };
 
   return {
+    async listFundraisers(): Promise<PublicFundraiserSummarySnapshot[]> {
+      return listFundraiserSummaries();
+    },
+    async listCommunities(): Promise<PublicCommunitySummarySnapshot[]> {
+      return listCommunitySummaries();
+    },
+    async findProfileSlugByUserId(userId: string): Promise<string | null> {
+      return findUserProfileByUserId(userId)?.slug ?? null;
+    },
     async findProfileBySlug(slug: string): Promise<PublicProfileSnapshot | null> {
       const profile = catalog.userProfiles.find((entry) => entry.slug === slug);
 

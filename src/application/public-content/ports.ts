@@ -28,6 +28,14 @@ export type PublicFundraiserSupporterSnapshot = {
   donationIntent: DonationIntent;
 };
 
+export type PublicCommunitySummarySnapshot = {
+  community: Community;
+  owner: User;
+  ownerProfile: UserProfile | null;
+  followerCount: number;
+  fundraiserCount: number;
+};
+
 export type PublicProfileActivitySnapshot =
   | {
       type: "fundraiser_support";
@@ -84,4 +92,7 @@ export interface PublicContentReadRepository {
   findProfileBySlug(slug: string): Promise<PublicProfileSnapshot | null>;
   findFundraiserBySlug(slug: string): Promise<PublicFundraiserSnapshot | null>;
   findCommunityBySlug(slug: string): Promise<PublicCommunitySnapshot | null>;
+  listFundraisers(): Promise<PublicFundraiserSummarySnapshot[]>;
+  listCommunities(): Promise<PublicCommunitySummarySnapshot[]>;
+  findProfileSlugByUserId(userId: string): Promise<string | null>;
 }
