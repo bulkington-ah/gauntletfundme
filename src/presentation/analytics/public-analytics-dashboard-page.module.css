@@ -1,0 +1,189 @@
+.page {
+  display: grid;
+  gap: 2rem;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.hero {
+  display: grid;
+  gap: 1rem;
+}
+
+.eyebrow,
+.sectionEyebrow {
+  margin: 0;
+  color: #8b5a2b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.heading,
+.sectionTitle {
+  margin: 0;
+  color: #1f2a37;
+}
+
+.heading {
+  font-size: clamp(2rem, 4vw, 3.1rem);
+  line-height: 1.05;
+}
+
+.lead {
+  margin: 0;
+  color: #4a5968;
+  font-size: 1rem;
+  line-height: 1.7;
+  max-width: 46rem;
+}
+
+.summaryGrid,
+.eventCountGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.summaryGrid {
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.metricCard,
+.eventCountCard {
+  border: 1px solid rgba(31, 42, 55, 0.12);
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(245, 240, 232, 0.96));
+  box-shadow: 0 18px 40px -32px rgba(31, 42, 55, 0.45);
+}
+
+.metricCard {
+  padding: 1.25rem;
+}
+
+.metricLabel {
+  margin: 0 0 0.5rem;
+  color: #66727f;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.metricValue {
+  margin: 0;
+  color: #17212b;
+  font-size: clamp(1.9rem, 3vw, 2.5rem);
+  font-weight: 700;
+}
+
+.metricTimestamp {
+  margin: 0;
+  color: #17212b;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.section {
+  display: grid;
+  gap: 1rem;
+}
+
+.sectionHeader {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.eventCountGrid {
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.eventCountCard {
+  padding: 1rem 1.1rem;
+}
+
+.eventName {
+  margin: 0 0 0.75rem;
+  color: #17212b;
+  font-size: 0.92rem;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.eventCount {
+  margin: 0 0 0.5rem;
+  color: #8b5a2b;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.eventMeta {
+  margin: 0;
+  color: #5b6773;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.emptyState {
+  margin: 0;
+  color: #5b6773;
+  font-size: 0.98rem;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border: 1px solid rgba(31, 42, 55, 0.12);
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18px 40px -32px rgba(31, 42, 55, 0.45);
+}
+
+.table {
+  width: 100%;
+  min-width: 56rem;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.95rem 1rem;
+  border-bottom: 1px solid rgba(31, 42, 55, 0.08);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  color: #52606d;
+  font-size: 0.77rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.timestampCell,
+.eventCell,
+.sourceCell {
+  color: #17212b;
+  font-size: 0.88rem;
+  word-break: break-word;
+}
+
+.payload {
+  margin: 0;
+  color: #17212b;
+  font-family: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding-inline: 1rem;
+  }
+}

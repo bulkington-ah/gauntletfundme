@@ -718,3 +718,4 @@ Standalone incremental tasks tracked only in `tasks/` after Task 040:
 Standalone incremental tasks tracked only in `tasks/` after Task 043:
 - Task 044 made the fundraiser supporter-rail controls functional without changing contracts.
 - Task 045 replaced inert fundraiser share buttons with an in-place share modal and copy-link flow.
+- Task 046 replaced the no-op analytics publisher with Postgres-backed persistence, historical backfill, unfollow tracking, and an unlinked public analytics dashboard.

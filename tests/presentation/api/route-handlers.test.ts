@@ -1,4 +1,5 @@
 import { createApplicationApi } from "@/application";
+import { createNoopAnalyticsEventPublisher } from "@/infrastructure/analytics";
 import { createStaticSessionViewerGateway } from "@/infrastructure/auth";
 import { createStaticPublicContentRepository } from "@/infrastructure/public-content";
 import { browserSessionCookieName } from "@/presentation/auth";
@@ -24,6 +25,7 @@ describe("API route handlers", () => {
 
     setApplicationApiForTesting(
       createApplicationApi({
+        analyticsEventPublisher: createNoopAnalyticsEventPublisher(),
         publicContentReadRepository: staticRepository,
         accountAuthRepository: createAccountAuthRepositoryStub(),
         followTargetLookup: staticRepository,
@@ -1271,6 +1273,7 @@ describe("API route handlers", () => {
     const staticRepository = createStaticPublicContentRepository();
     setApplicationApiForTesting(
       createApplicationApi({
+        analyticsEventPublisher: createNoopAnalyticsEventPublisher(),
         publicContentReadRepository: staticRepository,
         followTargetLookup: staticRepository,
         sessionViewerGateway: createStaticSessionViewerGateway(),
@@ -1333,6 +1336,7 @@ describe("API route handlers", () => {
     const staticRepository = createStaticPublicContentRepository();
     setApplicationApiForTesting(
       createApplicationApi({
+        analyticsEventPublisher: createNoopAnalyticsEventPublisher(),
         publicContentReadRepository: staticRepository,
         followTargetLookup: staticRepository,
         sessionViewerGateway: createStaticSessionViewerGateway(),

@@ -3,6 +3,7 @@ export const analyticsEventNames = {
   fundraiserPageViewed: "page_view.fundraiser",
   communityPageViewed: "page_view.community",
   followCompleted: "engagement.follow.completed",
+  unfollowCompleted: "engagement.unfollow.completed",
   communityCreated: "community.created",
   fundraiserCreated: "fundraiser.created",
   postCreated: "discussion.post.created",
@@ -13,15 +14,17 @@ export const analyticsEventNames = {
 export type AnalyticsEventName =
   (typeof analyticsEventNames)[keyof typeof analyticsEventNames];
 
+export type AnalyticsEventPayloadValue = string | number | boolean | null;
+
 export type AnalyticsEvent = {
   name: AnalyticsEventName;
-  payload: Record<string, string | number | boolean | null>;
+  payload: Record<string, AnalyticsEventPayloadValue>;
   occurredAt: string;
 };
 
 const toEvent = (
   name: AnalyticsEventName,
-  payload: Record<string, string | number | boolean | null>,
+  payload: Record<string, AnalyticsEventPayloadValue>,
   occurredAt: Date = new Date(),
 ): AnalyticsEvent => ({
   name,
@@ -62,6 +65,21 @@ export const buildFollowCompletedEvent = (input: {
     targetType: input.targetType,
     targetSlug: input.targetSlug,
     created: input.created,
+    followerCount: input.followerCount,
+  });
+
+export const buildUnfollowCompletedEvent = (input: {
+  viewerUserId: string;
+  targetType: "profile" | "fundraiser" | "community";
+  targetSlug: string;
+  removed: boolean;
+  followerCount: number;
+}): AnalyticsEvent =>
+  toEvent(analyticsEventNames.unfollowCompleted, {
+    viewerUserId: input.viewerUserId,
+    targetType: input.targetType,
+    targetSlug: input.targetSlug,
+    removed: input.removed,
     followerCount: input.followerCount,
   });
 

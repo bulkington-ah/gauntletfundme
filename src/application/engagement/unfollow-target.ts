@@ -1,4 +1,8 @@
 import {
+  buildUnfollowCompletedEvent,
+  type AnalyticsEventPublisher,
+} from "@/application/analytics";
+import {
   DomainValidationError,
   followTargetTypes,
   normalizeSlug,
@@ -52,6 +56,7 @@ type Dependencies = {
   sessionViewerGateway: SessionViewerGateway;
   followTargetLookup: FollowTargetLookup;
   followWriteRepository: FollowWriteRepository;
+  analyticsEventPublisher?: AnalyticsEventPublisher;
 };
 
 export const unfollowTarget = async (
@@ -106,6 +111,16 @@ export const unfollowTarget = async (
       targetType: target.targetType,
       targetId: target.id,
     },
+  );
+
+  await dependencies.analyticsEventPublisher?.publish(
+    buildUnfollowCompletedEvent({
+      viewerUserId: authorization.viewer.userId,
+      targetType: target.targetType,
+      targetSlug: target.slug,
+      removed: removal.removed,
+      followerCount,
+    }),
   );
 
   return {

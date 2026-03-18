@@ -1,5 +1,8 @@
 import { createPostgresAccountAuthRepository } from "@/infrastructure/auth";
-import { createNoopAnalyticsEventPublisher } from "@/infrastructure/analytics";
+import {
+  createBestEffortAnalyticsEventPublisher,
+  createPostgresAnalyticsRepository,
+} from "@/infrastructure/analytics";
 import { createPostgresPublicContentEngagementRepository } from "@/infrastructure/persistence";
 
 import {
@@ -13,7 +16,11 @@ import {
   type SignUpRequest,
   type AccountAuthRepository,
 } from "../accounts";
-import type { AnalyticsEventPublisher } from "../analytics";
+import {
+  getAnalyticsDashboard,
+  type AnalyticsDashboardQuery,
+  type AnalyticsEventPublisher,
+} from "../analytics";
 import {
   createCommunityCommand,
   listOwnedCommunitiesForViewer,
@@ -103,6 +110,7 @@ type Dependencies = {
   followOwnerLookup?: FollowOwnerLookup;
   followWriteRepository?: FollowWriteRepository;
   analyticsEventPublisher?: AnalyticsEventPublisher;
+  analyticsDashboardQuery?: AnalyticsDashboardQuery;
   sessionViewerGateway?: SessionViewerGateway;
   accountAuthRepository?: AccountAuthRepository;
   prototypeDataResetRepository?: PrototypeDataResetRepository;
@@ -127,6 +135,17 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     }
 
     return accountAuthRepository;
+  };
+
+  let analyticsRepository:
+    | ReturnType<typeof createPostgresAnalyticsRepository>
+    | null = null;
+  const resolveAnalyticsRepository = () => {
+    if (!analyticsRepository) {
+      analyticsRepository = createPostgresAnalyticsRepository();
+    }
+
+    return analyticsRepository;
   };
 
   const publicContentReadRepository =
@@ -175,7 +194,16 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     dependencies.prototypeDataResetRepository ??
     createPostgresPrototypeDataResetRepository();
   const analyticsEventPublisher =
-    dependencies.analyticsEventPublisher ?? createNoopAnalyticsEventPublisher();
+    dependencies.analyticsEventPublisher ??
+    createBestEffortAnalyticsEventPublisher({
+      publisher: {
+        publish: (event) => resolveAnalyticsRepository().publish(event),
+      },
+    });
+  const analyticsDashboardQuery =
+    dependencies.analyticsDashboardQuery ?? {
+      getDashboard: () => resolveAnalyticsRepository().getDashboard(),
+    };
   const sessionViewerGateway =
     dependencies.sessionViewerGateway ?? {
       findViewerBySessionToken: (sessionToken: string | null) =>
@@ -191,6 +219,10 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
       logout({ accountAuthRepository: getAccountAuthRepository() }, request),
     getSession: (request: LookupSessionRequest) =>
       getSession({ accountAuthRepository: getAccountAuthRepository() }, request),
+    getAnalyticsDashboard: () =>
+      getAnalyticsDashboard({
+        analyticsDashboardQuery,
+      }),
     resetPrototypeData: () =>
       resetPrototypeData({
         prototypeDataResetRepository: getPrototypeDataResetRepository(),
@@ -318,6 +350,7 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
           sessionViewerGateway,
           followTargetLookup,
           followWriteRepository,
+          analyticsEventPublisher,
         },
         request,
       ),

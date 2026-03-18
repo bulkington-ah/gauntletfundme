@@ -1,4 +1,5 @@
 import {
+  type AnalyticsEventPublisher,
   unfollowTarget,
   type FollowTargetLookup,
   type FollowWriteRepository,
@@ -107,12 +108,14 @@ describe("unfollowTarget", () => {
       removed: false,
       followerCount: 7,
     });
+    const analyticsEventPublisher = createAnalyticsEventPublisherStub();
 
     const result = await unfollowTarget(
       {
         sessionViewerGateway,
         followTargetLookup,
         followWriteRepository,
+        analyticsEventPublisher,
       },
       {
         sessionToken: "demo-supporter-session",
@@ -130,6 +133,18 @@ describe("unfollowTarget", () => {
       targetType: "community",
       targetId: "community_123",
     });
+    expect(analyticsEventPublisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "engagement.unfollow.completed",
+        payload: {
+          viewerUserId: "user_123",
+          targetType: "community",
+          targetSlug: "neighbors-helping-neighbors",
+          removed: false,
+          followerCount: 7,
+        },
+      }),
+    );
     expect(result).toEqual({
       status: "success",
       viewer: {
@@ -183,4 +198,10 @@ const createFollowWriteRepositoryStub = ({
     removed,
   }),
   countFollowersForTarget: vi.fn().mockResolvedValue(followerCount),
+});
+
+const createAnalyticsEventPublisherStub = (): AnalyticsEventPublisher & {
+  publish: ReturnType<typeof vi.fn>;
+} => ({
+  publish: vi.fn().mockResolvedValue(undefined),
 });

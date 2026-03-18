@@ -99,6 +99,15 @@ CREATE TABLE reports (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE analytics_events (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  payload JSONB NOT NULL,
+  occurred_at TIMESTAMPTZ NOT NULL,
+  source_table TEXT,
+  source_record_id TEXT
+);
+
 CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
 CREATE INDEX idx_fundraisers_owner_user_id ON fundraisers(owner_user_id);
 CREATE INDEX idx_fundraisers_community_id ON fundraisers(community_id);
@@ -110,3 +119,7 @@ CREATE INDEX idx_follows_target_lookup ON follows(target_type, target_id);
 CREATE INDEX idx_donations_fundraiser_id ON donations(fundraiser_id);
 CREATE INDEX idx_donations_user_id_created_at ON donations(user_id, created_at DESC);
 CREATE INDEX idx_reports_status_created_at ON reports(status, created_at DESC);
+CREATE INDEX idx_analytics_events_occurred_at ON analytics_events(occurred_at DESC, id DESC);
+CREATE INDEX idx_analytics_events_name_occurred_at ON analytics_events(name, occurred_at DESC);
+CREATE UNIQUE INDEX idx_analytics_events_source_backfill_uniqueness
+  ON analytics_events(name, source_table, source_record_id);

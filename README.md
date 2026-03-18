@@ -27,7 +27,7 @@ Implemented foundations currently include:
 - explicit fundraiser-to-community linkage in persistence and public read models instead of owner-derived linkage
 - moderation report submission command with authenticated, idempotent post/comment reporting semantics
 - moderator/owner report resolution actions (`hide`, `remove`, `dismiss`) with public discussion visibility updates for moderated content
-- application-layer analytics instrumentation for page views, follows, post/comment creation, and completed donations
+- Postgres-backed analytics capture for page views, follows, unfollows, community/fundraiser creation, post/comment creation, and completed donations, plus historical backfill and an unlinked `/analytics` dashboard
 - public profile page route with slug-based lookup, relationship navigation, and connected fundraiser/community links
 - public fundraiser page route with organizer context, story rendering, real donation entry, supporter-rail controls, and an in-place share modal
 - public community page route with connected links and an interactive activity tab for update posting and commenting
@@ -129,7 +129,7 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
 
 ## Known Limitations
 - Payment processing is intentionally mocked, but donations themselves are persisted and propagated through the product.
-- Analytics publisher is currently wired to a no-op provider by default; production event delivery requires a concrete adapter implementation.
+- Historical analytics backfill reconstructs persisted follows, posts, comments, and donations, but it cannot recover page views or unfollows that were never recorded before real analytics persistence was enabled.
 - Moderation actions update current statuses but do not yet persist a separate historical moderation event log.
 - Public signup UI is still deferred even though the underlying signup API exists.
 

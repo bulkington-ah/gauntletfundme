@@ -9,6 +9,7 @@ import {
   buildFundraiserPageViewedEvent,
   buildPostCreatedEvent,
   buildProfilePageViewedEvent,
+  buildUnfollowCompletedEvent,
 } from "@/application";
 
 describe("analytics event contracts", () => {
@@ -45,6 +46,13 @@ describe("analytics event contracts", () => {
       created: true,
       followerCount: 3,
     });
+    const unfollow = buildUnfollowCompletedEvent({
+      viewerUserId: "user_supporter_jordan",
+      targetType: "community",
+      targetSlug: "neighbors-helping-neighbors",
+      removed: true,
+      followerCount: 2,
+    });
     const post = buildPostCreatedEvent({
       viewerUserId: "user_organizer_avery",
       communitySlug: "neighbors-helping-neighbors",
@@ -80,6 +88,14 @@ describe("analytics event contracts", () => {
       targetSlug: "neighbors-helping-neighbors",
       created: true,
       followerCount: 3,
+    });
+    expect(unfollow.name).toBe(analyticsEventNames.unfollowCompleted);
+    expect(unfollow.payload).toEqual({
+      viewerUserId: "user_supporter_jordan",
+      targetType: "community",
+      targetSlug: "neighbors-helping-neighbors",
+      removed: true,
+      followerCount: 2,
     });
     expect(post.name).toBe(analyticsEventNames.postCreated);
     expect(post.payload).toEqual({

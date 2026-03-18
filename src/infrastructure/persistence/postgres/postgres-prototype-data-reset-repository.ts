@@ -4,6 +4,10 @@ import {
   hashPassword,
   seedPrototypeLoginCredentials,
 } from "@/infrastructure/auth";
+import {
+  backfillHistoricalAnalyticsEvents,
+  ensureAnalyticsStorage,
+} from "@/infrastructure/analytics";
 
 import { createPersistenceBootstrapper } from "./bootstrap";
 import { createPostgresPool } from "./create-postgres-pool";
@@ -17,6 +21,7 @@ type Dependencies = {
 const prototypeResetTableNames = [
   "auth_sessions",
   "auth_credentials",
+  "analytics_events",
   "reports",
   "donation_intents",
   "donations",
@@ -53,6 +58,8 @@ export const createPostgresPrototypeDataResetRepository = (
 
         await seedPrototypeCatalog(sqlClient);
         await seedPrototypeLoginCredentials(sqlClient, hashPassword);
+        await ensureAnalyticsStorage(sqlClient);
+        await backfillHistoricalAnalyticsEvents(sqlClient);
         await sqlClient.query("COMMIT");
       } catch (error) {
         await sqlClient.query("ROLLBACK");

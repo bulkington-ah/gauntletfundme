@@ -4,6 +4,7 @@ import { newDb } from "pg-mem";
 
 import { createApplicationApi } from "@/application";
 import {
+  createNoopAnalyticsEventPublisher,
   createPostgresPrototypeDataResetRepository,
   createPostgresPublicContentEngagementRepository,
   createStaticSessionViewerGateway,
@@ -152,6 +153,7 @@ const createJourneyApplicationApi = async () => {
   await resetRepository.resetPrototypeData();
 
   return createApplicationApi({
+    analyticsEventPublisher: createNoopAnalyticsEventPublisher(),
     publicContentReadRepository: persistence,
     discussionTargetLookup: persistence,
     discussionWriteRepository: persistence,
