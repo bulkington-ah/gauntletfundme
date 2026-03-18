@@ -25,6 +25,7 @@ async function registerWebAwesome() {
     import("@awesome.me/webawesome/dist/components/card/card.js"),
     import("@awesome.me/webawesome/dist/components/details/details.js"),
     import("@awesome.me/webawesome/dist/components/divider/divider.js"),
+    import("@awesome.me/webawesome/dist/components/progress-bar/progress-bar.js"),
     import("@awesome.me/webawesome/dist/components/progress-ring/progress-ring.js"),
     import("@awesome.me/webawesome/dist/components/tab-group/tab-group.js"),
     import("@awesome.me/webawesome/dist/components/tab/tab.js"),
