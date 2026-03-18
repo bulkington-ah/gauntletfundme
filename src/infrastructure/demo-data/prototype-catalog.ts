@@ -1,7 +1,7 @@
 import {
   createComment,
   createCommunity,
-  createDonationIntent,
+  createDonation,
   createFollow,
   createFundraiser,
   createPost,
@@ -10,7 +10,7 @@ import {
   createUserProfile,
   type Comment,
   type Community,
-  type DonationIntent,
+  type Donation,
   type Follow,
   type Fundraiser,
   type Post,
@@ -27,7 +27,7 @@ export type PrototypeCatalog = {
   posts: Post[];
   comments: Comment[];
   follows: Follow[];
-  donationIntents: DonationIntent[];
+  donations: Donation[];
   reports: Report[];
   demoSessions: Record<string, string>;
 };
@@ -472,16 +472,16 @@ const prototypeCatalog: PrototypeCatalog = {
       createdAt: new Date("2026-03-16T11:55:00.000Z"),
     }),
   ],
-  donationIntents: [
-    createDonationIntent({
+  donations: [
+    createDonation({
       id: "intent_jordan_warm_meals",
       userId: "user_supporter_jordan",
       fundraiserId: "fundraiser_warm_meals_2026",
       amount: 5000,
-      status: "started",
+      status: "completed",
       createdAt: new Date("2026-03-16T12:20:00.000Z"),
     }),
-    createDonationIntent({
+    createDonation({
       id: "intent_morgan_warm_meals",
       userId: "user_moderator_morgan",
       fundraiserId: "fundraiser_warm_meals_2026",
@@ -489,7 +489,7 @@ const prototypeCatalog: PrototypeCatalog = {
       status: "completed",
       createdAt: new Date("2026-03-16T12:25:00.000Z"),
     }),
-    createDonationIntent({
+    createDonation({
       id: "intent_elena_winter_coats",
       userId: "user_supporter_elena",
       fundraiserId: "fundraiser_winter_coat_drive_2026",
@@ -497,7 +497,7 @@ const prototypeCatalog: PrototypeCatalog = {
       status: "completed",
       createdAt: new Date("2026-03-16T12:35:00.000Z"),
     }),
-    createDonationIntent({
+    createDonation({
       id: "intent_sam_warm_meals",
       userId: "user_supporter_sam",
       fundraiserId: "fundraiser_warm_meals_2026",
@@ -505,23 +505,23 @@ const prototypeCatalog: PrototypeCatalog = {
       status: "completed",
       createdAt: new Date("2026-03-16T12:40:00.000Z"),
     }),
-    createDonationIntent({
+    createDonation({
       id: "intent_priya_warm_meals",
       userId: "user_supporter_priya",
       fundraiserId: "fundraiser_warm_meals_2026",
       amount: 3000,
-      status: "started",
+      status: "completed",
       createdAt: new Date("2026-03-16T12:45:00.000Z"),
     }),
-    createDonationIntent({
+    createDonation({
       id: "intent_jordan_winter_coats",
       userId: "user_supporter_jordan",
       fundraiserId: "fundraiser_winter_coat_drive_2026",
       amount: 1800,
-      status: "started",
+      status: "completed",
       createdAt: new Date("2026-03-16T12:50:00.000Z"),
     }),
-    createDonationIntent({
+    createDonation({
       id: "intent_noah_warm_meals",
       userId: "user_supporter_noah",
       fundraiserId: "fundraiser_warm_meals_2026",
@@ -529,7 +529,7 @@ const prototypeCatalog: PrototypeCatalog = {
       status: "completed",
       createdAt: new Date("2026-03-16T12:55:00.000Z"),
     }),
-    createDonationIntent({
+    createDonation({
       id: "intent_priya_school_supplies",
       userId: "user_supporter_priya",
       fundraiserId: "fundraiser_school_supplies_spring",
@@ -537,15 +537,15 @@ const prototypeCatalog: PrototypeCatalog = {
       status: "completed",
       createdAt: new Date("2026-03-16T13:05:00.000Z"),
     }),
-    createDonationIntent({
+    createDonation({
       id: "intent_morgan_school_supplies",
       userId: "user_moderator_morgan",
       fundraiserId: "fundraiser_school_supplies_spring",
       amount: 2400,
-      status: "started",
+      status: "completed",
       createdAt: new Date("2026-03-16T13:10:00.000Z"),
     }),
-    createDonationIntent({
+    createDonation({
       id: "intent_noah_fridge_expansion",
       userId: "user_supporter_noah",
       fundraiserId: "fundraiser_community_fridge_expansion",
@@ -553,12 +553,12 @@ const prototypeCatalog: PrototypeCatalog = {
       status: "completed",
       createdAt: new Date("2026-03-16T13:15:00.000Z"),
     }),
-    createDonationIntent({
+    createDonation({
       id: "intent_elena_fridge_expansion",
       userId: "user_supporter_elena",
       fundraiserId: "fundraiser_community_fridge_expansion",
       amount: 3500,
-      status: "started",
+      status: "completed",
       createdAt: new Date("2026-03-16T13:20:00.000Z"),
     }),
   ],

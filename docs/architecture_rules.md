@@ -55,7 +55,7 @@ Practical rule:
 - Formatting for UI display belongs in `presentation`.
 - Serialization, persistence mappings, and third-party payload transformations belong in `infrastructure`.
 - Analytics event names may be defined centrally, but event emission should happen from `application` use cases at meaningful business moments.
-- Mocked donation behavior must remain clearly separated from any future real payment integration code.
+- Donation submission behavior must remain clearly separated from any future real payment integration code.
 
 ## Module Boundary Rules
 - Each domain module should expose a small public surface and keep internals private.
@@ -67,8 +67,8 @@ Practical rule:
 ## Naming Conventions
 - Directory names should be lowercase and plural for domain modules, such as `communities`, `fundraisers`, and `profiles`.
 - Public entry points should use predictable names such as `index.ts`, `public.ts`, or clearly named module service files.
-- Domain types and entities should use PascalCase names such as `Community`, `DonationIntent`, and `UserProfile`.
-- Application use cases should be verb-oriented, such as `createPost`, `followTarget`, `startDonationIntent`, and `reportComment`.
+- Domain types and entities should use PascalCase names such as `Community`, `Donation`, and `UserProfile`.
+- Application use cases should be verb-oriented, such as `createPost`, `followTarget`, `submitDonation`, and `reportComment`.
 - Infrastructure adapters should be named by capability and provider when relevant, such as `PostgresCommunityRepository` or `AwsSecretsConfig`.
 - Tests should mirror the subject they validate and use descriptive names tied to behavior rather than implementation details.
 

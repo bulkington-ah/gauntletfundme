@@ -137,7 +137,7 @@ describe("authorization policy", () => {
     });
   });
 
-  it("allows members to comment, report content, and create donation intents", () => {
+  it("allows members to comment, report content, and create donations", () => {
     expect(
       evaluateAuthorizationPolicy({
         action: "create_comment",
@@ -152,7 +152,7 @@ describe("authorization policy", () => {
     ).toEqual({ allowed: true });
     expect(
       evaluateAuthorizationPolicy({
-        action: "create_donation_intent",
+        action: "submit_donation",
         viewer: memberViewer,
       }),
     ).toEqual({ allowed: true });

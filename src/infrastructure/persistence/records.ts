@@ -1,7 +1,7 @@
 import type {
   CommentStatus,
   CommunityVisibility,
-  DonationIntentStatus,
+  DonationStatus,
   FollowTargetType,
   FundraiserStatus,
   ModerationStatus,
@@ -80,12 +80,12 @@ export type FollowRecord = {
   created_at: string;
 };
 
-export type DonationIntentRecord = {
+export type DonationRecord = {
   id: string;
   user_id: string;
   fundraiser_id: string;
   amount: number;
-  status: DonationIntentStatus;
+  status: DonationStatus;
   created_at: string;
 };
 

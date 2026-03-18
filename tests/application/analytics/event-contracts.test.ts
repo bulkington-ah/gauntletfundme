@@ -2,7 +2,7 @@ import {
   analyticsEventNames,
   buildCommentCreatedEvent,
   buildCommunityPageViewedEvent,
-  buildDonationIntentStartedEvent,
+  buildDonationCompletedEvent,
   buildFollowCompletedEvent,
   buildFundraiserPageViewedEvent,
   buildPostCreatedEvent,
@@ -53,10 +53,10 @@ describe("analytics event contracts", () => {
       postId: "post_kickoff_update",
       commentId: "comment_new_shift_offer",
     });
-    const donationIntent = buildDonationIntentStartedEvent({
+    const donationIntent = buildDonationCompletedEvent({
       viewerUserId: "user_supporter_jordan",
       fundraiserSlug: "warm-meals-2026",
-      donationIntentId: "intent_new_123",
+      donationId: "intent_new_123",
       amount: 2500,
     });
 
@@ -80,11 +80,11 @@ describe("analytics event contracts", () => {
       postId: "post_kickoff_update",
       commentId: "comment_new_shift_offer",
     });
-    expect(donationIntent.name).toBe(analyticsEventNames.donationIntentStarted);
+    expect(donationIntent.name).toBe(analyticsEventNames.donationCompleted);
     expect(donationIntent.payload).toEqual({
       viewerUserId: "user_supporter_jordan",
       fundraiserSlug: "warm-meals-2026",
-      donationIntentId: "intent_new_123",
+      donationId: "intent_new_123",
       amount: 2500,
     });
   });

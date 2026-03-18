@@ -4,28 +4,22 @@ import {
   requirePositiveInteger,
 } from "@/domain/shared";
 
-export const donationIntentStatuses = [
-  "started",
-  "abandoned",
-  "completed",
-] as const;
+export const donationStatuses = ["completed"] as const;
 
-export type DonationIntentStatus = (typeof donationIntentStatuses)[number];
+export type DonationStatus = (typeof donationStatuses)[number];
 
-export type DonationIntent = {
+export type Donation = {
   id: string;
   userId: string;
   fundraiserId: string;
   amount: number;
-  status: DonationIntentStatus;
+  status: DonationStatus;
   createdAt: Date;
 };
 
-export type CreateDonationIntentInput = DonationIntent;
+export type CreateDonationInput = Donation;
 
-export const createDonationIntent = (
-  input: CreateDonationIntentInput,
-): DonationIntent => ({
+export const createDonation = (input: CreateDonationInput): Donation => ({
   id: requireNonEmptyString(input.id, "id"),
   userId: requireNonEmptyString(input.userId, "userId"),
   fundraiserId: requireNonEmptyString(input.fundraiserId, "fundraiserId"),

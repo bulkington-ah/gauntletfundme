@@ -1,22 +1,22 @@
 import {
   type AnalyticsEventPublisher,
-  startDonationIntent,
-  type DonationIntentTargetLookup,
-  type DonationIntentWriteRepository,
+  submitDonation,
+  type DonationTargetLookup,
+  type DonationWriteRepository,
   type SessionViewerGateway,
 } from "@/application";
 
-describe("startDonationIntent", () => {
+describe("submitDonation", () => {
   it("rejects invalid requests before touching dependencies", async () => {
     const sessionViewerGateway = createSessionViewerGatewayStub();
-    const donationIntentTargetLookup = createDonationIntentTargetLookupStub();
-    const donationIntentWriteRepository = createDonationIntentWriteRepositoryStub();
+    const donationTargetLookup = createDonationTargetLookupStub();
+    const donationWriteRepository = createDonationWriteRepositoryStub();
 
-    const result = await startDonationIntent(
+    const result = await submitDonation(
       {
         sessionViewerGateway,
-        donationIntentTargetLookup,
-        donationIntentWriteRepository,
+        donationTargetLookup,
+        donationWriteRepository,
       },
       {
         sessionToken: "demo-supporter-session",
@@ -30,22 +30,20 @@ describe("startDonationIntent", () => {
       message: "amount must be a positive integer.",
     });
     expect(sessionViewerGateway.findViewerBySessionToken).not.toHaveBeenCalled();
-    expect(
-      donationIntentTargetLookup.findFundraiserBySlugForDonationIntent,
-    ).not.toHaveBeenCalled();
-    expect(donationIntentWriteRepository.createDonationIntent).not.toHaveBeenCalled();
+    expect(donationTargetLookup.findFundraiserBySlugForDonation).not.toHaveBeenCalled();
+    expect(donationWriteRepository.createDonation).not.toHaveBeenCalled();
   });
 
   it("returns unauthorized when no viewer can be resolved", async () => {
     const sessionViewerGateway = createSessionViewerGatewayStub();
-    const donationIntentTargetLookup = createDonationIntentTargetLookupStub();
-    const donationIntentWriteRepository = createDonationIntentWriteRepositoryStub();
+    const donationTargetLookup = createDonationTargetLookupStub();
+    const donationWriteRepository = createDonationWriteRepositoryStub();
 
-    const result = await startDonationIntent(
+    const result = await submitDonation(
       {
         sessionViewerGateway,
-        donationIntentTargetLookup,
-        donationIntentWriteRepository,
+        donationTargetLookup,
+        donationWriteRepository,
       },
       {
         sessionToken: null,
@@ -57,12 +55,10 @@ describe("startDonationIntent", () => {
     expect(result).toEqual({
       status: "unauthorized",
       message:
-        "Authentication is required to start donation intents. Send the x-session-token header to continue.",
+        "Authentication is required to submit donations. Send the x-session-token header to continue.",
     });
-    expect(
-      donationIntentTargetLookup.findFundraiserBySlugForDonationIntent,
-    ).not.toHaveBeenCalled();
-    expect(donationIntentWriteRepository.createDonationIntent).not.toHaveBeenCalled();
+    expect(donationTargetLookup.findFundraiserBySlugForDonation).not.toHaveBeenCalled();
+    expect(donationWriteRepository.createDonation).not.toHaveBeenCalled();
   });
 
   it("returns not_found when fundraiser lookup fails", async () => {
@@ -72,14 +68,14 @@ describe("startDonationIntent", () => {
         role: "supporter",
       },
     });
-    const donationIntentTargetLookup = createDonationIntentTargetLookupStub();
-    const donationIntentWriteRepository = createDonationIntentWriteRepositoryStub();
+    const donationTargetLookup = createDonationTargetLookupStub();
+    const donationWriteRepository = createDonationWriteRepositoryStub();
 
-    const result = await startDonationIntent(
+    const result = await submitDonation(
       {
         sessionViewerGateway,
-        donationIntentTargetLookup,
-        donationIntentWriteRepository,
+        donationTargetLookup,
+        donationWriteRepository,
       },
       {
         sessionToken: "demo-supporter-session",
@@ -92,39 +88,39 @@ describe("startDonationIntent", () => {
       status: "not_found",
       message: 'No fundraiser was found for slug "missing-fundraiser".',
     });
-    expect(donationIntentWriteRepository.createDonationIntent).not.toHaveBeenCalled();
+    expect(donationWriteRepository.createDonation).not.toHaveBeenCalled();
   });
 
-  it("creates a mocked donation intent for authenticated viewers", async () => {
+  it("creates a completed donation for authenticated viewers", async () => {
     const sessionViewerGateway = createSessionViewerGatewayStub({
       viewer: {
         userId: "user_supporter_jordan",
         role: "supporter",
       },
     });
-    const donationIntentTargetLookup = createDonationIntentTargetLookupStub({
+    const donationTargetLookup = createDonationTargetLookupStub({
       fundraiser: {
         id: "fundraiser_warm_meals_2026",
         slug: "warm-meals-2026",
       },
     });
-    const donationIntentWriteRepository = createDonationIntentWriteRepositoryStub({
-      donationIntent: {
+    const donationWriteRepository = createDonationWriteRepositoryStub({
+      donation: {
         id: "intent_jordan_warm_meals_new",
         userId: "user_supporter_jordan",
         fundraiserId: "fundraiser_warm_meals_2026",
         amount: 2500,
-        status: "started",
+        status: "completed",
         createdAt: new Date("2026-03-16T16:00:00.000Z"),
       },
     });
     const analyticsEventPublisher = createAnalyticsEventPublisherStub();
 
-    const result = await startDonationIntent(
+    const result = await submitDonation(
       {
         sessionViewerGateway,
-        donationIntentTargetLookup,
-        donationIntentWriteRepository,
+        donationTargetLookup,
+        donationWriteRepository,
         analyticsEventPublisher,
       },
       {
@@ -134,18 +130,18 @@ describe("startDonationIntent", () => {
       },
     );
 
-    expect(donationIntentWriteRepository.createDonationIntent).toHaveBeenCalledWith({
+    expect(donationWriteRepository.createDonation).toHaveBeenCalledWith({
       userId: "user_supporter_jordan",
       fundraiserId: "fundraiser_warm_meals_2026",
       amount: 2500,
     });
     expect(analyticsEventPublisher.publish).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: "engagement.donation_intent.started",
+        name: "engagement.donation.completed",
         payload: {
           viewerUserId: "user_supporter_jordan",
           fundraiserSlug: "warm-meals-2026",
-          donationIntentId: "intent_jordan_warm_meals_new",
+          donationId: "intent_jordan_warm_meals_new",
           amount: 2500,
         },
       }),
@@ -159,13 +155,13 @@ describe("startDonationIntent", () => {
       fundraiser: {
         slug: "warm-meals-2026",
       },
-      donationIntent: {
+      donation: {
         id: "intent_jordan_warm_meals_new",
         amount: 2500,
-        status: "started",
+        status: "completed",
         createdAt: "2026-03-16T16:00:00.000Z",
       },
-      mockedCheckout: true,
+      mockedPaymentProcessor: true,
     });
   });
 });
@@ -180,35 +176,35 @@ const createSessionViewerGatewayStub = ({
   findViewerBySessionToken: vi.fn().mockResolvedValue(viewer),
 });
 
-const createDonationIntentTargetLookupStub = ({
+const createDonationTargetLookupStub = ({
   fundraiser = null,
 }: {
   fundraiser?: Awaited<
-    ReturnType<DonationIntentTargetLookup["findFundraiserBySlugForDonationIntent"]>
+    ReturnType<DonationTargetLookup["findFundraiserBySlugForDonation"]>
   >;
-} = {}): DonationIntentTargetLookup & {
-  findFundraiserBySlugForDonationIntent: ReturnType<typeof vi.fn>;
+} = {}): DonationTargetLookup & {
+  findFundraiserBySlugForDonation: ReturnType<typeof vi.fn>;
 } => ({
-  findFundraiserBySlugForDonationIntent: vi.fn().mockResolvedValue(fundraiser),
+  findFundraiserBySlugForDonation: vi.fn().mockResolvedValue(fundraiser),
 });
 
-const createDonationIntentWriteRepositoryStub = ({
-  donationIntent = {
+const createDonationWriteRepositoryStub = ({
+  donation = {
     id: "intent_default",
     userId: "user_supporter_jordan",
     fundraiserId: "fundraiser_warm_meals_2026",
     amount: 2500,
-    status: "started" as const,
+    status: "completed" as const,
     createdAt: new Date("2026-03-16T16:00:00.000Z"),
   },
 }: {
-  donationIntent?: Awaited<
-    ReturnType<DonationIntentWriteRepository["createDonationIntent"]>
+  donation?: Awaited<
+    ReturnType<DonationWriteRepository["createDonation"]>
   >;
-} = {}): DonationIntentWriteRepository & {
-  createDonationIntent: ReturnType<typeof vi.fn>;
+} = {}): DonationWriteRepository & {
+  createDonation: ReturnType<typeof vi.fn>;
 } => ({
-  createDonationIntent: vi.fn().mockResolvedValue(donationIntent),
+  createDonation: vi.fn().mockResolvedValue(donation),
 });
 
 const createAnalyticsEventPublisherStub = (): AnalyticsEventPublisher & {

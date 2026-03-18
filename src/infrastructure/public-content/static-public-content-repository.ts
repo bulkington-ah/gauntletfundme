@@ -96,9 +96,9 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
       .filter((fundraiser) => fundraiser.ownerUserId === ownerUserId)
       .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
 
-  const findDonationIntentsForFundraiser = (fundraiserId: string) =>
-    catalog.donationIntents
-      .filter((intent) => intent.fundraiserId === fundraiserId)
+  const findDonationsForFundraiser = (fundraiserId: string) =>
+    catalog.donations
+      .filter((donation) => donation.fundraiserId === fundraiserId)
       .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
 
   const listFundraiserSummaries = (): PublicFundraiserSummarySnapshot[] =>
@@ -164,16 +164,16 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
       return null;
     }
 
-    const donationIntents = findDonationIntentsForFundraiser(fundraiser.id);
+    const donations = findDonationsForFundraiser(fundraiser.id);
 
     return {
       fundraiser,
       owner,
       ownerProfile: findUserProfileByUserId(owner.id),
       relatedCommunity: findCommunitiesByOwnerUserId(owner.id)[0] ?? null,
-      donationIntentCount: donationIntents.length,
-      supporterCount: new Set(donationIntents.map((intent) => intent.userId)).size,
-      supportAmount: donationIntents.reduce((sum, intent) => sum + intent.amount, 0),
+      donationCount: donations.length,
+      supporterCount: new Set(donations.map((donation) => donation.userId)).size,
+      amountRaised: donations.reduce((sum, donation) => sum + donation.amount, 0),
     };
   };
 
@@ -181,12 +181,12 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
     left: PublicFundraiserSummarySnapshot,
     right: PublicFundraiserSummarySnapshot,
   ): number => {
-    if (right.supportAmount !== left.supportAmount) {
-      return right.supportAmount - left.supportAmount;
+    if (right.amountRaised !== left.amountRaised) {
+      return right.amountRaised - left.amountRaised;
     }
 
-    if (right.donationIntentCount !== left.donationIntentCount) {
-      return right.donationIntentCount - left.donationIntentCount;
+    if (right.donationCount !== left.donationCount) {
+      return right.donationCount - left.donationCount;
     }
 
     return (
@@ -211,18 +211,18 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
     ownedCommunities: ReturnType<typeof findCommunitiesByOwnerUserId>,
   ): PublicProfileActivitySnapshot[] => {
     const donationActivity = fundraiserSummaries.flatMap((fundraiserSummary) =>
-      findDonationIntentsForFundraiser(fundraiserSummary.fundraiser.id).flatMap(
-        (donationIntent) => {
-          const actor = buildActorSnapshotByUserId(donationIntent.userId);
+      findDonationsForFundraiser(fundraiserSummary.fundraiser.id).flatMap(
+        (donation) => {
+          const actor = buildActorSnapshotByUserId(donation.userId);
 
           return actor
             ? [
                 {
-                  type: "fundraiser_support" as const,
+                  type: "fundraiser_donation" as const,
                   actor,
                   fundraiser: fundraiserSummary,
                   community: fundraiserSummary.relatedCommunity,
-                  donationIntent,
+                  donation,
                 },
               ]
             : [];
@@ -257,12 +257,12 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
     return [...donationActivity, ...communityPostActivity]
       .sort((left, right) => {
         const leftCreatedAt =
-          left.type === "fundraiser_support"
-            ? left.donationIntent.createdAt
+          left.type === "fundraiser_donation"
+            ? left.donation.createdAt
             : left.post.createdAt;
         const rightCreatedAt =
-          right.type === "fundraiser_support"
-            ? right.donationIntent.createdAt
+          right.type === "fundraiser_donation"
+            ? right.donation.createdAt
             : right.post.createdAt;
 
         return rightCreatedAt.getTime() - leftCreatedAt.getTime();
@@ -278,10 +278,10 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
     const engagedUserIds = new Set<string>();
 
     fundraiserSummaries.forEach((fundraiserSummary) => {
-      findDonationIntentsForFundraiser(fundraiserSummary.fundraiser.id).forEach(
-        (donationIntent) => {
-          if (donationIntent.userId !== ownerUserId) {
-            engagedUserIds.add(donationIntent.userId);
+      findDonationsForFundraiser(fundraiserSummary.fundraiser.id).forEach(
+        (donation) => {
+          if (donation.userId !== ownerUserId) {
+            engagedUserIds.add(donation.userId);
           }
         },
       );
@@ -384,11 +384,11 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
 
       return {
         summary,
-        recentSupporters: findDonationIntentsForFundraiser(fundraiser.id).flatMap(
-          (donationIntent) => {
-            const actor = buildActorSnapshotByUserId(donationIntent.userId);
+        recentDonations: findDonationsForFundraiser(fundraiser.id).flatMap(
+          (donation) => {
+            const actor = buildActorSnapshotByUserId(donation.userId);
 
-            return actor ? [{ actor, donationIntent }] : [];
+            return actor ? [{ actor, donation }] : [];
           },
         ),
       };
@@ -415,12 +415,12 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
         featuredFundraiser: fundraisers[0] ?? null,
         fundraisers,
         followerCount: countFollowers("community", community.id),
-        supportAmount: fundraisers.reduce(
-          (sum, fundraiserSummary) => sum + fundraiserSummary.supportAmount,
+        amountRaised: fundraisers.reduce(
+          (sum, fundraiserSummary) => sum + fundraiserSummary.amountRaised,
           0,
         ),
-        donationIntentCount: fundraisers.reduce(
-          (sum, fundraiserSummary) => sum + fundraiserSummary.donationIntentCount,
+        donationCount: fundraisers.reduce(
+          (sum, fundraiserSummary) => sum + fundraiserSummary.donationCount,
           0,
         ),
         discussion: findVisibleDiscussionForCommunity(community.id),

@@ -45,12 +45,12 @@ export const getPublicCommunityBySlug = async (
   );
 
   const sortedFundraisers = [...snapshot.fundraisers].sort((left, right) => {
-    if (right.supportAmount !== left.supportAmount) {
-      return right.supportAmount - left.supportAmount;
+    if (right.amountRaised !== left.amountRaised) {
+      return right.amountRaised - left.amountRaised;
     }
 
-    if (right.donationIntentCount !== left.donationIntentCount) {
-      return right.donationIntentCount - left.donationIntentCount;
+    if (right.donationCount !== left.donationCount) {
+      return right.donationCount - left.donationCount;
     }
 
     return (
@@ -69,8 +69,8 @@ export const getPublicCommunityBySlug = async (
         visibility: snapshot.community.visibility,
         followerCount: snapshot.followerCount,
         fundraiserCount: snapshot.fundraisers.length,
-        supportAmount: snapshot.supportAmount,
-        donationIntentCount: snapshot.donationIntentCount,
+        amountRaised: snapshot.amountRaised,
+        donationCount: snapshot.donationCount,
       },
       owner: {
         displayName: snapshot.owner.displayName,

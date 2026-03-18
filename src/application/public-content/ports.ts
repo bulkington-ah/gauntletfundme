@@ -1,7 +1,7 @@
 import type {
   Comment,
   Community,
-  DonationIntent,
+  Donation,
   Fundraiser,
   Post,
   User,
@@ -18,14 +18,14 @@ export type PublicFundraiserSummarySnapshot = {
   owner: User;
   ownerProfile: UserProfile | null;
   relatedCommunity: Community | null;
-  donationIntentCount: number;
+  donationCount: number;
   supporterCount: number;
-  supportAmount: number;
+  amountRaised: number;
 };
 
-export type PublicFundraiserSupporterSnapshot = {
+export type PublicFundraiserDonationSnapshot = {
   actor: PublicActorSnapshot;
-  donationIntent: DonationIntent;
+  donation: Donation;
 };
 
 export type PublicCommunitySummarySnapshot = {
@@ -38,11 +38,11 @@ export type PublicCommunitySummarySnapshot = {
 
 export type PublicProfileActivitySnapshot =
   | {
-      type: "fundraiser_support";
+      type: "fundraiser_donation";
       actor: PublicActorSnapshot;
       fundraiser: PublicFundraiserSummarySnapshot;
       community: Community | null;
-      donationIntent: DonationIntent;
+      donation: Donation;
     }
   | {
       type: "community_post";
@@ -64,7 +64,7 @@ export type PublicProfileSnapshot = {
 
 export type PublicFundraiserSnapshot = {
   summary: PublicFundraiserSummarySnapshot;
-  recentSupporters: PublicFundraiserSupporterSnapshot[];
+  recentDonations: PublicFundraiserDonationSnapshot[];
 };
 
 export type CommunityDiscussionSnapshot = {
@@ -83,8 +83,8 @@ export type PublicCommunitySnapshot = {
   featuredFundraiser: PublicFundraiserSummarySnapshot | null;
   fundraisers: PublicFundraiserSummarySnapshot[];
   followerCount: number;
-  supportAmount: number;
-  donationIntentCount: number;
+  amountRaised: number;
+  donationCount: number;
   discussion: CommunityDiscussionSnapshot[];
 };
 

@@ -281,7 +281,7 @@ const createApplicationApiStub = ({
     status: "unauthorized",
     message: "not configured for this test",
   }),
-  startDonationIntent: vi.fn().mockResolvedValue({
+  submitDonation: vi.fn().mockResolvedValue({
     status: "unauthorized",
     message: "not configured for this test",
   }),

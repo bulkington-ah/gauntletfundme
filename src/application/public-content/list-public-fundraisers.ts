@@ -42,12 +42,12 @@ const compareFundraiserBrowsePriority = (
     return leftStatusRank - rightStatusRank;
   }
 
-  if (right.supportAmount !== left.supportAmount) {
-    return right.supportAmount - left.supportAmount;
+  if (right.amountRaised !== left.amountRaised) {
+    return right.amountRaised - left.amountRaised;
   }
 
-  if (right.donationIntentCount !== left.donationIntentCount) {
-    return right.donationIntentCount - left.donationIntentCount;
+  if (right.donationCount !== left.donationCount) {
+    return right.donationCount - left.donationCount;
   }
 
   return right.fundraiser.createdAt.getTime() - left.fundraiser.createdAt.getTime();

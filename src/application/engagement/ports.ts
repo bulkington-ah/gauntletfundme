@@ -1,5 +1,5 @@
 import type {
-  DonationIntent,
+  Donation,
   Follow,
   FollowTargetType,
   UserRole,
@@ -60,21 +60,37 @@ export interface FollowWriteRepository {
   }): Promise<number>;
 }
 
-export type DonationIntentFundraiserReference = {
+export type DonationFundraiserReference = {
   id: string;
   slug: string;
 };
 
-export interface DonationIntentTargetLookup {
-  findFundraiserBySlugForDonationIntent(
+export interface DonationTargetLookup {
+  findFundraiserBySlugForDonation(
+    fundraiserSlug: string,
+  ): Promise<DonationFundraiserReference | null>;
+}
+
+export interface DonationWriteRepository {
+  createDonation(input: {
+    userId: string;
+    fundraiserId: string;
+    amount: number;
+  }): Promise<Donation>;
+}
+
+export type DonationIntentFundraiserReference = DonationFundraiserReference;
+
+export interface DonationIntentTargetLookup extends DonationTargetLookup {
+  findFundraiserBySlugForDonationIntent?(
     fundraiserSlug: string,
   ): Promise<DonationIntentFundraiserReference | null>;
 }
 
-export interface DonationIntentWriteRepository {
-  createDonationIntent(input: {
+export interface DonationIntentWriteRepository extends DonationWriteRepository {
+  createDonationIntent?(input: {
     userId: string;
     fundraiserId: string;
     amount: number;
-  }): Promise<DonationIntent>;
+  }): Promise<Donation>;
 }

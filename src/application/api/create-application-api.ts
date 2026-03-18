@@ -25,9 +25,13 @@ import {
 import {
   followTarget,
   startDonationIntent,
+  submitDonation,
+  type DonationTargetLookup,
+  type DonationWriteRepository,
   unfollowTarget,
   type FollowTargetRequest,
   type StartDonationIntentRequest,
+  type SubmitDonationRequest,
   type UnfollowTargetRequest,
 } from "../engagement";
 import {
@@ -53,6 +57,8 @@ import {
 import type {
   DonationIntentTargetLookup,
   DonationIntentWriteRepository,
+  DonationTargetLookup as LegacyCompatibleDonationTargetLookup,
+  DonationWriteRepository as LegacyCompatibleDonationWriteRepository,
   FollowOwnerLookup,
   FollowTargetLookup,
   FollowWriteRepository,
@@ -63,6 +69,8 @@ type Dependencies = {
   publicContentReadRepository?: PublicContentReadRepository;
   discussionTargetLookup?: DiscussionTargetLookup;
   discussionWriteRepository?: DiscussionWriteRepository;
+  donationTargetLookup?: DonationTargetLookup;
+  donationWriteRepository?: DonationWriteRepository;
   donationIntentTargetLookup?: DonationIntentTargetLookup;
   donationIntentWriteRepository?: DonationIntentWriteRepository;
   reportTargetLookup?: ReportTargetLookup;
@@ -104,10 +112,18 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
     dependencies.discussionTargetLookup ?? resolvePersistenceAdapter();
   const getDiscussionWriteRepository = () =>
     dependencies.discussionWriteRepository ?? resolvePersistenceAdapter();
-  const getDonationIntentTargetLookup = () =>
-    dependencies.donationIntentTargetLookup ?? resolvePersistenceAdapter();
-  const getDonationIntentWriteRepository = () =>
-    dependencies.donationIntentWriteRepository ?? resolvePersistenceAdapter();
+  const getDonationTargetLookup = () =>
+    (
+      dependencies.donationTargetLookup ??
+      dependencies.donationIntentTargetLookup ??
+      resolvePersistenceAdapter()
+    ) as LegacyCompatibleDonationTargetLookup;
+  const getDonationWriteRepository = () =>
+    (
+      dependencies.donationWriteRepository ??
+      dependencies.donationIntentWriteRepository ??
+      resolvePersistenceAdapter()
+    ) as LegacyCompatibleDonationWriteRepository;
   const getReportTargetLookup = () =>
     dependencies.reportTargetLookup ?? resolvePersistenceAdapter();
   const getReportWriteRepository = () =>
@@ -182,12 +198,22 @@ export const createApplicationApi = (dependencies: Dependencies = {}) => {
         },
         request,
       ),
+    submitDonation: (request: SubmitDonationRequest) =>
+      submitDonation(
+        {
+          sessionViewerGateway,
+          donationTargetLookup: getDonationTargetLookup(),
+          donationWriteRepository: getDonationWriteRepository(),
+          analyticsEventPublisher,
+        },
+        request,
+      ),
     startDonationIntent: (request: StartDonationIntentRequest) =>
       startDonationIntent(
         {
           sessionViewerGateway,
-          donationIntentTargetLookup: getDonationIntentTargetLookup(),
-          donationIntentWriteRepository: getDonationIntentWriteRepository(),
+          donationIntentTargetLookup: getDonationTargetLookup(),
+          donationIntentWriteRepository: getDonationWriteRepository(),
           analyticsEventPublisher,
         },
         request,

@@ -199,13 +199,13 @@ export const PublicCommunityPage = ({
             <div className={styles.statsRow}>
               <div className={styles.stat}>
                 <p className={styles.statValue}>
-                  {formatCompactCurrency(model.community.supportAmount)}
+                  {formatCompactCurrency(model.community.amountRaised)}
                 </p>
-                <p className={styles.statLabel}>prototype support</p>
+                <p className={styles.statLabel}>raised</p>
               </div>
               <div className={styles.stat}>
-                <p className={styles.statValue}>{model.community.donationIntentCount}</p>
-                <p className={styles.statLabel}>support actions</p>
+                <p className={styles.statValue}>{model.community.donationCount}</p>
+                <p className={styles.statLabel}>donations</p>
               </div>
               <div className={styles.stat}>
                 <p className={styles.statValue}>{model.community.fundraiserCount}</p>
@@ -254,11 +254,11 @@ export const PublicCommunityPage = ({
                 <div className={styles.rankMedal}>{entry.rank}</div>
                 <p className={styles.leaderboardName}>{entry.fundraiser.title}</p>
                 <p className={styles.leaderboardRaised}>
-                  {formatCurrency(entry.fundraiser.supportAmount)}
+                  {formatCurrency(entry.fundraiser.amountRaised)}
                 </p>
                 <p className={styles.leaderboardMeta}>
                   {entry.fundraiser.supporterCount} supporters ·{" "}
-                  {entry.fundraiser.donationIntentCount} actions
+                  {entry.fundraiser.donationCount} donations
                 </p>
               </a>
             ))}
@@ -352,15 +352,14 @@ export const PublicCommunityPage = ({
                         className={styles.fundraiserProgressFill}
                         style={{
                           width: `${toGoalProgressPercentage(
-                            fundraiser.supportAmount,
+                            fundraiser.amountRaised,
                             fundraiser.goalAmount,
                           )}%`,
                         }}
                       />
                     </div>
                     <p className={styles.fundraiserRaised}>
-                      {formatCurrency(fundraiser.supportAmount)} in prototype
-                      support
+                      {formatCurrency(fundraiser.amountRaised)} raised
                     </p>
                     <p className={styles.fundraiserMeta}>
                       Goal {formatCompactCurrency(fundraiser.goalAmount)} ·{" "}
@@ -423,8 +422,7 @@ export const PublicCommunityPage = ({
                         {model.featuredFundraiser.title}
                       </a>
                       <p className={styles.aboutMeta}>
-                        {formatCurrency(model.featuredFundraiser.supportAmount)} in
-                        prototype support
+                        {formatCurrency(model.featuredFundraiser.amountRaised)} raised
                       </p>
                     </>
                   ) : (

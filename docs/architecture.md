@@ -5,17 +5,17 @@ The MVP should be built as a thin full-stack web application that connects profi
 
 The architecture should optimize for:
 - public page performance for profile, fundraiser, and community browsing
-- authenticated user actions such as follow, comment, and mocked donation start
+- authenticated user actions such as follow, comment, and donation submission through a mocked payment processor
 - simple ownership and moderation workflows
 - modular domain logic that can later be extracted or expanded without reworking the whole system
 
 ## Major Components
 - `Web App`: React or Next.js application responsible for page rendering, navigation, authenticated experiences, and form handling.
-- `Application API`: server-side route handlers or API endpoints that expose domain operations for auth, profiles, communities, posts, comments, follows, and donation intents.
+- `Application API`: server-side route handlers or API endpoints that expose domain operations for auth, profiles, communities, posts, comments, follows, and donations.
 - `Domain Services`: business logic layer that enforces permissions, validation, workflow rules, and cross-entity behavior.
 - `Persistence Layer`: relational database access for core entities and relationships.
 - `Auth Layer`: session management, login, logout, and identity checks for protected actions.
-- `Analytics Layer`: event capture for page views, follows, comments, donation intent starts, and other engagement signals.
+- `Analytics Layer`: event capture for page views, follows, comments, completed donations, and other engagement signals.
 - `Moderation Controls`: lightweight reporting and content action workflows for owners or moderators.
 
 ## Module Boundaries
@@ -28,7 +28,7 @@ The codebase should stay modular inside one deployable application rather than s
   - request orchestration, use-case entry points, DTO mapping, and auth-aware command handling
   - coordinates domain services and persistence
 - `domain`:
-  - core business logic and rules for profiles, fundraisers, communities, posts, comments, follows, donation intents, and moderation decisions
+  - core business logic and rules for profiles, fundraisers, communities, posts, comments, follows, donations, and moderation decisions
   - does not depend on UI framework details
 - `infrastructure`:
   - database adapters, auth provider integration, analytics providers, logging, and deployment-specific code
@@ -68,8 +68,8 @@ Core relational entities for the MVP:
 - `Follow`
   - user relationship to a target entity
   - fields: `id`, `userId`, `targetType`, `targetId`, `createdAt`
-- `DonationIntent`
-  - mocked donation start for analytics and funnel tracking
+- `Donation`
+  - persisted contribution record created when a supporter submits a donation through the mocked payment processor flow
   - fields: `id`, `userId`, `fundraiserId`, `amount`, `status`, `createdAt`
 - `Report`
   - moderation report for a post or comment
@@ -93,7 +93,7 @@ Authenticated user endpoints:
 - sign up, login, logout, session lookup
 - follow or unfollow a profile, fundraiser, or community
 - create, edit, or delete owned posts and comments
-- create donation intent
+- submit donation
 - submit moderation reports
 
 Privileged endpoints:
@@ -129,5 +129,5 @@ API design guidance:
 - Protect session and auth flows against common web risks such as CSRF, session fixation, and insecure cookie settings.
 - Apply rate limiting or abuse checks to login, comment creation, follow actions, and report submission.
 - Record moderation actions and important content state changes for traceability.
-- Keep mocked donation flows clearly separated from real payment concerns so no sensitive payment data is collected in v1.
+- Keep donation submission clearly separated from real payment concerns so no sensitive payment data is collected in v1.
 - Manage runtime secrets through AWS-managed environment configuration rather than baking them into deployment artifacts.

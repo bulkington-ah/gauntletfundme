@@ -10,7 +10,7 @@ import {
   DomainValidationError,
   createComment,
   createCommunity,
-  createDonationIntent,
+  createDonation,
   createFollow,
   createFundraiser,
   createPost,
@@ -80,7 +80,7 @@ describe("core domain models", () => {
     expectTypeOf(community).toEqualTypeOf<Community>();
   });
 
-  it("enforces positive integer amounts for fundraiser goals and donation intents", () => {
+  it("enforces positive integer amounts for fundraiser goals and donations", () => {
     expect(() =>
       createFundraiser({
         id: "fundraiser_123",
@@ -95,12 +95,12 @@ describe("core domain models", () => {
     ).toThrowError(DomainValidationError);
 
     expect(() =>
-      createDonationIntent({
+      createDonation({
         id: "intent_123",
         userId: "user_123",
         fundraiserId: "fundraiser_123",
         amount: -500,
-        status: "started",
+        status: "completed",
         createdAt,
       }),
     ).toThrowError("amount must be a positive integer.");

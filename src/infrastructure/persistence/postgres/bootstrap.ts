@@ -28,21 +28,73 @@ const initializePersistence = async (sqlClient: SqlClient): Promise<void> => {
 
   if (!hasUsersTable) {
     await sqlClient.query(loadCoreSchemaSql());
+  } else {
+    await ensureDonationStorage(sqlClient);
   }
 
   await seedPrototypeCatalog(sqlClient);
 };
 
 const checkUsersTableExists = async (sqlClient: SqlClient): Promise<boolean> => {
+  return checkTableExists(sqlClient, "users");
+};
+
+const checkTableExists = async (
+  sqlClient: SqlClient,
+  tableName: string,
+): Promise<boolean> => {
   const result = await sqlClient.query<{ has_table: boolean }>(
     `SELECT EXISTS (
        SELECT 1
        FROM information_schema.tables
-       WHERE table_schema = 'public' AND table_name = 'users'
+       WHERE table_schema = 'public' AND table_name = $1
      ) AS has_table`,
+    [tableName],
   );
 
   return Boolean(result.rows[0]?.has_table);
+};
+
+const ensureDonationStorage = async (sqlClient: SqlClient): Promise<void> => {
+  try {
+    await sqlClient.query(`CREATE TYPE donation_status AS ENUM ('completed')`);
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      !error.message.includes('type "donation_status" already exists')
+    ) {
+      throw error;
+    }
+  }
+
+  if (!(await checkTableExists(sqlClient, "donations"))) {
+    await sqlClient.query(`
+      CREATE TABLE donations (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        fundraiser_id TEXT NOT NULL REFERENCES fundraisers(id) ON DELETE RESTRICT,
+        amount BIGINT NOT NULL CHECK (amount > 0),
+        status donation_status NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+  }
+
+  await sqlClient.query(
+    `CREATE INDEX IF NOT EXISTS idx_donations_fundraiser_id ON donations(fundraiser_id)`,
+  );
+  await sqlClient.query(
+    `CREATE INDEX IF NOT EXISTS idx_donations_user_id_created_at ON donations(user_id, created_at DESC)`,
+  );
+
+  if (await checkTableExists(sqlClient, "donation_intents")) {
+    await sqlClient.query(`
+      INSERT INTO donations (id, user_id, fundraiser_id, amount, status, created_at)
+      SELECT id, user_id, fundraiser_id, amount, 'completed'::donation_status, created_at
+      FROM donation_intents
+      ON CONFLICT (id) DO NOTHING
+    `);
+  }
 };
 
 const seedPrototypeCatalog = async (sqlClient: SqlClient): Promise<void> => {
@@ -165,19 +217,19 @@ const seedPrototypeCatalog = async (sqlClient: SqlClient): Promise<void> => {
     );
   }
 
-  for (const donationIntent of catalog.donationIntents) {
+  for (const donation of catalog.donations) {
     await sqlClient.query(
-      `INSERT INTO donation_intents
+      `INSERT INTO donations
          (id, user_id, fundraiser_id, amount, status, created_at)
        VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (id) DO NOTHING`,
       [
-        donationIntent.id,
-        donationIntent.userId,
-        donationIntent.fundraiserId,
-        donationIntent.amount,
-        donationIntent.status,
-        donationIntent.createdAt,
+        donation.id,
+        donation.userId,
+        donation.fundraiserId,
+        donation.amount,
+        donation.status,
+        donation.createdAt,
       ],
     );
   }

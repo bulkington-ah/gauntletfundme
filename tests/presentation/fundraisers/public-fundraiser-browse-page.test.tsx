@@ -17,9 +17,9 @@ describe("PublicFundraiserBrowsePage", () => {
             title: "Warm Meals 2026",
             status: "active",
             goalAmount: 250000,
-            supportAmount: 22000,
+            amountRaised: 22000,
             supporterCount: 5,
-            donationIntentCount: 5,
+            donationCount: 5,
             storyExcerpt: "Funding weekly hot meal deliveries and pantry restocks.",
             organizer: {
               displayName: "Avery Johnson",
@@ -50,9 +50,9 @@ describe("PublicFundraiserBrowsePage", () => {
           title: "Warm Meals 2026",
           status: "active",
           goalAmount: 250000,
-          supportAmount: 22000,
+          amountRaised: 22000,
           supporterCount: 5,
-          donationIntentCount: 5,
+          donationCount: 5,
           storyExcerpt: "Funding weekly hot meal deliveries and pantry restocks.",
           organizer: {
             displayName: "Avery Johnson",
@@ -81,9 +81,9 @@ describe("PublicFundraiserBrowsePage", () => {
               title: "Warm Meals 2026",
               status: "active",
               goalAmount: 250000,
-              supportAmount: 22000,
+              amountRaised: 22000,
               supporterCount: 5,
-              donationIntentCount: 5,
+              donationCount: 5,
               storyExcerpt:
                 "Funding weekly hot meal deliveries and pantry restocks for families across the neighborhood.",
               organizer: {
@@ -103,9 +103,9 @@ describe("PublicFundraiserBrowsePage", () => {
               title: "Winter Coat Drive 2026",
               status: "active",
               goalAmount: 180000,
-              supportAmount: 8000,
+              amountRaised: 8000,
               supporterCount: 2,
-              donationIntentCount: 2,
+              donationCount: 2,
               storyExcerpt:
                 "Funding new coats, gloves, and cold-weather gear for neighbors preparing for severe weather.",
               organizer: {

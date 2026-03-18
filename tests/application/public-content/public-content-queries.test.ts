@@ -16,7 +16,7 @@ import {
 import {
   createComment,
   createCommunity,
-  createDonationIntent,
+  createDonation,
   createFundraiser,
   createPost,
   createUser,
@@ -91,9 +91,9 @@ describe("public content queries", () => {
             visibility: "public",
             createdAt,
           }),
-          supportAmount: 12500,
+          amountRaised: 12500,
           supporterCount: 3,
-          donationIntentCount: 4,
+          donationCount: 4,
         },
       ],
       ownedCommunities: [
@@ -109,7 +109,7 @@ describe("public content queries", () => {
       ],
       recentActivity: [
         {
-          type: "fundraiser_support",
+          type: "fundraiser_donation",
           actor: {
             user: createUser({
               id: "user_456",
@@ -164,9 +164,9 @@ describe("public content queries", () => {
               visibility: "public",
               createdAt,
             }),
-            supportAmount: 12500,
+            amountRaised: 12500,
             supporterCount: 3,
-            donationIntentCount: 4,
+            donationCount: 4,
           },
           community: createCommunity({
             id: "community_123",
@@ -177,12 +177,12 @@ describe("public content queries", () => {
             visibility: "public",
             createdAt,
           }),
-          donationIntent: createDonationIntent({
+          donation: createDonation({
             id: "intent_123",
             userId: "user_456",
             fundraiserId: "fundraiser_123",
             amount: 4200,
-            status: "started",
+            status: "completed",
             createdAt,
           }),
         },
@@ -259,9 +259,9 @@ describe("public content queries", () => {
               title: "Warm Meals 2026",
               status: "active",
               goalAmount: 250000,
-              supportAmount: 12500,
+              amountRaised: 12500,
               supporterCount: 3,
-              donationIntentCount: 4,
+              donationCount: 4,
             },
           ],
           communities: [
@@ -275,23 +275,23 @@ describe("public content queries", () => {
         recentActivity: [
           {
             id: "intent_123",
-            type: "fundraiser_support",
+            type: "fundraiser_donation",
             actor: {
               displayName: "Jordan Lee",
               profileSlug: "jordan-lee",
               avatarUrl: null,
             },
             createdAt: createdAt.toISOString(),
-            summary: "Jordan Lee started a mocked donation",
+            summary: "Jordan Lee donated",
             detail: "Warm Meals 2026",
             fundraiser: {
               slug: "warm-meals-2026",
               title: "Warm Meals 2026",
               status: "active",
               goalAmount: 250000,
-              supportAmount: 12500,
+              amountRaised: 12500,
               supporterCount: 3,
-              donationIntentCount: 4,
+              donationCount: 4,
             },
             community: {
               slug: "neighbors-helping-neighbors",
@@ -395,9 +395,9 @@ describe("public content queries", () => {
         owner,
         ownerProfile,
         relatedCommunity: community,
-        supportAmount: 99000,
+        amountRaised: 99000,
         supporterCount: 40,
-        donationIntentCount: 55,
+        donationCount: 55,
       }),
       createFundraiserSummarySnapshot({
         fundraiser: createFundraiser({
@@ -413,9 +413,9 @@ describe("public content queries", () => {
         owner,
         ownerProfile,
         relatedCommunity: community,
-        supportAmount: 6100,
+        amountRaised: 6100,
         supporterCount: 2,
-        donationIntentCount: 2,
+        donationCount: 2,
       }),
       createFundraiserSummarySnapshot({
         fundraiser: createFundraiser({
@@ -432,9 +432,9 @@ describe("public content queries", () => {
         owner,
         ownerProfile,
         relatedCommunity: community,
-        supportAmount: 12600,
+        amountRaised: 12600,
         supporterCount: 3,
-        donationIntentCount: 4,
+        donationCount: 4,
       }),
     ]);
 
@@ -450,9 +450,9 @@ describe("public content queries", () => {
           title: "Warm Meals 2026",
           status: "active",
           goalAmount: 250000,
-          supportAmount: 12600,
+          amountRaised: 12600,
           supporterCount: 3,
-          donationIntentCount: 4,
+          donationCount: 4,
           storyExcerpt:
             "Funding weekly hot meal deliveries and pantry restocks for families across the neighborhood with evening volunteer support included.",
           organizer: {
@@ -472,9 +472,9 @@ describe("public content queries", () => {
           title: "Coat Drive",
           status: "active",
           goalAmount: 120000,
-          supportAmount: 6100,
+          amountRaised: 6100,
           supporterCount: 2,
-          donationIntentCount: 2,
+          donationCount: 2,
           storyExcerpt: "Funding warm coats for winter weather support.",
           organizer: {
             displayName: "Avery Johnson",
@@ -493,9 +493,9 @@ describe("public content queries", () => {
           title: "Future Drive",
           status: "draft",
           goalAmount: 300000,
-          supportAmount: 99000,
+          amountRaised: 99000,
           supporterCount: 40,
-          donationIntentCount: 55,
+          donationCount: 55,
           storyExcerpt:
             "Planning the next big drive with plenty of prep work and a lot of volunteer coordination ahead.",
           organizer: {
@@ -705,11 +705,11 @@ describe("public content queries", () => {
           visibility: "public",
           createdAt,
         }),
-        donationIntentCount: 2,
+        donationCount: 2,
         supporterCount: 2,
-        supportAmount: 7800,
+        amountRaised: 7800,
       },
-      recentSupporters: [
+      recentDonations: [
         {
           actor: {
             user: createUser({
@@ -729,7 +729,7 @@ describe("public content queries", () => {
               createdAt,
             }),
           },
-          donationIntent: createDonationIntent({
+          donation: createDonation({
             id: "intent_456",
             userId: "user_456",
             fundraiserId: "fundraiser_123",
@@ -759,9 +759,9 @@ describe("public content queries", () => {
           story: "Funding hot meals.",
           status: "active",
           goalAmount: 250000,
-          supportAmount: 7800,
+          amountRaised: 7800,
           supporterCount: 2,
-          donationIntentCount: 2,
+          donationCount: 2,
         },
         organizer: {
           displayName: "Avery Johnson",
@@ -774,7 +774,7 @@ describe("public content queries", () => {
           name: "Neighbors Helping Neighbors",
           visibility: "public",
         },
-        recentSupporters: [
+        recentDonations: [
           {
             displayName: "Jordan Lee",
             profileSlug: "jordan-lee",
@@ -880,9 +880,9 @@ describe("public content queries", () => {
           createdAt,
         }),
         relatedCommunity: community,
-        donationIntentCount: 4,
+        donationCount: 4,
         supporterCount: 3,
-        supportAmount: 12600,
+        amountRaised: 12600,
       },
       fundraisers: [
         {
@@ -907,9 +907,9 @@ describe("public content queries", () => {
             createdAt,
           }),
           relatedCommunity: community,
-          donationIntentCount: 4,
+          donationCount: 4,
           supporterCount: 3,
-          supportAmount: 12600,
+          amountRaised: 12600,
         },
         {
           fundraiser: createFundraiser({
@@ -933,14 +933,14 @@ describe("public content queries", () => {
             createdAt,
           }),
           relatedCommunity: community,
-          donationIntentCount: 2,
+          donationCount: 2,
           supporterCount: 2,
-          supportAmount: 6100,
+          amountRaised: 6100,
         },
       ],
       followerCount: 12,
-      supportAmount: 18700,
-      donationIntentCount: 6,
+      amountRaised: 18700,
+      donationCount: 6,
       discussion: [
         {
           post,
@@ -969,8 +969,8 @@ describe("public content queries", () => {
 
     expect(result.data.community.followerCount).toBe(12);
     expect(result.data.community.fundraiserCount).toBe(2);
-    expect(result.data.community.supportAmount).toBe(18700);
-    expect(result.data.community.donationIntentCount).toBe(6);
+    expect(result.data.community.amountRaised).toBe(18700);
+    expect(result.data.community.donationCount).toBe(6);
     expect(result.data.owner.profileSlug).toBe("avery-johnson");
     expect(result.data.owner.avatarUrl).toBe("https://example.com/avery.png");
     expect(result.data.leaderboard[0]).toEqual({
@@ -980,9 +980,9 @@ describe("public content queries", () => {
         title: "Warm Meals 2026",
         status: "active",
         goalAmount: 250000,
-        supportAmount: 12600,
+        amountRaised: 12600,
         supporterCount: 3,
-        donationIntentCount: 4,
+        donationCount: 4,
       },
     });
     expect(result.data.discussion[0]).toMatchObject({

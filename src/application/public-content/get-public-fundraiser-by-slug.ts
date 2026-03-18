@@ -63,13 +63,13 @@ export const getPublicFundraiserBySlug = async (
       community: snapshot.summary.relatedCommunity
         ? toPublicCommunityReference(snapshot.summary.relatedCommunity)
         : null,
-      recentSupporters: snapshot.recentSupporters.map((supporter) => ({
-        displayName: supporter.actor.user.displayName,
-        profileSlug: supporter.actor.profile?.slug ?? null,
-        avatarUrl: supporter.actor.profile?.avatarUrl ?? null,
-        amount: supporter.donationIntent.amount,
-        status: supporter.donationIntent.status,
-        createdAt: supporter.donationIntent.createdAt.toISOString(),
+      recentDonations: snapshot.recentDonations.map((donation) => ({
+        displayName: donation.actor.user.displayName,
+        profileSlug: donation.actor.profile?.slug ?? null,
+        avatarUrl: donation.actor.profile?.avatarUrl ?? null,
+        amount: donation.donation.amount,
+        status: donation.donation.status,
+        createdAt: donation.donation.createdAt.toISOString(),
       })),
     },
   };

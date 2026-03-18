@@ -19,12 +19,12 @@ Implemented foundations currently include:
 - centralized authorization policies for owner/member/moderator/anonymous checks
 - follow and unfollow commands with auth checks, self-follow protection, idempotent persistence semantics, and follower count state in API responses
 - post and comment creation commands with authenticated route handlers and owner-aware post authorization
-- mocked donation intent start command with authenticated API flow and tracked `started` intent persistence
+- real donation submission command with authenticated API flow and persisted completed donations backed by a mocked payment processor
 - moderation report submission command with authenticated, idempotent post/comment reporting semantics
 - moderator/owner report resolution actions (`hide`, `remove`, `dismiss`) with public discussion visibility updates for moderated content
-- application-layer analytics instrumentation for page views, follows, post/comment creation, and donation intent starts
+- application-layer analytics instrumentation for page views, follows, post/comment creation, and completed donations
 - public profile page route with slug-based lookup and connected fundraiser/community links
-- public fundraiser page route with organizer context, story rendering, and mocked donation entry
+- public fundraiser page route with organizer context, story rendering, and real donation entry backed by the mocked payment processor
 - public community page route with discussion feed, comment visibility, and connected links
 - dedicated `/login` page with browser session persistence and shared-shell signed-in state
 
@@ -120,7 +120,7 @@ Browser sign-in uses the HttpOnly `gofundme_v2_session` cookie. Protected API ro
   - this first version intentionally uses local Terraform state; migrate to S3 + DynamoDB locking in a follow-up task before collaborative production operations.
 
 ## Known Limitations
-- Donation flow is intentionally mocked and does not process real payments.
+- Payment processing is intentionally mocked, but donations themselves are persisted and propagated through the product.
 - Analytics publisher is currently wired to a no-op provider by default; production event delivery requires a concrete adapter implementation.
 - Moderation actions update current statuses but do not yet persist a separate historical moderation event log.
 - Public signup UI is still deferred even though the underlying signup API exists.

@@ -36,9 +36,9 @@ export const toPublicFundraiserSummary = (
   title: snapshot.fundraiser.title,
   status: snapshot.fundraiser.status,
   goalAmount: snapshot.fundraiser.goalAmount,
-  supportAmount: snapshot.supportAmount,
+  amountRaised: snapshot.amountRaised,
   supporterCount: snapshot.supporterCount,
-  donationIntentCount: snapshot.donationIntentCount,
+  donationCount: snapshot.donationCount,
 });
 
 export const toPublicFundraiserBrowseEntry = (

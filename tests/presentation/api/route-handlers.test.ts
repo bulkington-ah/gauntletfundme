@@ -10,7 +10,7 @@ import {
   handlePostCreatePostRoute,
   handlePostFollowTargetRoute,
   handlePostResolveReportRoute,
-  handlePostStartDonationIntentRoute,
+  handlePostSubmitDonationRoute,
   handlePostSubmitReportRoute,
   handlePostUnfollowTargetRoute,
   setApplicationApiForTesting,
@@ -73,8 +73,8 @@ describe("API route handlers", () => {
             };
           },
         },
-        donationIntentTargetLookup: {
-          async findFundraiserBySlugForDonationIntent(fundraiserSlug) {
+        donationTargetLookup: {
+          async findFundraiserBySlugForDonation(fundraiserSlug) {
             return fundraiserSlug === "warm-meals-2026"
               ? {
                   id: "fundraiser_warm_meals_2026",
@@ -83,14 +83,14 @@ describe("API route handlers", () => {
               : null;
           },
         },
-        donationIntentWriteRepository: {
-          async createDonationIntent(input) {
+        donationWriteRepository: {
+          async createDonation(input) {
             return {
-              id: "intent_created_route_test",
+              id: "donation_created_route_test",
               userId: input.userId,
               fundraiserId: input.fundraiserId,
               amount: input.amount,
-              status: "started",
+              status: "completed",
               createdAt: new Date("2026-03-16T15:10:00.000Z"),
             };
           },
@@ -225,7 +225,7 @@ describe("API route handlers", () => {
       expect.arrayContaining([
         expect.objectContaining({
           slug: "warm-meals-2026",
-          supportAmount: 22000,
+          amountRaised: 22000,
         }),
       ]),
     );
@@ -258,8 +258,8 @@ describe("API route handlers", () => {
         slug: "neighbors-helping-neighbors",
         followerCount: 4,
         fundraiserCount: 4,
-        supportAmount: 50500,
-        donationIntentCount: 11,
+        amountRaised: 50500,
+        donationCount: 11,
       },
       featuredFundraiser: {
         slug: "warm-meals-2026",
@@ -507,8 +507,8 @@ describe("API route handlers", () => {
     });
   });
 
-  it("returns unauthorized for donation intent commands without a session token header", async () => {
-    const response = await handlePostStartDonationIntentRoute(
+  it("returns unauthorized for donation submission without a session token header", async () => {
+    const response = await handlePostSubmitDonationRoute(
       new Request("http://test", {
         method: "POST",
         headers: {
@@ -525,15 +525,15 @@ describe("API route handlers", () => {
     await expect(response.json()).resolves.toEqual({
       error: "unauthorized",
       message:
-        "Authentication is required to start donation intents. Send the x-session-token header to continue.",
+        "Authentication is required to submit donations. Send the x-session-token header to continue.",
       meta: {
         sessionTokenHeader: "x-session-token",
       },
     });
   });
 
-  it("returns 201 for an authenticated mocked donation intent start", async () => {
-    const response = await handlePostStartDonationIntentRoute(
+  it("returns 201 for an authenticated donation submission", async () => {
+    const response = await handlePostSubmitDonationRoute(
       new Request("http://test", {
         method: "POST",
         headers: {
@@ -556,21 +556,21 @@ describe("API route handlers", () => {
       fundraiser: {
         slug: "warm-meals-2026",
       },
-      donationIntent: {
-        id: "intent_created_route_test",
+      donation: {
+        id: "donation_created_route_test",
         amount: 2500,
-        status: "started",
+        status: "completed",
         createdAt: "2026-03-16T15:10:00.000Z",
       },
       meta: {
         sessionTokenHeader: "x-session-token",
-        mockedCheckout: true,
+        mockedPaymentProcessor: true,
       },
     });
   });
 
-  it("accepts a browser session cookie for mocked donation intent start", async () => {
-    const response = await handlePostStartDonationIntentRoute(
+  it("accepts a browser session cookie for donation submission", async () => {
+    const response = await handlePostSubmitDonationRoute(
       new Request("http://test", {
         method: "POST",
         headers: {
@@ -593,15 +593,15 @@ describe("API route handlers", () => {
       fundraiser: {
         slug: "warm-meals-2026",
       },
-      donationIntent: {
-        id: "intent_created_route_test",
+      donation: {
+        id: "donation_created_route_test",
         amount: 2500,
-        status: "started",
+        status: "completed",
         createdAt: "2026-03-16T15:10:00.000Z",
       },
       meta: {
         sessionTokenHeader: "x-session-token",
-        mockedCheckout: true,
+        mockedPaymentProcessor: true,
       },
     });
   });

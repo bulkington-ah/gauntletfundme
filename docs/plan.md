@@ -43,7 +43,7 @@ This plan breaks the MVP into dependency-ordered milestones and small implementa
 ## Milestone 2: Domain and Persistence Base
 
 ### Task 003: Core data schema and shared domain types
-- Description: Define the initial database schema and domain types for `User`, `UserProfile`, `Fundraiser`, `Community`, `Post`, `Comment`, `Follow`, `DonationIntent`, and `Report`.
+- Description: Define the initial database schema and domain types for `User`, `UserProfile`, `Fundraiser`, `Community`, `Post`, `Comment`, `Follow`, `Donation`, and `Report`.
 - Expected files affected:
   - `src/domain/**`
   - `src/infrastructure/persistence/**`
@@ -93,7 +93,7 @@ This plan breaks the MVP into dependency-ordered milestones and small implementa
   - authorization tests for protected use-case entry points
 
 ### Task 006: Ownership and authorization policies
-- Description: Add reusable authorization checks for profile editing, community management, posting, commenting, following, donation intent creation, and moderation.
+- Description: Add reusable authorization checks for profile editing, community management, posting, commenting, following, donation submission, and moderation.
 - Expected files affected:
   - `src/application/**`
   - `src/domain/**`
@@ -125,7 +125,7 @@ This plan breaks the MVP into dependency-ordered milestones and small implementa
   - application query tests for profile retrieval
 
 ### Task 008: Public fundraiser page
-- Description: Implement the fundraiser view with organizer context, story content, and mocked donation entry points.
+- Description: Implement the fundraiser view with organizer context, story content, and donation entry points.
 - Expected files affected:
   - `src/presentation/fundraisers/**`
   - `src/application/fundraisers/**`
@@ -134,7 +134,7 @@ This plan breaks the MVP into dependency-ordered milestones and small implementa
 - Acceptance criteria:
   - a fundraiser can be fetched by slug
   - the page shows organizer, story, progress, and connected community or profile links
-  - the donation entry point is visible but clearly leads to a mocked flow
+  - the donation entry point is visible and clearly scoped to the MVP's mocked payment processor
 - Tests required:
   - fundraiser page render tests
   - fundraiser query tests
@@ -190,7 +190,7 @@ This plan breaks the MVP into dependency-ordered milestones and small implementa
   - presentation tests for authenticated and anonymous submission paths
 
 ### Task 012: Mocked donation intent flow
-- Description: Implement the donation intent workflow as a tracked, mocked checkout initiation rather than a real payment flow.
+- Description: Implement the initial mocked donation intent workflow as a tracked checkout initiation rather than a real payment flow.
 - Expected files affected:
   - `src/presentation/fundraisers/**`
   - `src/application/engagement/**`
@@ -239,7 +239,7 @@ This plan breaks the MVP into dependency-ordered milestones and small implementa
 ## Milestone 7: Analytics and Product Readiness
 
 ### Task 015: Analytics instrumentation
-- Description: Add analytics events for page views, follows, comment creation, donation intent starts, and key community interactions.
+- Description: Add analytics events for page views, follows, comment creation, completed donations, and key community interactions.
 - Expected files affected:
   - `src/application/analytics/**`
   - `src/infrastructure/analytics/**`
@@ -277,7 +277,7 @@ This plan breaks the MVP into dependency-ordered milestones and small implementa
   - `README.md`
   - release or demo notes if added
 - Acceptance criteria:
-  - the main flows work together: browse public pages, authenticate, follow, comment, start donation intent, and moderate content
+  - the main flows work together: browse public pages, authenticate, follow, comment, submit a donation, and moderate content
   - major UX inconsistencies or broken transitions are resolved
   - remaining scope cuts or known limitations are documented
 - Tests required:
@@ -337,7 +337,33 @@ This plan breaks the MVP into dependency-ordered milestones and small implementa
   - `tasks/task_021_public_fundraiser_page_webawesome_redesign.md`
 - Acceptance criteria:
   - the fundraiser page uses a two-column layout with a large media area and sticky support sidebar on desktop
-  - donate entry remains functional through the existing mocked checkout flow
+  - donate entry remains functional through the current MVP donation flow backed by the mocked payment processor
+
+## Milestone 9: Donation Flow Upgrade
+
+### Task 033: Real system-wide donation flow
+- Description: Replace the prototype donation intent behavior with a real persisted donation flow that creates completed donations immediately while continuing to mock only the payment processor.
+- Expected files affected:
+  - `docs/**`
+  - `src/application/**`
+  - `src/domain/**`
+  - `src/infrastructure/**`
+  - `src/presentation/**`
+  - `src/app/api/engagement/**`
+  - `tests/**`
+  - `tasks/task_033_real_system_wide_donation_flow.md`
+- Acceptance criteria:
+  - clicking donate reveals an amount form on the fundraiser page
+  - submitting the form creates a completed donation without collecting real payment data
+  - donations persist to the database and update fundraiser totals, recent supporters, community stats, and profile activity from database-backed reads
+  - public APIs and read models use donation terminology rather than donation-intent terminology
+  - the legacy `/api/engagement/donation-intents` path remains as a compatibility alias during the transition
+- Tests required:
+  - donation use-case tests
+  - route tests for canonical and alias donation submission endpoints
+  - repository tests covering persistence, aggregates, and legacy backfill
+  - presentation tests for the fundraiser donation form
+  - end-to-end regression coverage for system-wide donation propagation
   - organizer and connected community links remain functional
   - unsupported interactions remain visually present but non-misleading
 - Tests required:

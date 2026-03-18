@@ -3,6 +3,7 @@
 import { newDb } from "pg-mem";
 
 import { createPostgresPublicContentEngagementRepository } from "@/infrastructure";
+import { loadCoreSchemaSql } from "@/infrastructure/persistence/schema";
 
 describe("PostgresPublicContentEngagementRepository", () => {
   it("returns seeded public profile snapshots", async () => {
@@ -21,7 +22,7 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(snapshot.inspiredSupporterCount).toBe(6);
     expect(snapshot.featuredFundraisers).toHaveLength(4);
     expect(snapshot.featuredFundraisers[0]?.fundraiser.slug).toBe("warm-meals-2026");
-    expect(snapshot.featuredFundraisers[0]?.supportAmount).toBe(22000);
+    expect(snapshot.featuredFundraisers[0]?.amountRaised).toBe(22000);
     expect(snapshot.ownedCommunities).toHaveLength(3);
     expect(snapshot.ownedCommunities[0]?.slug).toBe("school-success-network");
     expect(snapshot.recentActivity).not.toHaveLength(0);
@@ -39,9 +40,9 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(fundraisers[0]?.relatedCommunity?.slug).toBe("school-success-network");
     expect(fundraisers.find((entry) => entry.fundraiser.slug === "warm-meals-2026"))
       .toMatchObject({
-        supportAmount: 22000,
+        amountRaised: 22000,
         supporterCount: 5,
-        donationIntentCount: 5,
+        donationCount: 5,
       });
   });
 
@@ -220,25 +221,26 @@ describe("PostgresPublicContentEngagementRepository", () => {
     });
   });
 
-  it("persists donation intents and increments fundraiser engagement counts", async () => {
+  it("persists completed donations and increments fundraiser engagement counts", async () => {
     const repository = createRepository();
 
-    const fundraiserTarget =
-      await repository.findFundraiserBySlugForDonationIntent("warm-meals-2026");
+    const fundraiserTarget = await repository.findFundraiserBySlugForDonation(
+      "warm-meals-2026",
+    );
 
     expect(fundraiserTarget).not.toBeNull();
     if (!fundraiserTarget) {
       throw new Error("Expected fundraiser target to be found.");
     }
 
-    const createdIntent = await repository.createDonationIntent({
+    const createdDonation = await repository.createDonation({
       userId: "user_moderator_morgan",
       fundraiserId: fundraiserTarget.id,
       amount: 4200,
     });
 
-    expect(createdIntent.status).toBe("started");
-    expect(createdIntent.amount).toBe(4200);
+    expect(createdDonation.status).toBe("completed");
+    expect(createdDonation.amount).toBe(4200);
 
     const fundraiserSnapshot = await repository.findFundraiserBySlug(
       "warm-meals-2026",
@@ -249,8 +251,8 @@ describe("PostgresPublicContentEngagementRepository", () => {
       throw new Error("Expected fundraiser snapshot to be found.");
     }
 
-    expect(fundraiserSnapshot.summary.donationIntentCount).toBe(6);
-    expect(fundraiserSnapshot.summary.supportAmount).toBe(26200);
+    expect(fundraiserSnapshot.summary.donationCount).toBe(6);
+    expect(fundraiserSnapshot.summary.amountRaised).toBe(26200);
     expect(fundraiserSnapshot.summary.supporterCount).toBe(5);
   });
 
@@ -267,9 +269,9 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(fundraiserSnapshot).not.toBeNull();
     expect(communitySnapshot).not.toBeNull();
 
-    expect(fundraiserSnapshot?.summary.supportAmount).toBe(22000);
+    expect(fundraiserSnapshot?.summary.amountRaised).toBe(22000);
     expect(fundraiserSnapshot?.summary.supporterCount).toBe(5);
-    expect(fundraiserSnapshot?.recentSupporters[0]?.actor.user.displayName).toBe(
+    expect(fundraiserSnapshot?.recentDonations[0]?.actor.user.displayName).toBe(
       "Noah Kim",
     );
     expect(communitySnapshot?.followerCount).toBe(4);
@@ -277,8 +279,75 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(communitySnapshot?.featuredFundraiser?.fundraiser.slug).toBe(
       "warm-meals-2026",
     );
-    expect(communitySnapshot?.supportAmount).toBe(50500);
-    expect(communitySnapshot?.donationIntentCount).toBe(11);
+    expect(communitySnapshot?.amountRaised).toBe(50500);
+    expect(communitySnapshot?.donationCount).toBe(11);
+  });
+
+  it("backfills legacy donation intent rows into completed donations during bootstrap", async () => {
+    const { pool, repository } = createRepositoryHarness();
+
+    await pool.query(loadCoreSchemaSql());
+    await pool.query(`DROP TABLE donations CASCADE`);
+    await pool.query(`DROP INDEX IF EXISTS donations_pkey`);
+    await pool.query(`DROP INDEX IF EXISTS idx_donations_fundraiser_id`);
+    await pool.query(`DROP INDEX IF EXISTS idx_donations_user_id_created_at`);
+    await pool.query(`DROP TYPE donation_status`);
+    await pool.query(`CREATE TYPE donation_intent_status AS ENUM ('started')`);
+    await pool.query(`
+      CREATE TABLE donation_intents (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        fundraiser_id TEXT NOT NULL REFERENCES fundraisers(id) ON DELETE RESTRICT,
+        amount BIGINT NOT NULL CHECK (amount > 0),
+        status donation_intent_status NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await pool.query(
+      `INSERT INTO users (id, email, display_name, role, created_at)
+       VALUES
+         ('user_owner_legacy', 'legacy.owner@example.com', 'Legacy Owner', 'organizer', '2026-03-10T10:00:00.000Z'),
+         ('user_supporter_legacy', 'legacy.supporter@example.com', 'Legacy Supporter', 'supporter', '2026-03-10T10:05:00.000Z')`,
+    );
+    await pool.query(
+      `INSERT INTO fundraisers
+         (id, owner_user_id, slug, title, story, status, goal_amount, created_at)
+       VALUES
+         ('fundraiser_legacy_drive', 'user_owner_legacy', 'legacy-drive', 'Legacy Drive', 'Legacy fundraiser story.', 'active', 5000, '2026-03-10T10:10:00.000Z')`,
+    );
+    await pool.query(
+      `INSERT INTO donation_intents
+         (id, user_id, fundraiser_id, amount, status, created_at)
+       VALUES
+         ('intent_legacy_drive_support', 'user_supporter_legacy', 'fundraiser_legacy_drive', 2400, 'started', '2026-03-10T10:15:00.000Z')`,
+    );
+
+    const fundraiserSnapshot = await repository.findFundraiserBySlug("legacy-drive");
+
+    expect(fundraiserSnapshot).not.toBeNull();
+    expect(fundraiserSnapshot?.summary.amountRaised).toBe(2400);
+    expect(fundraiserSnapshot?.summary.donationCount).toBe(1);
+    expect(fundraiserSnapshot?.recentDonations[0]?.donation.status).toBe("completed");
+
+    const persistedDonations = await pool.query<{
+      id: string;
+      amount: number;
+      status: string;
+    }>(
+      `SELECT id, amount, status::text AS status
+       FROM donations
+       WHERE fundraiser_id = $1`,
+      ["fundraiser_legacy_drive"],
+    );
+
+    expect(persistedDonations.rows).toEqual([
+      {
+        id: "intent_legacy_drive_support",
+        amount: 2400,
+        status: "completed",
+      },
+    ]);
   });
 
   it("resolves report targets and writes reports idempotently", async () => {
@@ -345,11 +414,18 @@ describe("PostgresPublicContentEngagementRepository", () => {
 });
 
 const createRepository = () => {
+  return createRepositoryHarness().repository;
+};
+
+const createRepositoryHarness = () => {
   const db = newDb({ autoCreateForeignKeyIndices: true });
   const pg = db.adapters.createPg();
   const pool = new pg.Pool();
 
-  return createPostgresPublicContentEngagementRepository({
-    sqlClient: pool,
-  });
+  return {
+    pool,
+    repository: createPostgresPublicContentEngagementRepository({
+      sqlClient: pool,
+    }),
+  };
 };

@@ -12,7 +12,7 @@ GoFundMe's profile, fundraiser, and community surfaces can feel disconnected, wh
 - Anonymous visitors browse public profile, fundraiser, and community pages to understand people, causes, and current activity.
 - Visitors create accounts and authenticated users log in or out to access protected actions.
 - Supporters follow people, fundraisers, and communities to build an ongoing relationship with causes they care about.
-- Supporters start a donation flow through a mocked checkout experience.
+- Supporters submit donations through a real product flow that uses a mocked payment processor.
 - Community members read posts, comment on updates, and react to discussions.
 - Organizers publish updates, maintain their profiles, and manage the fundraiser or community spaces they own.
 - Moderators or owners review reports and remove problematic posts or comments.
@@ -33,7 +33,7 @@ GoFundMe's profile, fundraiser, and community surfaces can feel disconnected, wh
 - `Post`: discussion or update content published inside a community.
 - `Comment`: member response attached to a post.
 - `Follow`: relationship connecting a user to a profile, fundraiser, or community.
-- `DonationIntent`: tracked start of a mocked donation flow for engagement measurement.
+- `Donation`: persisted supporter contribution tied to a fundraiser, recorded without collecting real payment details in v1.
 
 ## Non-Goals
 - Shipping end-user AI features in v1.
@@ -53,6 +53,6 @@ GoFundMe's profile, fundraiser, and community surfaces can feel disconnected, wh
 ## Success Criteria
 - Community growth is the primary success measure, tracked through community follows, memberships, active readers, and comment participation.
 - Repeat engagement increases, measured through return visits, update consumption, and ongoing supporter activity across connected pages.
-- Meaningful actions increase, especially follow actions, comment creation, donation intent starts, and shares.
+- Meaningful actions increase, especially follow actions, comment creation, completed donations, and shares.
 - Users can move intuitively between profiles, fundraisers, and communities without the experience feeling fragmented.
 - Pages load reliably and respond quickly enough for a polished prototype experience.

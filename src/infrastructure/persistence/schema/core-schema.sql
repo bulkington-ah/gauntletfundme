@@ -6,7 +6,7 @@ CREATE TYPE post_status AS ENUM ('draft', 'published', 'archived');
 CREATE TYPE comment_status AS ENUM ('published', 'edited', 'archived');
 CREATE TYPE moderation_status AS ENUM ('visible', 'flagged', 'removed');
 CREATE TYPE follow_target_type AS ENUM ('profile', 'fundraiser', 'community');
-CREATE TYPE donation_intent_status AS ENUM ('started', 'abandoned', 'completed');
+CREATE TYPE donation_status AS ENUM ('completed');
 CREATE TYPE report_target_type AS ENUM ('post', 'comment');
 CREATE TYPE report_status AS ENUM ('submitted', 'reviewing', 'actioned', 'dismissed');
 
@@ -79,12 +79,12 @@ CREATE TABLE follows (
   UNIQUE (user_id, target_type, target_id)
 );
 
-CREATE TABLE donation_intents (
+CREATE TABLE donations (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   fundraiser_id TEXT NOT NULL REFERENCES fundraisers(id) ON DELETE RESTRICT,
   amount BIGINT NOT NULL CHECK (amount > 0),
-  status donation_intent_status NOT NULL,
+  status donation_status NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -105,5 +105,6 @@ CREATE INDEX idx_posts_community_id_created_at ON posts(community_id, created_at
 CREATE INDEX idx_comments_post_id_created_at ON comments(post_id, created_at DESC);
 CREATE INDEX idx_follows_user_id ON follows(user_id);
 CREATE INDEX idx_follows_target_lookup ON follows(target_type, target_id);
-CREATE INDEX idx_donation_intents_fundraiser_id ON donation_intents(fundraiser_id);
+CREATE INDEX idx_donations_fundraiser_id ON donations(fundraiser_id);
+CREATE INDEX idx_donations_user_id_created_at ON donations(user_id, created_at DESC);
 CREATE INDEX idx_reports_status_created_at ON reports(status, created_at DESC);

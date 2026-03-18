@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import type {
   CommunityDiscussionSnapshot,
-  DonationIntentTargetLookup,
-  DonationIntentWriteRepository,
+  DonationTargetLookup,
+  DonationWriteRepository,
   DiscussionTargetLookup,
   DiscussionWriteRepository,
   FollowOwnerLookup,
@@ -26,7 +26,7 @@ import type {
 import {
   createComment,
   createCommunity,
-  createDonationIntent,
+  createDonation,
   createFollow,
   createFundraiser,
   createPost,
@@ -53,8 +53,8 @@ type Dependencies = {
 export const createPostgresPublicContentEngagementRepository = (
   dependencies: Dependencies = {},
 ): PublicContentReadRepository &
-  DonationIntentTargetLookup &
-  DonationIntentWriteRepository &
+  DonationTargetLookup &
+  DonationWriteRepository &
   DiscussionTargetLookup &
   DiscussionWriteRepository &
   ReportReviewLookup &
@@ -194,10 +194,10 @@ export const createPostgresPublicContentEngagementRepository = (
     return row ? mapCommunity(row) : null;
   };
 
-  const findDonationIntentRowsByFundraiserId = async (fundraiserId: string) => {
-    const result = await query<DonationIntentRow>(
+  const findDonationRowsByFundraiserId = async (fundraiserId: string) => {
+    const result = await query<DonationRow>(
       `SELECT id, user_id, fundraiser_id, amount, status, created_at
-       FROM donation_intents
+       FROM donations
        WHERE fundraiser_id = $1
        ORDER BY created_at DESC`,
       [fundraiserId],
@@ -238,15 +238,15 @@ export const createPostgresPublicContentEngagementRepository = (
     relatedCommunity: PublicFundraiserSummarySnapshot["relatedCommunity"],
   ): Promise<PublicFundraiserSummarySnapshot> => {
     const donationMetricsResult = await query<{
-      intent_count: string;
+      donation_count: string;
       supporter_count: string;
-      support_amount: string;
+      amount_raised: string;
     }>(
       `SELECT
-         COUNT(*)::text AS intent_count,
+         COUNT(*)::text AS donation_count,
          COUNT(DISTINCT user_id)::text AS supporter_count,
-         COALESCE(SUM(amount), 0)::text AS support_amount
-       FROM donation_intents
+         COALESCE(SUM(amount), 0)::text AS amount_raised
+       FROM donations
        WHERE fundraiser_id = $1`,
       [fundraiserRow.id],
     );
@@ -256,11 +256,11 @@ export const createPostgresPublicContentEngagementRepository = (
       owner,
       ownerProfile,
       relatedCommunity,
-      donationIntentCount: Number(
-        donationMetricsResult.rows[0]?.intent_count ?? "0",
+      donationCount: Number(
+        donationMetricsResult.rows[0]?.donation_count ?? "0",
       ),
       supporterCount: Number(donationMetricsResult.rows[0]?.supporter_count ?? "0"),
-      supportAmount: Number(donationMetricsResult.rows[0]?.support_amount ?? "0"),
+      amountRaised: Number(donationMetricsResult.rows[0]?.amount_raised ?? "0"),
     };
   };
 
@@ -370,23 +370,23 @@ export const createPostgresPublicContentEngagementRepository = (
     const donationActivity = (
       await Promise.all(
         fundraiserSummaries.map(async (fundraiserSummary) => {
-          const donationIntentRows = await findDonationIntentRowsByFundraiserId(
+          const donationRows = await findDonationRowsByFundraiserId(
             fundraiserSummary.fundraiser.id,
           );
 
           return Promise.all(
-            donationIntentRows.map(async (donationIntentRow) => {
+            donationRows.map(async (donationRow) => {
               const actor = await buildActorSnapshotByUserId(
-                donationIntentRow.user_id,
+                donationRow.user_id,
               );
 
               return actor
                 ? {
-                    type: "fundraiser_support" as const,
+                    type: "fundraiser_donation" as const,
                     actor,
                     fundraiser: fundraiserSummary,
                     community: fundraiserSummary.relatedCommunity,
-                    donationIntent: mapDonationIntent(donationIntentRow),
+                    donation: mapDonation(donationRow),
                   }
                 : null;
             }),
@@ -400,7 +400,7 @@ export const createPostgresPublicContentEngagementRepository = (
           entry,
         ): entry is Extract<
           PublicProfileActivitySnapshot,
-          { type: "fundraiser_support" }
+          { type: "fundraiser_donation" }
         > => entry !== null,
       );
 
@@ -439,12 +439,12 @@ export const createPostgresPublicContentEngagementRepository = (
     return [...donationActivity, ...communityPostActivity]
       .sort((left, right) => {
         const leftCreatedAt =
-          left.type === "fundraiser_support"
-            ? left.donationIntent.createdAt
+          left.type === "fundraiser_donation"
+            ? left.donation.createdAt
             : left.post.createdAt;
         const rightCreatedAt =
-          right.type === "fundraiser_support"
-            ? right.donationIntent.createdAt
+          right.type === "fundraiser_donation"
+            ? right.donation.createdAt
             : right.post.createdAt;
 
         return rightCreatedAt.getTime() - leftCreatedAt.getTime();
@@ -460,13 +460,13 @@ export const createPostgresPublicContentEngagementRepository = (
     const engagedUserIds = new Set<string>();
 
     for (const fundraiserSummary of fundraiserSummaries) {
-      const donationIntentRows = await findDonationIntentRowsByFundraiserId(
+      const donationRows = await findDonationRowsByFundraiserId(
         fundraiserSummary.fundraiser.id,
       );
 
-      donationIntentRows.forEach((donationIntentRow) => {
-        if (donationIntentRow.user_id !== ownerUserId) {
-          engagedUserIds.add(donationIntentRow.user_id);
+      donationRows.forEach((donationRow) => {
+        if (donationRow.user_id !== ownerUserId) {
+          engagedUserIds.add(donationRow.user_id);
         }
       });
     }
@@ -488,6 +488,53 @@ export const createPostgresPublicContentEngagementRepository = (
     }
 
     return engagedUserIds.size;
+  };
+
+  const findFundraiserReferenceBySlug = async (slug: string) => {
+    const result = await query<{
+      id: string;
+      slug: string;
+    }>(
+      `SELECT id, slug
+       FROM fundraisers
+       WHERE slug = $1
+       LIMIT 1`,
+      [slug],
+    );
+    const fundraiser = result.rows[0];
+
+    return fundraiser
+      ? {
+          id: fundraiser.id,
+          slug: fundraiser.slug,
+        }
+      : null;
+  };
+
+  const persistDonation = async (input: {
+    userId: string;
+    fundraiserId: string;
+    amount: number;
+  }) => {
+    const donationId = `donation_${randomUUID()}`;
+    const now = new Date();
+    const result = await query<DonationRow>(
+      `INSERT INTO donations
+         (id, user_id, fundraiser_id, amount, status, created_at)
+       VALUES
+         ($1, $2, $3, $4, 'completed', $5)
+       RETURNING id, user_id, fundraiser_id, amount, status, created_at`,
+      [donationId, input.userId, input.fundraiserId, input.amount, now],
+    );
+    const row = result.rows[0];
+
+    if (!row) {
+      throw new Error(
+        "Expected the created donation row to be returned after insert.",
+      );
+    }
+
+    return mapDonation(row);
   };
 
   return {
@@ -612,7 +659,7 @@ export const createPostgresPublicContentEngagementRepository = (
       const relatedCommunity = await findLatestCommunityByOwnerUserId(
         fundraiserRow.owner_user_id,
       );
-      const donationIntentRows = await findDonationIntentRowsByFundraiserId(
+      const donationRows = await findDonationRowsByFundraiserId(
         fundraiserRow.id,
       );
 
@@ -623,22 +670,22 @@ export const createPostgresPublicContentEngagementRepository = (
           ownerProfile,
           relatedCommunity,
         ),
-        recentSupporters: (
+        recentDonations: (
           await Promise.all(
-            donationIntentRows.map(async (donationIntentRow) => {
+            donationRows.map(async (donationRow) => {
               const actor = await buildActorSnapshotByUserId(
-                donationIntentRow.user_id,
+                donationRow.user_id,
               );
 
               return actor
                 ? {
                     actor,
-                    donationIntent: mapDonationIntent(donationIntentRow),
+                    donation: mapDonation(donationRow),
                   }
                 : null;
             }),
           )
-        ).filter((entry): entry is PublicFundraiserSnapshot["recentSupporters"][number] => entry !== null),
+        ).filter((entry): entry is PublicFundraiserSnapshot["recentDonations"][number] => entry !== null),
       } satisfies PublicFundraiserSnapshot;
     },
 
@@ -680,12 +727,12 @@ export const createPostgresPublicContentEngagementRepository = (
         featuredFundraiser: fundraisers[0] ?? null,
         fundraisers,
         followerCount: await countFollowersByTarget("community", communityRow.id),
-        supportAmount: fundraisers.reduce(
-          (sum, fundraiserSummary) => sum + fundraiserSummary.supportAmount,
+        amountRaised: fundraisers.reduce(
+          (sum, fundraiserSummary) => sum + fundraiserSummary.amountRaised,
           0,
         ),
-        donationIntentCount: fundraisers.reduce(
-          (sum, fundraiserSummary) => sum + fundraiserSummary.donationIntentCount,
+        donationCount: fundraisers.reduce(
+          (sum, fundraiserSummary) => sum + fundraiserSummary.donationCount,
           0,
         ),
         discussion: await findVisibleDiscussionForCommunityId(communityRow.id),
@@ -715,25 +762,8 @@ export const createPostgresPublicContentEngagementRepository = (
         : null;
     },
 
-    async findFundraiserBySlugForDonationIntent(slug) {
-      const result = await query<{
-        id: string;
-        slug: string;
-      }>(
-        `SELECT id, slug
-         FROM fundraisers
-         WHERE slug = $1
-         LIMIT 1`,
-        [slug],
-      );
-      const fundraiser = result.rows[0];
-
-      return fundraiser
-        ? {
-            id: fundraiser.id,
-            slug: fundraiser.slug,
-          }
-        : null;
+    async findFundraiserBySlugForDonation(slug) {
+      return findFundraiserReferenceBySlug(slug);
     },
 
     async findPostByIdForCommentCreation(postId) {
@@ -1020,32 +1050,8 @@ export const createPostgresPublicContentEngagementRepository = (
       return mapComment(row);
     },
 
-    async createDonationIntent(input) {
-      const donationIntentId = `intent_${randomUUID()}`;
-      const now = new Date();
-      const result = await query<DonationIntentRow>(
-        `INSERT INTO donation_intents
-           (id, user_id, fundraiser_id, amount, status, created_at)
-         VALUES
-           ($1, $2, $3, $4, 'started', $5)
-         RETURNING id, user_id, fundraiser_id, amount, status, created_at`,
-        [
-          donationIntentId,
-          input.userId,
-          input.fundraiserId,
-          input.amount,
-          now,
-        ],
-      );
-      const row = result.rows[0];
-
-      if (!row) {
-        throw new Error(
-          "Expected the created donation intent row to be returned after insert.",
-        );
-      }
-
-      return mapDonationIntent(row);
+    async createDonation(input) {
+      return persistDonation(input);
     },
 
     async createReportIfAbsent(input) {
@@ -1223,12 +1229,12 @@ type FollowRow = {
   created_at: Date | string;
 };
 
-type DonationIntentRow = {
+type DonationRow = {
   id: string;
   user_id: string;
   fundraiser_id: string;
   amount: number | string;
-  status: "started" | "abandoned" | "completed";
+  status: "completed";
   created_at: Date | string;
 };
 
@@ -1265,12 +1271,12 @@ const compareFundraiserSummaries = (
   left: PublicFundraiserSummarySnapshot,
   right: PublicFundraiserSummarySnapshot,
 ): number => {
-  if (right.supportAmount !== left.supportAmount) {
-    return right.supportAmount - left.supportAmount;
+  if (right.amountRaised !== left.amountRaised) {
+    return right.amountRaised - left.amountRaised;
   }
 
-  if (right.donationIntentCount !== left.donationIntentCount) {
-    return right.donationIntentCount - left.donationIntentCount;
+  if (right.donationCount !== left.donationCount) {
+    return right.donationCount - left.donationCount;
   }
 
   return (
@@ -1362,8 +1368,8 @@ const mapFollow = (row: FollowRow) =>
     createdAt: asDate(row.created_at, "created_at"),
   });
 
-const mapDonationIntent = (row: DonationIntentRow) =>
-  createDonationIntent({
+const mapDonation = (row: DonationRow) =>
+  createDonation({
     id: row.id,
     userId: row.user_id,
     fundraiserId: row.fundraiser_id,

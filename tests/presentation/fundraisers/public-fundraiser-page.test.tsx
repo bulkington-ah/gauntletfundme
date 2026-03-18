@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import type { PublicFundraiserResponse, PublicQueryResult } from "@/application";
 import {
@@ -6,7 +6,22 @@ import {
   buildPublicFundraiserPageModel,
 } from "@/presentation/fundraisers";
 
+const { refreshSpy } = vi.hoisted(() => ({
+  refreshSpy: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: refreshSpy,
+  }),
+}));
+
 describe("PublicFundraiserPage", () => {
+  afterEach(() => {
+    refreshSpy.mockReset();
+    vi.unstubAllGlobals();
+  });
+
   it("builds a success page model from the public fundraiser query", async () => {
     const query = createPublicFundraiserQueryStub({
       result: {
@@ -19,9 +34,9 @@ describe("PublicFundraiserPage", () => {
             story: "Funding hot meals for families all winter.",
             status: "active",
             goalAmount: 250000,
-            supportAmount: 7800,
+            amountRaised: 7800,
             supporterCount: 2,
-            donationIntentCount: 2,
+            donationCount: 2,
           },
           organizer: {
             displayName: "Avery Johnson",
@@ -34,7 +49,7 @@ describe("PublicFundraiserPage", () => {
             name: "Neighbors Helping Neighbors",
             visibility: "public",
           },
-          recentSupporters: [
+          recentDonations: [
             {
               displayName: "Noah Kim",
               profileSlug: "noah-kim",
@@ -66,9 +81,9 @@ describe("PublicFundraiserPage", () => {
         story: "Funding hot meals for families all winter.",
         status: "active",
         goalAmount: 250000,
-        supportAmount: 7800,
+        amountRaised: 7800,
         supporterCount: 2,
-        donationIntentCount: 2,
+        donationCount: 2,
       },
       organizer: {
         displayName: "Avery Johnson",
@@ -81,7 +96,7 @@ describe("PublicFundraiserPage", () => {
         name: "Neighbors Helping Neighbors",
         visibility: "public",
       },
-      recentSupporters: [
+      recentDonations: [
         {
           displayName: "Noah Kim",
           profileSlug: "noah-kim",
@@ -94,7 +109,7 @@ describe("PublicFundraiserPage", () => {
     });
   });
 
-  it("renders fundraiser media, story, organizer context, supporter rail, and mocked donation CTA", () => {
+  it("renders fundraiser media, story, organizer context, supporter rail, and donation controls", () => {
     render(
       <PublicFundraiserPage
         model={{
@@ -105,9 +120,9 @@ describe("PublicFundraiserPage", () => {
             story: "Funding hot meals for families all winter.",
             status: "active",
             goalAmount: 250000,
-            supportAmount: 7800,
+            amountRaised: 7800,
             supporterCount: 2,
-            donationIntentCount: 2,
+            donationCount: 2,
           },
           organizer: {
             displayName: "Avery Johnson",
@@ -120,7 +135,7 @@ describe("PublicFundraiserPage", () => {
             name: "Neighbors Helping Neighbors",
             visibility: "public",
           },
-          recentSupporters: [
+          recentDonations: [
             {
               displayName: "Noah Kim",
               profileSlug: "noah-kim",
@@ -134,7 +149,7 @@ describe("PublicFundraiserPage", () => {
               profileSlug: "sam-rivera",
               avatarUrl: null,
               amount: 3800,
-              status: "started",
+              status: "completed",
               createdAt: "2026-03-16T12:40:00.000Z",
             },
           ],
@@ -161,16 +176,13 @@ describe("PublicFundraiserPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Noah Kim")).toBeInTheDocument();
     expect(screen.getByText("Sam Rivera")).toBeInTheDocument();
-    expect(
-      screen.getAllByText("$7,800 in prototype support"),
-    ).toHaveLength(2);
+    expect(screen.getAllByText("$7,800 raised")).toHaveLength(2);
     expect(screen.getAllByText("3% of goal")).toHaveLength(2);
+    expect(screen.getAllByText("$4,000 donated")).toHaveLength(1);
+    expect(screen.getAllByText("$3,800 donated")).toHaveLength(1);
 
-    const donateLink = screen.getAllByRole("link", { name: "Donate now" })[0];
-    expect(donateLink).toHaveAttribute(
-      "href",
-      "/fundraisers/warm-meals-2026?checkout=mock",
-    );
+    const donateButtons = screen.getAllByRole("button", { name: "Donate now" });
+    expect(donateButtons).toHaveLength(3);
 
     const organizerProfileLink = screen.getByRole("link", {
       name: "Avery Johnson",
@@ -184,6 +196,82 @@ describe("PublicFundraiserPage", () => {
       "href",
       "/communities/neighbors-helping-neighbors",
     );
+  });
+
+  it("reveals the donation form from the shared CTA and submits a persisted donation", async () => {
+    const fetchSpy = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          donation: {
+            amount: 250,
+          },
+        }),
+        {
+          status: 201,
+          headers: {
+            "content-type": "application/json",
+          },
+        },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+
+    render(
+      <PublicFundraiserPage
+        model={{
+          status: "success",
+          fundraiser: {
+            slug: "warm-meals-2026",
+            title: "Warm Meals 2026",
+            story: "Funding hot meals for families all winter.",
+            status: "active",
+            goalAmount: 250000,
+            amountRaised: 7800,
+            supporterCount: 2,
+            donationCount: 2,
+          },
+          organizer: {
+            displayName: "Avery Johnson",
+            role: "organizer",
+            profileSlug: "avery-johnson",
+            avatarUrl: null,
+          },
+          community: {
+            slug: "neighbors-helping-neighbors",
+            name: "Neighbors Helping Neighbors",
+            visibility: "public",
+          },
+          recentDonations: [],
+        }}
+        viewer={{
+          userId: "user_supporter_jordan",
+          role: "supporter",
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Donate now" })[1]!);
+
+    const amountInput = screen.getAllByLabelText("Donation amount (USD)")[0]!;
+    fireEvent.change(amountInput, { target: { value: "250" } });
+    fireEvent.click(screen.getAllByRole("button", { name: "Submit donation" })[0]!);
+
+    await waitFor(() =>
+      expect(fetchSpy).toHaveBeenCalledWith("/api/engagement/donations", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          fundraiserSlug: "warm-meals-2026",
+          amount: 250,
+        }),
+      }),
+    );
+    expect(
+      await screen.findByText("$250 donated. Totals are refreshing now."),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(refreshSpy).toHaveBeenCalledTimes(1));
   });
 
   it("renders fundraiser-not-found and invalid-request states", () => {

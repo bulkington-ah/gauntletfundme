@@ -1,7 +1,7 @@
 import type {
   Comment,
   Community,
-  DonationIntent,
+  Donation,
   Follow,
   FollowTargetType,
   Fundraiser,
@@ -64,11 +64,13 @@ export interface FollowRepository {
   save(follow: Follow): Promise<void>;
 }
 
-export interface DonationIntentRepository {
-  findById(intentId: string): Promise<DonationIntent | null>;
+export interface DonationRepository {
+  findById(donationId: string): Promise<Donation | null>;
   countByFundraiserId(fundraiserId: string): Promise<number>;
-  save(intent: DonationIntent): Promise<void>;
+  save(donation: Donation): Promise<void>;
 }
+
+export type DonationIntentRepository = DonationRepository;
 
 export interface ReportRepository {
   findById(reportId: string): Promise<Report | null>;

@@ -69,22 +69,19 @@ export const getPublicProfileBySlug = async (
       },
       recentActivity: snapshot.recentActivity.map((entry) => {
         switch (entry.type) {
-          case "fundraiser_support":
+          case "fundraiser_donation":
             return {
-              id: entry.donationIntent.id,
+              id: entry.donation.id,
               type: entry.type,
               actor: toPublicActorSummary(entry.actor),
-              createdAt: entry.donationIntent.createdAt.toISOString(),
-              summary:
-                entry.donationIntent.status === "completed"
-                  ? `${entry.actor.user.displayName} completed a mocked donation`
-                  : `${entry.actor.user.displayName} started a mocked donation`,
+              createdAt: entry.donation.createdAt.toISOString(),
+              summary: `${entry.actor.user.displayName} donated`,
               detail: entry.fundraiser.fundraiser.title,
               fundraiser: toPublicFundraiserSummary(entry.fundraiser),
               community: entry.community
                 ? toPublicCommunityReference(entry.community)
                 : null,
-              amount: entry.donationIntent.amount,
+              amount: entry.donation.amount,
             };
           case "community_post":
             return {

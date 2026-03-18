@@ -4,7 +4,7 @@ export const protectedActions = [
   "create_post",
   "create_comment",
   "follow_target",
-  "create_donation_intent",
+  "submit_donation",
   "report_content",
   "moderate_content",
 ] as const;
@@ -47,7 +47,7 @@ export const evaluateAuthorizationPolicy = (
 
   switch (input.action) {
     case "create_comment":
-    case "create_donation_intent":
+    case "submit_donation":
     case "report_content":
       return { allowed: true };
     case "follow_target":
@@ -113,7 +113,7 @@ const unauthenticatedMessageByAction: Record<ProtectedAction, string> = {
   create_post: "Authentication is required to create posts.",
   create_comment: "Authentication is required to create comments.",
   follow_target: "Authentication is required for follow commands.",
-  create_donation_intent: "Authentication is required to start donation intents.",
+  submit_donation: "Authentication is required to submit donations.",
   report_content: "Authentication is required to submit reports.",
   moderate_content: "Authentication is required to moderate content.",
 };

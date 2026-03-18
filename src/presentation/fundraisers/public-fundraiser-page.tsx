@@ -3,10 +3,14 @@ import type {
   ApplicationApi,
   AuthenticatedViewer,
   PublicFundraiserResponse,
-  PublicFundraiserSupporter,
+  PublicFundraiserDonation,
 } from "@/application";
 import { PublicSiteShell } from "@/presentation/shared";
 
+import {
+  FundraiserDonationButton,
+  FundraiserDonationForm,
+} from "./fundraiser-donation-controls";
 import styles from "./public-fundraiser-page.module.css";
 
 type PublicFundraiserQuery = Pick<ApplicationApi, "getPublicFundraiserBySlug">;
@@ -16,7 +20,7 @@ type SuccessfulFundraiserPageModel = {
   fundraiser: PublicFundraiserResponse["fundraiser"];
   organizer: PublicFundraiserResponse["organizer"];
   community: PublicFundraiserResponse["community"];
-  recentSupporters: PublicFundraiserSupporter[];
+  recentDonations: PublicFundraiserDonation[];
 };
 
 export type PublicFundraiserPageModel =
@@ -52,7 +56,7 @@ export const buildPublicFundraiserPageModel = async (
         fundraiser: result.data.fundraiser,
         organizer: result.data.organizer,
         community: result.data.community,
-        recentSupporters: result.data.recentSupporters,
+        recentDonations: result.data.recentDonations,
       };
     case "invalid_request":
       return {
@@ -144,7 +148,7 @@ export const PublicFundraiserPage = ({
   const fundraiserStatus = toTitleCase(model.fundraiser.status);
   const organizerRole = toTitleCase(model.organizer.role);
   const goalProgress = toGoalProgressPercentage(
-    model.fundraiser.supportAmount,
+    model.fundraiser.amountRaised,
     model.fundraiser.goalAmount,
   );
   const storyParagraphs = buildStoryParagraphs(model);
@@ -174,7 +178,7 @@ export const PublicFundraiserPage = ({
               pill
               variant="brand"
             >
-              Prototype fundraiser
+              Active fundraiser
             </wa-badge>
             {model.community ? (
               <wa-badge className={styles.contextBadge} appearance="outlined" pill>
@@ -223,12 +227,12 @@ export const PublicFundraiserPage = ({
               />
 
               <div className={styles.mobileSupportActions}>
-                <a
-                  className={styles.primaryAction}
-                  href={`/fundraisers/${model.fundraiser.slug}?checkout=mock`}
-                >
-                  Donate now
-                </a>
+                <FundraiserDonationForm
+                  buttonClassName={styles.primaryAction}
+                  fundraiserSlug={model.fundraiser.slug}
+                  nextPath={`/fundraisers/${model.fundraiser.slug}`}
+                  viewer={viewer}
+                />
                 <button className={styles.secondaryAction} type="button">
                   Share
                 </button>
@@ -280,7 +284,7 @@ export const PublicFundraiserPage = ({
                   {model.fundraiser.supporterCount} supporters
                 </wa-badge>
                 <wa-badge className={styles.supportBadge} appearance="outlined" pill>
-                  {model.fundraiser.donationIntentCount} mock donations
+                  {model.fundraiser.donationCount} donations
                 </wa-badge>
               </div>
             </section>
@@ -318,12 +322,9 @@ export const PublicFundraiserPage = ({
               </div>
 
               <div className={styles.actionRow}>
-                <a
-                  className={styles.primaryAction}
-                  href={`/fundraisers/${model.fundraiser.slug}?checkout=mock`}
-                >
+                <FundraiserDonationButton className={styles.primaryAction}>
                   Donate now
-                </a>
+                </FundraiserDonationButton>
                 <button className={styles.secondaryAction} type="button">
                   Share
                 </button>
@@ -375,12 +376,12 @@ export const PublicFundraiserPage = ({
               />
 
               <div className={styles.sidebarActions}>
-                <a
-                  className={styles.primaryAction}
-                  href={`/fundraisers/${model.fundraiser.slug}?checkout=mock`}
-                >
-                  Donate now
-                </a>
+                <FundraiserDonationForm
+                  buttonClassName={styles.primaryAction}
+                  fundraiserSlug={model.fundraiser.slug}
+                  nextPath={`/fundraisers/${model.fundraiser.slug}`}
+                  viewer={viewer}
+                />
                 <button className={styles.sidebarSecondaryAction} type="button">
                   Share
                 </button>
@@ -389,12 +390,12 @@ export const PublicFundraiserPage = ({
               <div className={styles.supportersHeader}>
                 <h2 className={styles.supportersTitle}>Recent supporters</h2>
                 <p className={styles.supportersCount}>
-                  {model.recentSupporters.length} visible in the prototype feed
+                  {model.recentDonations.length} public donations
                 </p>
               </div>
 
               <ul className={styles.supportersList}>
-                {model.recentSupporters.map((supporter) => (
+                {model.recentDonations.map((supporter) => (
                   <SupporterListItem key={`${supporter.displayName}-${supporter.createdAt}`} supporter={supporter} />
                 ))}
               </ul>
@@ -416,7 +417,7 @@ export const PublicFundraiserPage = ({
 };
 
 type SupporterListItemProps = {
-  supporter: PublicFundraiserSupporter;
+  supporter: PublicFundraiserDonation;
 };
 
 type SupportProgressDetailsProps = {
@@ -433,12 +434,11 @@ const SupportProgressDetails = ({
   <div className={className}>
     <div className={styles.supportSummary}>
       <p className={styles.supportAmount}>
-        {formatCurrency(fundraiser.supportAmount)} in prototype support
+        {formatCurrency(fundraiser.amountRaised)} raised
       </p>
       <p className={styles.supportMeta}>
         Goal {formatCompactCurrency(fundraiser.goalAmount)} ·{" "}
-        {fundraiser.supporterCount} supporters · {fundraiser.donationIntentCount}{" "}
-        support actions
+        {fundraiser.supporterCount} supporters · {fundraiser.donationCount} donations
       </p>
     </div>
 
@@ -446,7 +446,7 @@ const SupportProgressDetails = ({
       <p className={styles.progressBarLabel}>{goalProgress}% of goal</p>
       <wa-progress-bar
         className={styles.progressBar}
-        label={`${goalProgress}% of goal represented by prototype support`}
+        label={`${goalProgress}% of goal represented by donations raised`}
         value={goalProgress}
       />
     </div>
@@ -467,16 +467,7 @@ const SupporterListItem = ({ supporter }: SupporterListItemProps) => (
         </span>
       </div>
       <p className={styles.supporterMeta}>
-        {formatCurrency(supporter.amount)} ·{" "}
-        <span
-          className={
-            supporter.status === "completed"
-              ? styles.supporterStatusComplete
-              : styles.supporterStatusStarted
-          }
-        >
-          {toTitleCase(supporter.status)}
-        </span>
+        {formatCurrency(supporter.amount)} donated
       </p>
     </div>
   </li>
@@ -487,12 +478,12 @@ const buildStoryParagraphs = (model: SuccessfulFundraiserPageModel): string[] =>
 
   if (model.community) {
     paragraphs.push(
-      `Every support action in this prototype helps ${model.community.name} stay stocked, scheduled, and ready for the next round of neighborhood meal deliveries.`,
+      `Every donation helps ${model.community.name} stay stocked, scheduled, and ready for the next round of neighborhood meal deliveries.`,
     );
   }
 
   paragraphs.push(
-    `${model.fundraiser.supporterCount} supporters have already started or completed ${model.fundraiser.donationIntentCount} mocked donation flows toward the ${formatCurrency(model.fundraiser.goalAmount)} goal. This public route keeps that momentum visible without implying real payment processing.`,
+    `${model.fundraiser.supporterCount} supporters have already made ${model.fundraiser.donationCount} public donations toward the ${formatCurrency(model.fundraiser.goalAmount)} goal. Payment processing stays mocked in v1, but the donations and totals are persisted across the product.`,
   );
 
   return paragraphs;

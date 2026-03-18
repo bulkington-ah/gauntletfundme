@@ -5,7 +5,7 @@ export const analyticsEventNames = {
   followCompleted: "engagement.follow.completed",
   postCreated: "discussion.post.created",
   commentCreated: "discussion.comment.created",
-  donationIntentStarted: "engagement.donation_intent.started",
+  donationCompleted: "engagement.donation.completed",
 } as const;
 
 export type AnalyticsEventName =
@@ -85,15 +85,15 @@ export const buildPostCreatedEvent = (input: {
     postId: input.postId,
   });
 
-export const buildDonationIntentStartedEvent = (input: {
+export const buildDonationCompletedEvent = (input: {
   viewerUserId: string;
   fundraiserSlug: string;
-  donationIntentId: string;
+  donationId: string;
   amount: number;
 }): AnalyticsEvent =>
-  toEvent(analyticsEventNames.donationIntentStarted, {
+  toEvent(analyticsEventNames.donationCompleted, {
     viewerUserId: input.viewerUserId,
     fundraiserSlug: input.fundraiserSlug,
-    donationIntentId: input.donationIntentId,
+    donationId: input.donationId,
     amount: input.amount,
   });

@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 
-import type { FollowTargetType, ReportStatus, UserRole } from "@/domain";
+import type { DonationStatus, FollowTargetType, ReportStatus, UserRole } from "@/domain";
 import {
+  type DonationRecord,
   type FollowRecord,
   type ReportRecord,
   type UserRecord,
@@ -21,7 +22,7 @@ describe("core persistence schema", () => {
     expect(sql).toContain("CREATE TABLE posts (");
     expect(sql).toContain("CREATE TABLE comments (");
     expect(sql).toContain("CREATE TABLE follows (");
-    expect(sql).toContain("CREATE TABLE donation_intents (");
+    expect(sql).toContain("CREATE TABLE donations (");
     expect(sql).toContain("CREATE TABLE reports (");
   });
 
@@ -45,6 +46,7 @@ describe("core persistence schema", () => {
   it("keeps persistence records aligned with domain enums", () => {
     expectTypeOf<UserRecord["role"]>().toEqualTypeOf<UserRole>();
     expectTypeOf<FollowRecord["target_type"]>().toEqualTypeOf<FollowTargetType>();
+    expectTypeOf<DonationRecord["status"]>().toEqualTypeOf<DonationStatus>();
     expectTypeOf<ReportRecord["status"]>().toEqualTypeOf<ReportStatus>();
   });
 });

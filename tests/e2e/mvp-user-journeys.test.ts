@@ -40,14 +40,24 @@ describe("MVP end-to-end journeys", () => {
       throw new Error("Expected comment creation to succeed.");
     }
 
-    const donationIntent = await applicationApi.startDonationIntent({
+    const fundraiserBefore = await applicationApi.getPublicFundraiserBySlug({
+      slug: "warm-meals-2026",
+    });
+    const profileBefore = await applicationApi.getPublicProfileBySlug({
+      slug: "avery-johnson",
+    });
+    if (fundraiserBefore.status !== "success" || profileBefore.status !== "success") {
+      throw new Error("Expected fundraiser and profile reads to succeed before donating.");
+    }
+
+    const donation = await applicationApi.submitDonation({
       sessionToken: "demo-supporter-session",
       fundraiserSlug: "warm-meals-2026",
       amount: 3500,
     });
-    expect(donationIntent.status).toBe("success");
-    if (donationIntent.status !== "success") {
-      throw new Error("Expected donation intent start to succeed.");
+    expect(donation.status).toBe("success");
+    if (donation.status !== "success") {
+      throw new Error("Expected donation submission to succeed.");
     }
 
     const report = await applicationApi.submitReport({
@@ -74,9 +84,21 @@ describe("MVP end-to-end journeys", () => {
     const publicAfter = await applicationApi.getPublicCommunityBySlug({
       slug: "neighbors-helping-neighbors",
     });
+    const fundraiserAfter = await applicationApi.getPublicFundraiserBySlug({
+      slug: "warm-meals-2026",
+    });
+    const profileAfter = await applicationApi.getPublicProfileBySlug({
+      slug: "avery-johnson",
+    });
     expect(publicAfter.status).toBe("success");
-    if (publicAfter.status !== "success") {
-      throw new Error("Expected final community browse to succeed.");
+    expect(fundraiserAfter.status).toBe("success");
+    expect(profileAfter.status).toBe("success");
+    if (
+      publicAfter.status !== "success" ||
+      fundraiserAfter.status !== "success" ||
+      profileAfter.status !== "success"
+    ) {
+      throw new Error("Expected final public reads to succeed.");
     }
 
     const visibleCommentIds = publicAfter.data.discussion.flatMap((entry) =>
@@ -84,6 +106,20 @@ describe("MVP end-to-end journeys", () => {
     );
 
     expect(visibleCommentIds).not.toContain(comment.comment.id);
+    expect(fundraiserAfter.data.fundraiser.amountRaised).toBe(
+      fundraiserBefore.data.fundraiser.amountRaised + 3500,
+    );
+    expect(fundraiserAfter.data.fundraiser.donationCount).toBe(
+      fundraiserBefore.data.fundraiser.donationCount + 1,
+    );
+    expect(publicAfter.data.community.amountRaised).toBe(
+      publicBefore.data.community.amountRaised + 3500,
+    );
+    expect(publicAfter.data.community.donationCount).toBe(
+      publicBefore.data.community.donationCount + 1,
+    );
+    expect(profileAfter.data.recentActivity[0]?.type).toBe("fundraiser_donation");
+    expect(profileAfter.data.recentActivity[0]?.amount).toBe(3500);
   });
 });
 
@@ -99,8 +135,8 @@ const createJourneyApplicationApi = () => {
     publicContentReadRepository: persistence,
     discussionTargetLookup: persistence,
     discussionWriteRepository: persistence,
-    donationIntentTargetLookup: persistence,
-    donationIntentWriteRepository: persistence,
+    donationTargetLookup: persistence,
+    donationWriteRepository: persistence,
     reportTargetLookup: persistence,
     reportWriteRepository: persistence,
     reportReviewLookup: persistence,

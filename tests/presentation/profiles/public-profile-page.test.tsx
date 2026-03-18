@@ -31,9 +31,9 @@ describe("PublicProfilePage", () => {
                 title: "Warm Meals 2026",
                 status: "active",
                 goalAmount: 250000,
-                supportAmount: 22000,
+                amountRaised: 22000,
                 supporterCount: 5,
-                donationIntentCount: 5,
+                donationCount: 5,
               },
             ],
             communities: [
@@ -79,9 +79,9 @@ describe("PublicProfilePage", () => {
             title: "Warm Meals 2026",
             status: "active",
             goalAmount: 250000,
-            supportAmount: 22000,
+            amountRaised: 22000,
             supporterCount: 5,
-            donationIntentCount: 5,
+            donationCount: 5,
           },
         ],
         communities: [
@@ -119,18 +119,18 @@ describe("PublicProfilePage", () => {
                 title: "Warm Meals 2026",
                 status: "active",
                 goalAmount: 250000,
-                supportAmount: 22000,
+                amountRaised: 22000,
                 supporterCount: 5,
-                donationIntentCount: 5,
+                donationCount: 5,
               },
               {
                 slug: "winter-coat-drive-2026",
                 title: "Winter Coat Drive 2026",
                 status: "active",
                 goalAmount: 180000,
-                supportAmount: 8000,
+                amountRaised: 8000,
                 supporterCount: 3,
-                donationIntentCount: 3,
+                donationCount: 3,
               },
             ],
             communities: [
@@ -144,23 +144,23 @@ describe("PublicProfilePage", () => {
           recentActivity: [
             {
               id: "intent_123",
-              type: "fundraiser_support",
+              type: "fundraiser_donation",
               actor: {
                 displayName: "Jordan Lee",
                 profileSlug: "jordan-lee",
                 avatarUrl: null,
               },
               createdAt: "2026-03-16T12:00:00.000Z",
-              summary: "Jordan Lee started a mocked donation",
+              summary: "Jordan Lee donated",
               detail: "Warm Meals 2026",
               fundraiser: {
                 slug: "warm-meals-2026",
                 title: "Warm Meals 2026",
                 status: "active",
                 goalAmount: 250000,
-                supportAmount: 22000,
+                amountRaised: 22000,
                 supporterCount: 5,
-                donationIntentCount: 5,
+                donationCount: 5,
               },
               community: {
                 slug: "neighbors-helping-neighbors",
@@ -227,8 +227,8 @@ describe("PublicProfilePage", () => {
             "/communities/neighbors-helping-neighbors",
         ),
     ).toBe(true);
-    expect(screen.getByText("Jordan Lee started a mocked donation")).toBeInTheDocument();
-    expect(screen.getByText("$4,200 toward a fundraiser")).toBeInTheDocument();
+    expect(screen.getByText("Jordan Lee donated")).toBeInTheDocument();
+    expect(screen.getByText("$4,200 donated")).toBeInTheDocument();
     expect(screen.getByText("Kitchen kickoff update")).toBeInTheDocument();
     expect(screen.getByText("Meal prep starts Saturday.")).toBeInTheDocument();
     expect(

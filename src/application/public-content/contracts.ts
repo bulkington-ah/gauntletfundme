@@ -1,6 +1,6 @@
 import type {
   CommunityVisibility,
-  DonationIntentStatus,
+  DonationStatus,
   FundraiserStatus,
   ModerationStatus,
   PostStatus,
@@ -38,9 +38,9 @@ export type PublicFundraiserSummary = {
   title: string;
   status: FundraiserStatus;
   goalAmount: number;
-  supportAmount: number;
+  amountRaised: number;
   supporterCount: number;
-  donationIntentCount: number;
+  donationCount: number;
 };
 
 export type PublicFundraiserBrowseEntry = PublicFundraiserSummary & {
@@ -51,15 +51,15 @@ export type PublicFundraiserBrowseEntry = PublicFundraiserSummary & {
   community: PublicCommunityReference | null;
 };
 
-export type PublicFundraiserSupporter = PublicActorSummary & {
+export type PublicFundraiserDonation = PublicActorSummary & {
   amount: number;
-  status: DonationIntentStatus;
+  status: DonationStatus;
   createdAt: string;
 };
 
 export type PublicProfileActivity = {
   id: string;
-  type: "fundraiser_support" | "community_post";
+  type: "fundraiser_donation" | "community_post";
   actor: PublicActorSummary;
   createdAt: string;
   summary: string;
@@ -98,7 +98,7 @@ export type PublicFundraiserResponse = {
     role: UserRole;
   };
   community: PublicCommunityReference | null;
-  recentSupporters: PublicFundraiserSupporter[];
+  recentDonations: PublicFundraiserDonation[];
 };
 
 export type PublicFundraiserListResponse = {
@@ -115,8 +115,8 @@ export type PublicCommunityResponse = {
     visibility: CommunityVisibility;
     followerCount: number;
     fundraiserCount: number;
-    supportAmount: number;
-    donationIntentCount: number;
+    amountRaised: number;
+    donationCount: number;
   };
   owner: PublicActorSummary & {
     role: UserRole;

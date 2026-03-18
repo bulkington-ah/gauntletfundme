@@ -56,7 +56,7 @@ export const PublicFundraiserBrowsePage = ({
             <p className={styles.eyebrow}>Browse fundraisers</p>
             <h1 className={styles.title}>Find public fundraisers with real momentum</h1>
             <p className={styles.description}>
-              Explore the current prototype campaigns, see who is organizing them,
+              Explore current public campaigns, see who is organizing them,
               and jump straight into the fundraiser pages that already have active
               supporter energy.
             </p>
@@ -81,7 +81,7 @@ export const PublicFundraiserBrowsePage = ({
             <div className={styles.grid}>
               {model.fundraisers.map((fundraiser) => {
                 const progressPercentage = toGoalProgressPercentage(
-                  fundraiser.supportAmount,
+                  fundraiser.amountRaised,
                   fundraiser.goalAmount,
                 );
 
@@ -110,7 +110,7 @@ export const PublicFundraiserBrowsePage = ({
                     <div className={styles.metricBlock}>
                       <div className={styles.metricHeadline}>
                         <span className={styles.metricValue}>
-                          {formatCurrency(fundraiser.supportAmount)}
+                          {formatCurrency(fundraiser.amountRaised)}
                         </span>
                         <span className={styles.metricContext}>
                           of {formatCompactCurrency(fundraiser.goalAmount)}
@@ -126,7 +126,7 @@ export const PublicFundraiserBrowsePage = ({
 
                       <p className={styles.metricMeta}>
                         {fundraiser.supporterCount} supporters ·{" "}
-                        {fundraiser.donationIntentCount} support actions
+                        {fundraiser.donationCount} donations
                       </p>
                     </div>
 
@@ -164,7 +164,7 @@ const formatCurrency = (amount: number): string =>
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(amount / 100);
+  }).format(amount);
 
 const formatCompactCurrency = (amount: number): string =>
   new Intl.NumberFormat("en-US", {
@@ -172,7 +172,7 @@ const formatCompactCurrency = (amount: number): string =>
     currency: "USD",
     maximumFractionDigits: 1,
     notation: "compact",
-  }).format(amount / 100);
+  }).format(amount);
 
 const toGoalProgressPercentage = (supportAmount: number, goalAmount: number): number => {
   if (goalAmount <= 0) {

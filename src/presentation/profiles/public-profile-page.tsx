@@ -279,14 +279,14 @@ export const PublicProfilePage = ({
                         className={styles.highlightProgressFill}
                         style={{
                           width: `${toGoalProgressPercentage(
-                            fundraiser.supportAmount,
+                            fundraiser.amountRaised,
                             fundraiser.goalAmount,
                           )}%`,
                         }}
                       />
                     </div>
                     <p className={styles.highlightRaised}>
-                      {formatCurrency(fundraiser.supportAmount)} in prototype support
+                      {formatCurrency(fundraiser.amountRaised)} raised
                     </p>
                     <p className={styles.highlightMeta}>
                       Goal {formatCompactCurrency(fundraiser.goalAmount)} ·{" "}
@@ -359,7 +359,7 @@ export const PublicProfilePage = ({
                     <p className={styles.activitySummary}>{entry.summary}</p>
                     {entry.amount !== null ? (
                       <p className={styles.activityAmount}>
-                        {formatCurrency(entry.amount)} toward a fundraiser
+                        {formatCurrency(entry.amount)} donated
                       </p>
                     ) : null}
                     {entry.detail ? (
