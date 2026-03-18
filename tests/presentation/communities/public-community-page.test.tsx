@@ -71,6 +71,7 @@ describe("PublicCommunityPage", () => {
               status: "published",
               moderationStatus: "visible",
               authorDisplayName: "Avery Johnson",
+              authorProfileSlug: "avery-johnson",
               createdAt: "2026-03-16T10:00:00.000Z",
               comments: [
                 {
@@ -78,6 +79,7 @@ describe("PublicCommunityPage", () => {
                   body: "I can help with setup.",
                   moderationStatus: "visible",
                   authorDisplayName: "Jordan Lee",
+                  authorProfileSlug: "jordan-lee",
                   createdAt: "2026-03-16T10:15:00.000Z",
                 },
               ],
@@ -157,6 +159,7 @@ describe("PublicCommunityPage", () => {
           status: "published",
           moderationStatus: "visible",
           authorDisplayName: "Avery Johnson",
+          authorProfileSlug: "avery-johnson",
           createdAt: "2026-03-16T10:00:00.000Z",
           comments: [
             {
@@ -164,6 +167,7 @@ describe("PublicCommunityPage", () => {
               body: "I can help with setup.",
               moderationStatus: "visible",
               authorDisplayName: "Jordan Lee",
+              authorProfileSlug: "jordan-lee",
               createdAt: "2026-03-16T10:15:00.000Z",
             },
           ],
@@ -256,6 +260,7 @@ describe("PublicCommunityPage", () => {
               status: "published",
               moderationStatus: "visible",
               authorDisplayName: "Avery Johnson",
+              authorProfileSlug: "avery-johnson",
               createdAt: "2026-03-16T10:00:00.000Z",
               comments: [
                 {
@@ -263,6 +268,7 @@ describe("PublicCommunityPage", () => {
                   body: "I can help with setup.",
                   moderationStatus: "visible",
                   authorDisplayName: "Jordan Lee",
+                  authorProfileSlug: "jordan-lee",
                   createdAt: "2026-03-16T10:15:00.000Z",
                 },
               ],
@@ -303,6 +309,13 @@ describe("PublicCommunityPage", () => {
     expect(screen.getByText("Kitchen kickoff update")).toBeInTheDocument();
     expect(screen.getByText("Our first prep day starts this Saturday.")).toBeInTheDocument();
     expect(screen.getByText("I can help with setup.")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Avery Johnson\s+Mar 16, 2026/i }),
+    ).toHaveAttribute("href", "/profiles/avery-johnson");
+    expect(screen.getByRole("link", { name: "Jordan Lee" })).toHaveAttribute(
+      "href",
+      "/profiles/jordan-lee",
+    );
     expect(screen.getByText("Campaigns in this community")).toBeInTheDocument();
     expect(
       screen
@@ -314,6 +327,9 @@ describe("PublicCommunityPage", () => {
         ),
     ).toBe(true);
     expect(screen.getByText("What this community supports")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Avery Johnson\s+Organizer/i }),
+    ).toHaveAttribute("href", "/profiles/avery-johnson");
   });
 
   it("renders community-not-found and invalid-request states", () => {

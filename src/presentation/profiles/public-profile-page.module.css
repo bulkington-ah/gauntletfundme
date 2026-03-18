@@ -163,6 +163,15 @@
   font-weight: var(--wa-font-weight-semibold);
 }
 
+.counterLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.counterLink:hover {
+  color: var(--wa-color-success-fill-loud);
+}
+
 .counterValue {
   color: var(--wa-color-text-normal);
   font-weight: var(--wa-font-weight-bold);
@@ -420,6 +429,21 @@
   font-size: 0.95rem;
   height: 3rem;
   width: 3rem;
+}
+
+.activityIdentityLink {
+  align-items: center;
+  color: inherit;
+  display: grid;
+  gap: 0.75rem;
+  grid-column: 1 / span 2;
+  grid-template-columns: auto 1fr;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.activityIdentityLink:hover .activityActor {
+  color: var(--wa-color-success-fill-loud);
 }
 
 .activityMeta,

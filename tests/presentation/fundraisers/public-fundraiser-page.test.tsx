@@ -169,9 +169,6 @@ describe("PublicFundraiserPage", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Avery Johnson" }),
-    ).toBeInTheDocument();
-    expect(
       screen.getByText("Recent supporters"),
     ).toBeInTheDocument();
     expect(screen.getByText("Noah Kim")).toBeInTheDocument();
@@ -184,10 +181,19 @@ describe("PublicFundraiserPage", () => {
     const donateButtons = screen.getAllByRole("button", { name: "Donate now" });
     expect(donateButtons).toHaveLength(3);
 
-    const organizerProfileLink = screen.getByRole("link", {
-      name: "Avery Johnson",
-    });
-    expect(organizerProfileLink).toHaveAttribute("href", "/profiles/avery-johnson");
+    expect(
+      screen
+        .getAllByRole("link", { name: "Avery Johnson" })
+        .some((link) => link.getAttribute("href") === "/profiles/avery-johnson"),
+    ).toBe(true);
+    expect(screen.getByRole("link", { name: /Noah Kim/i })).toHaveAttribute(
+      "href",
+      "/profiles/noah-kim",
+    );
+    expect(screen.getByRole("link", { name: /Sam Rivera/i })).toHaveAttribute(
+      "href",
+      "/profiles/sam-rivera",
+    );
 
     const communityLink = screen.getByRole("link", {
       name: "Neighbors Helping Neighbors",

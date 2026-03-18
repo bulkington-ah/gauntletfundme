@@ -285,16 +285,40 @@ export const PublicCommunityPage = ({
                   model.discussion.map((post) => (
                     <article className={styles.postCard} key={post.id}>
                       <div className={styles.postHeader}>
-                        <div className={styles.postAvatar} aria-hidden="true">
-                          {toInitials(post.authorDisplayName)}
-                        </div>
-                        <div className={styles.postMeta}>
-                          <p className={styles.postAuthor}>{post.authorDisplayName}</p>
-                          <p className={styles.postDate}>
-                            {formatDate(post.createdAt)} ·{" "}
-                            {toTitleCase(post.moderationStatus)}
-                          </p>
-                        </div>
+                        {post.authorProfileSlug ? (
+                          <Link
+                            className={styles.postIdentityLink}
+                            href={`/profiles/${post.authorProfileSlug}`}
+                          >
+                            <div className={styles.postAvatar} aria-hidden="true">
+                              {toInitials(post.authorDisplayName)}
+                            </div>
+                            <div className={styles.postMeta}>
+                              <p className={styles.postAuthor}>
+                                {post.authorDisplayName}
+                              </p>
+                              <p className={styles.postDate}>
+                                {formatDate(post.createdAt)} ·{" "}
+                                {toTitleCase(post.moderationStatus)}
+                              </p>
+                            </div>
+                          </Link>
+                        ) : (
+                          <>
+                            <div className={styles.postAvatar} aria-hidden="true">
+                              {toInitials(post.authorDisplayName)}
+                            </div>
+                            <div className={styles.postMeta}>
+                              <p className={styles.postAuthor}>
+                                {post.authorDisplayName}
+                              </p>
+                              <p className={styles.postDate}>
+                                {formatDate(post.createdAt)} ·{" "}
+                                {toTitleCase(post.moderationStatus)}
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       <div className={styles.postContent}>
@@ -312,7 +336,17 @@ export const PublicCommunityPage = ({
                               <li className={styles.commentItem} key={comment.id}>
                                 <p className={styles.commentBody}>{comment.body}</p>
                                 <p className={styles.commentMeta}>
-                                  {comment.authorDisplayName} ·{" "}
+                                  {comment.authorProfileSlug ? (
+                                    <Link
+                                      className={styles.inlineAuthorLink}
+                                      href={`/profiles/${comment.authorProfileSlug}`}
+                                    >
+                                      {comment.authorDisplayName}
+                                    </Link>
+                                  ) : (
+                                    comment.authorDisplayName
+                                  )}{" "}
+                                  ·{" "}
                                   {formatDate(comment.createdAt)}
                                 </p>
                               </li>
@@ -390,17 +424,36 @@ export const PublicCommunityPage = ({
 
                 <section className={styles.aboutCard}>
                   <h3 className={styles.aboutCardTitle}>Owner</h3>
-                  <div className={styles.ownerRow}>
-                    <div className={styles.ownerAvatar} aria-hidden="true">
-                      {ownerInitials}
+                  {model.owner.profileSlug ? (
+                    <Link
+                      className={styles.ownerLink}
+                      href={`/profiles/${model.owner.profileSlug}`}
+                    >
+                      <div className={styles.ownerRow}>
+                        <div className={styles.ownerAvatar} aria-hidden="true">
+                          {ownerInitials}
+                        </div>
+                        <div>
+                          <p className={styles.ownerName}>{model.owner.displayName}</p>
+                          <p className={styles.ownerRole}>
+                            {toTitleCase(model.owner.role)}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  ) : (
+                    <div className={styles.ownerRow}>
+                      <div className={styles.ownerAvatar} aria-hidden="true">
+                        {ownerInitials}
+                      </div>
+                      <div>
+                        <p className={styles.ownerName}>{model.owner.displayName}</p>
+                        <p className={styles.ownerRole}>
+                          {toTitleCase(model.owner.role)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className={styles.ownerName}>{model.owner.displayName}</p>
-                      <p className={styles.ownerRole}>
-                        {toTitleCase(model.owner.role)}
-                      </p>
-                    </div>
-                  </div>
+                  )}
                   {model.owner.profileSlug ? (
                     <a
                       className={styles.inlineLink}

@@ -86,22 +86,28 @@ export const getPublicCommunityBySlug = async (
         fundraiser: toPublicFundraiserSummary(fundraiser),
       })),
       fundraisers: sortedFundraisers.map(toPublicFundraiserSummary),
-      discussion: snapshot.discussion.map(({ post, author, comments }) => ({
+      discussion: snapshot.discussion.map(
+        ({ post, author, authorProfile, comments }) => ({
         id: post.id,
         title: post.title,
         body: post.body,
         status: post.status,
         moderationStatus: post.moderationStatus,
         authorDisplayName: author.displayName,
+        authorProfileSlug: authorProfile?.slug ?? null,
         createdAt: post.createdAt.toISOString(),
-        comments: comments.map(({ comment, author: commentAuthor }) => ({
+        comments: comments.map(
+          ({ comment, author: commentAuthor, authorProfile }) => ({
           id: comment.id,
           body: comment.body,
           moderationStatus: comment.moderationStatus,
           authorDisplayName: commentAuthor.displayName,
+          authorProfileSlug: authorProfile?.slug ?? null,
           createdAt: comment.createdAt.toISOString(),
-        })),
-      })),
+          }),
+        ),
+        }),
+      ),
     },
   };
 };

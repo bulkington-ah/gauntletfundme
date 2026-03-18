@@ -19,6 +19,17 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(snapshot.user.displayName).toBe("Avery Johnson");
     expect(snapshot.followerCount).toBe(5);
     expect(snapshot.followingCount).toBe(2);
+    expect(snapshot.followers.map((entry) => entry.user.displayName)).toEqual([
+      "Elena Gomez",
+      "Priya Shah",
+      "Sam Rivera",
+      "Morgan Patel",
+      "Jordan Lee",
+    ]);
+    expect(snapshot.following.map((entry) => entry.user.displayName)).toEqual([
+      "Morgan Patel",
+      "Jordan Lee",
+    ]);
     expect(snapshot.inspiredSupporterCount).toBe(6);
     expect(snapshot.featuredFundraisers).toHaveLength(4);
     expect(snapshot.featuredFundraisers[0]?.fundraiser.slug).toBe("warm-meals-2026");
@@ -213,7 +224,13 @@ describe("PostgresPublicContentEngagementRepository", () => {
     }
 
     expect(communitySnapshot.discussion[0]?.post.id).toBe(post.id);
+    expect(communitySnapshot.discussion[0]?.authorProfile?.slug).toBe(
+      "avery-johnson",
+    );
     expect(communitySnapshot.discussion[0]?.comments[0]?.comment.id).toBe(comment.id);
+    expect(communitySnapshot.discussion[0]?.comments[0]?.authorProfile?.slug).toBe(
+      "jordan-lee",
+    );
     expect(
       await repository.findPostByIdForCommentCreation(post.id),
     ).toEqual({

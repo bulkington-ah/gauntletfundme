@@ -166,7 +166,19 @@ export const PublicFundraiserPage = ({
             <p className={styles.eyebrow}>Community fundraiser</p>
             <h1 className={styles.headlineTitle}>{model.fundraiser.title}</h1>
             <p className={styles.headlineMeta}>
-              Organized by {model.organizer.displayName}
+              Organized by{" "}
+              {model.organizer.profileSlug ? (
+                <Link
+                  className={styles.organizerLink}
+                  href={`/profiles/${model.organizer.profileSlug}`}
+                >
+                  {model.organizer.displayName}
+                </Link>
+              ) : (
+                <span className={styles.organizerName}>
+                  {model.organizer.displayName}
+                </span>
+              )}
               {model.community ? ` for ${model.community.name}` : ""} · {fundraiserStatus}
             </p>
           </div>
@@ -241,9 +253,21 @@ export const PublicFundraiserPage = ({
 
             <section className={styles.organizerCard}>
               <div className={styles.organizerHeader}>
-                <div className={styles.organizerAvatar} aria-hidden="true">
-                  {toInitials(model.organizer.displayName)}
-                </div>
+                {model.organizer.profileSlug ? (
+                  <Link
+                    aria-label={`View ${model.organizer.displayName} profile`}
+                    className={styles.organizerAvatarLink}
+                    href={`/profiles/${model.organizer.profileSlug}`}
+                  >
+                    <div className={styles.organizerAvatar} aria-hidden="true">
+                      {toInitials(model.organizer.displayName)}
+                    </div>
+                  </Link>
+                ) : (
+                  <div className={styles.organizerAvatar} aria-hidden="true">
+                    {toInitials(model.organizer.displayName)}
+                  </div>
+                )}
 
                 <div className={styles.organizerCopy}>
                   <p className={styles.organizerLine}>
@@ -455,21 +479,46 @@ const SupportProgressDetails = ({
 
 const SupporterListItem = ({ supporter }: SupporterListItemProps) => (
   <li className={styles.supporterItem}>
-    <div className={styles.supporterAvatar} aria-hidden="true">
-      {toInitials(supporter.displayName)}
-    </div>
+    {supporter.profileSlug ? (
+      <Link
+        className={styles.supporterIdentityLink}
+        href={`/profiles/${supporter.profileSlug}`}
+      >
+        <div className={styles.supporterAvatar} aria-hidden="true">
+          {toInitials(supporter.displayName)}
+        </div>
 
-    <div className={styles.supporterDetails}>
-      <div className={styles.supporterNameRow}>
-        <span className={styles.supporterName}>{supporter.displayName}</span>
-        <span className={styles.supporterDate}>
-          {formatSupporterDate(supporter.createdAt)}
-        </span>
-      </div>
-      <p className={styles.supporterMeta}>
-        {formatCurrency(supporter.amount)} donated
-      </p>
-    </div>
+        <div className={styles.supporterDetails}>
+          <div className={styles.supporterNameRow}>
+            <span className={styles.supporterName}>{supporter.displayName}</span>
+            <span className={styles.supporterDate}>
+              {formatSupporterDate(supporter.createdAt)}
+            </span>
+          </div>
+          <p className={styles.supporterMeta}>
+            {formatCurrency(supporter.amount)} donated
+          </p>
+        </div>
+      </Link>
+    ) : (
+      <>
+        <div className={styles.supporterAvatar} aria-hidden="true">
+          {toInitials(supporter.displayName)}
+        </div>
+
+        <div className={styles.supporterDetails}>
+          <div className={styles.supporterNameRow}>
+            <span className={styles.supporterName}>{supporter.displayName}</span>
+            <span className={styles.supporterDate}>
+              {formatSupporterDate(supporter.createdAt)}
+            </span>
+          </div>
+          <p className={styles.supporterMeta}>
+            {formatCurrency(supporter.amount)} donated
+          </p>
+        </div>
+      </>
+    )}
   </li>
 );
 

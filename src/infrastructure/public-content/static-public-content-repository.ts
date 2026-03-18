@@ -48,7 +48,7 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
 
   const findVisibleCommentsForPost = (
     postId: string,
-  ): Array<{ comment: Comment; author: User }> =>
+  ): Array<{ comment: Comment; author: User; authorProfile: UserProfile | null }> =>
     catalog.comments
       .filter(
         (comment) =>
@@ -58,7 +58,15 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
       .flatMap((comment) => {
         const author = findUserById(comment.authorUserId);
 
-        return author ? [{ comment, author }] : [];
+        return author
+          ? [
+              {
+                comment,
+                author,
+                authorProfile: findUserProfileByUserId(author.id),
+              },
+            ]
+          : [];
       });
 
   const findVisibleDiscussionForCommunity = (
@@ -80,6 +88,7 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
               {
                 post,
                 author,
+                authorProfile: findUserProfileByUserId(author.id),
                 comments: findVisibleCommentsForPost(post.id),
               },
             ]
@@ -145,8 +154,43 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
       (follow) => follow.targetType === targetType && follow.targetId === targetId,
     ).length;
 
-  const countFollowing = (userId: string): number =>
-    catalog.follows.filter((follow) => follow.userId === userId).length;
+  const findProfileFollowers = (profileId: string): PublicActorSnapshot[] =>
+    catalog.follows
+      .filter(
+        (follow) => follow.targetType === "profile" && follow.targetId === profileId,
+      )
+      .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())
+      .flatMap((follow) => {
+        const actor = buildActorSnapshotByUserId(follow.userId);
+
+        return actor ? [actor] : [];
+      });
+
+  const findProfilesFollowedByUserId = (userId: string): PublicActorSnapshot[] =>
+    catalog.follows
+      .filter(
+        (follow) => follow.userId === userId && follow.targetType === "profile",
+      )
+      .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())
+      .flatMap((follow) => {
+        const profile =
+          catalog.userProfiles.find((entry) => entry.id === follow.targetId) ?? null;
+
+        if (!profile) {
+          return [];
+        }
+
+        const user = findUserById(profile.userId);
+
+        return user
+          ? [
+              {
+                user,
+                profile,
+              },
+            ]
+          : [];
+      });
 
   const buildFundraiserSummarySnapshot = (
     fundraiserId: string,
@@ -341,17 +385,21 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
 
       const fundraiserSummaries = findFundraiserSummariesByOwnerUserId(user.id);
       const ownedCommunities = findCommunitiesByOwnerUserId(user.id);
+      const followers = findProfileFollowers(profile.id);
+      const following = findProfilesFollowedByUserId(user.id);
 
       return {
         user,
         profile,
-        followerCount: countFollowers("profile", profile.id),
-        followingCount: countFollowing(user.id),
+        followerCount: followers.length,
+        followingCount: following.length,
         inspiredSupporterCount: countInspiredSupporters(
           user.id,
           fundraiserSummaries,
           ownedCommunities,
         ),
+        followers,
+        following,
         featuredFundraisers: fundraiserSummaries,
         ownedCommunities,
         recentActivity: buildProfileRecentActivity(

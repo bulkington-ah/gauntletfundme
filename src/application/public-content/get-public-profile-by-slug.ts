@@ -13,6 +13,7 @@ import {
   toPublicActorSummary,
   toPublicCommunityReference,
   toPublicFundraiserSummary,
+  toPublicProfileRelationshipMember,
 } from "./mappers";
 import type { PublicContentReadRepository } from "./ports";
 
@@ -62,6 +63,10 @@ export const getPublicProfileBySlug = async (
         followerCount: snapshot.followerCount,
         followingCount: snapshot.followingCount,
         inspiredSupporterCount: snapshot.inspiredSupporterCount,
+      },
+      relationships: {
+        followers: snapshot.followers.map(toPublicProfileRelationshipMember),
+        following: snapshot.following.map(toPublicProfileRelationshipMember),
       },
       connections: {
         fundraisers: snapshot.featuredFundraisers.map(toPublicFundraiserSummary),

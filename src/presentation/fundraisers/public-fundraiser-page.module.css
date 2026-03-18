@@ -205,6 +205,13 @@
   width: 3.3rem;
 }
 
+.organizerAvatarLink,
+.supporterIdentityLink {
+  color: inherit;
+  display: inline-flex;
+  text-decoration: none;
+}
+
 .organizerCopy {
   display: grid;
   gap: 0.35rem;
@@ -550,6 +557,17 @@
   align-items: center;
   display: flex;
   gap: 0.9rem;
+}
+
+.supporterIdentityLink {
+  align-items: center;
+  display: flex;
+  gap: 0.9rem;
+  width: 100%;
+}
+
+.supporterIdentityLink:hover .supporterName {
+  color: var(--wa-color-success-fill-loud);
 }
 
 .supporterAvatar {

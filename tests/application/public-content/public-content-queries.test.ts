@@ -54,6 +54,46 @@ describe("public content queries", () => {
       followerCount: 4,
       followingCount: 2,
       inspiredSupporterCount: 5,
+      followers: [
+        {
+          user: createUser({
+            id: "user_456",
+            email: "jordan@example.com",
+            displayName: "Jordan Lee",
+            role: "supporter",
+            createdAt,
+          }),
+          profile: createUserProfile({
+            id: "profile_456",
+            userId: "user_456",
+            slug: "jordan-lee",
+            bio: "Supporter",
+            avatarUrl: null,
+            profileType: "supporter",
+            createdAt,
+          }),
+        },
+      ],
+      following: [
+        {
+          user: createUser({
+            id: "user_789",
+            email: "morgan@example.com",
+            displayName: "Morgan Patel",
+            role: "moderator",
+            createdAt,
+          }),
+          profile: createUserProfile({
+            id: "profile_789",
+            userId: "user_789",
+            slug: "morgan-patel",
+            bio: "Community moderator",
+            avatarUrl: null,
+            profileType: "supporter",
+            createdAt,
+          }),
+        },
+      ],
       featuredFundraisers: [
         {
           fundraiser: createFundraiser({
@@ -251,6 +291,28 @@ describe("public content queries", () => {
           followerCount: 4,
           followingCount: 2,
           inspiredSupporterCount: 5,
+        },
+        relationships: {
+          followers: [
+            {
+              displayName: "Jordan Lee",
+              profileSlug: "jordan-lee",
+              avatarUrl: null,
+              role: "supporter",
+              profileType: "supporter",
+              bio: "Supporter",
+            },
+          ],
+          following: [
+            {
+              displayName: "Morgan Patel",
+              profileSlug: "morgan-patel",
+              avatarUrl: null,
+              role: "moderator",
+              profileType: "supporter",
+              bio: "Community moderator",
+            },
+          ],
         },
         connections: {
           fundraisers: [
@@ -945,10 +1007,28 @@ describe("public content queries", () => {
         {
           post,
           author: owner,
+          authorProfile: createUserProfile({
+            id: "profile_123",
+            userId: owner.id,
+            slug: "avery-johnson",
+            bio: "Organizer building community support.",
+            avatarUrl: "https://example.com/avery.png",
+            profileType: "organizer",
+            createdAt,
+          }),
           comments: [
             {
               comment,
               author: supporter,
+              authorProfile: createUserProfile({
+                id: "profile_456",
+                userId: supporter.id,
+                slug: "jordan-lee",
+                bio: "Supporter",
+                avatarUrl: null,
+                profileType: "supporter",
+                createdAt,
+              }),
             },
           ],
         },
@@ -989,11 +1069,13 @@ describe("public content queries", () => {
       id: "post_123",
       title: "Kickoff update",
       authorDisplayName: "Avery Johnson",
+      authorProfileSlug: "avery-johnson",
       comments: [
         {
           id: "comment_123",
           body: "I can help with setup.",
           authorDisplayName: "Jordan Lee",
+          authorProfileSlug: "jordan-lee",
         },
       ],
     });

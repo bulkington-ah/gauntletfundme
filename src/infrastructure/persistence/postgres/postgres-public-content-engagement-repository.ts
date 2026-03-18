@@ -220,15 +220,46 @@ export const createPostgresPublicContentEngagementRepository = (
     return Number(result.rows[0]?.follower_count ?? "0");
   };
 
-  const countFollowingByUserId = async (userId: string) => {
-    const result = await query<{ following_count: string }>(
-      `SELECT COUNT(*)::text AS following_count
+  const findProfileFollowers = async (
+    profileId: string,
+  ): Promise<PublicActorSnapshot[]> => {
+    const result = await query<{ user_id: string }>(
+      `SELECT user_id
        FROM follows
-       WHERE user_id = $1`,
+       WHERE target_type = 'profile'
+         AND target_id = $1
+       ORDER BY created_at DESC`,
+      [profileId],
+    );
+
+    return (
+      await Promise.all(
+        result.rows.map(async (row) => buildActorSnapshotByUserId(row.user_id)),
+      )
+    ).filter((actor): actor is PublicActorSnapshot => actor !== null);
+  };
+
+  const findProfilesFollowedByUserId = async (
+    userId: string,
+  ): Promise<PublicActorSnapshot[]> => {
+    const result = await query<{
+      followed_user_id: string;
+    }>(
+      `SELECT
+         p.user_id AS followed_user_id
+       FROM follows f
+       INNER JOIN user_profiles p ON p.id = f.target_id
+       WHERE f.user_id = $1
+         AND f.target_type = 'profile'
+       ORDER BY f.created_at DESC`,
       [userId],
     );
 
-    return Number(result.rows[0]?.following_count ?? "0");
+    return (
+      await Promise.all(
+        result.rows.map(async (row) => buildActorSnapshotByUserId(row.followed_user_id)),
+      )
+    ).filter((actor): actor is PublicActorSnapshot => actor !== null);
   };
 
   const buildFundraiserSummarySnapshotFromRow = async (
@@ -354,10 +385,14 @@ export const createPostgresPublicContentEngagementRepository = (
         return {
           post: mapPost(postRow),
           author: mapJoinedUser(postRow),
-          comments: commentsResult.rows.map((commentRow) => ({
-            comment: mapComment(commentRow),
-            author: mapJoinedUser(commentRow),
-          })),
+          authorProfile: await findUserProfileByUserId(postRow.author_user_id),
+          comments: await Promise.all(
+            commentsResult.rows.map(async (commentRow) => ({
+              comment: mapComment(commentRow),
+              author: mapJoinedUser(commentRow),
+              authorProfile: await findUserProfileByUserId(commentRow.author_user_id),
+            })),
+          ),
         };
       }),
     );
@@ -606,17 +641,21 @@ export const createPostgresPublicContentEngagementRepository = (
       const featuredFundraisers = await findFundraiserSummariesByOwnerUserId(
         profileRow.user_id,
       );
+      const followers = await findProfileFollowers(profileRow.id);
+      const following = await findProfilesFollowedByUserId(profileRow.user_id);
 
       return {
         user,
         profile,
-        followerCount: await countFollowersByTarget("profile", profileRow.id),
-        followingCount: await countFollowingByUserId(profileRow.user_id),
+        followerCount: followers.length,
+        followingCount: following.length,
         inspiredSupporterCount: await countInspiredSupporters(
           profileRow.user_id,
           featuredFundraisers,
           ownedCommunities,
         ),
+        followers,
+        following,
         featuredFundraisers,
         ownedCommunities,
         recentActivity: await buildProfileRecentActivity(

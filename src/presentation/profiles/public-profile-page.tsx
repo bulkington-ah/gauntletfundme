@@ -13,6 +13,7 @@ type PublicProfileQuery = Pick<ApplicationApi, "getPublicProfileBySlug">;
 type SuccessfulProfilePageModel = {
   status: "success";
   profile: PublicProfileResponse["profile"];
+  relationships: PublicProfileResponse["relationships"];
   connections: PublicProfileResponse["connections"];
   recentActivity: PublicProfileResponse["recentActivity"];
 };
@@ -64,6 +65,7 @@ export const buildPublicProfilePageModel = async (
       return {
         status: "success",
         profile: result.data.profile,
+        relationships: result.data.relationships,
         connections: result.data.connections,
         recentActivity: result.data.recentActivity,
       };
@@ -186,18 +188,24 @@ export const PublicProfilePage = ({
               </wa-badge>
 
               <div className={styles.counterRow}>
-                <p className={styles.counter}>
+                <Link
+                  className={`${styles.counter} ${styles.counterLink}`}
+                  href={`/profiles/${model.profile.slug}/followers`}
+                >
                   <span className={styles.counterValue}>
                     {model.profile.followerCount}
                   </span>{" "}
                   followers
-                </p>
-                <p className={styles.counter}>
+                </Link>
+                <Link
+                  className={`${styles.counter} ${styles.counterLink}`}
+                  href={`/profiles/${model.profile.slug}/following`}
+                >
                   <span className={styles.counterValue}>
                     {model.profile.followingCount}
                   </span>{" "}
                   following
-                </p>
+                </Link>
               </div>
 
               <div className={styles.heroActions}>
@@ -343,13 +351,34 @@ export const PublicProfilePage = ({
               model.recentActivity.map((entry) => (
                 <article className={styles.activityCard} key={entry.id}>
                   <div className={styles.activityHeader}>
-                    <div className={styles.activityAvatar} aria-hidden="true">
-                      {toInitials(entry.actor.displayName)}
-                    </div>
-                    <div className={styles.activityMeta}>
-                      <p className={styles.activityActor}>{entry.actor.displayName}</p>
-                      <p className={styles.activityDate}>{formatDate(entry.createdAt)}</p>
-                    </div>
+                    {entry.actor.profileSlug ? (
+                      <Link
+                        className={styles.activityIdentityLink}
+                        href={`/profiles/${entry.actor.profileSlug}`}
+                      >
+                        <div className={styles.activityAvatar} aria-hidden="true">
+                          {toInitials(entry.actor.displayName)}
+                        </div>
+                        <div className={styles.activityMeta}>
+                          <p className={styles.activityActor}>{entry.actor.displayName}</p>
+                          <p className={styles.activityDate}>
+                            {formatDate(entry.createdAt)}
+                          </p>
+                        </div>
+                      </Link>
+                    ) : (
+                      <>
+                        <div className={styles.activityAvatar} aria-hidden="true">
+                          {toInitials(entry.actor.displayName)}
+                        </div>
+                        <div className={styles.activityMeta}>
+                          <p className={styles.activityActor}>{entry.actor.displayName}</p>
+                          <p className={styles.activityDate}>
+                            {formatDate(entry.createdAt)}
+                          </p>
+                        </div>
+                      </>
+                    )}
                     <button className={styles.activityMoreButton} type="button">
                       ...
                     </button>

@@ -18,6 +18,12 @@ export type PublicActorSummary = {
   avatarUrl: string | null;
 };
 
+export type PublicProfileRelationshipMember = PublicActorSummary & {
+  role: UserRole;
+  profileType: ProfileType | null;
+  bio: string | null;
+};
+
 export type PublicCommunityReference = {
   slug: string;
   name: string;
@@ -82,6 +88,10 @@ export type PublicProfileResponse = {
     followingCount: number;
     inspiredSupporterCount: number;
   };
+  relationships: {
+    followers: PublicProfileRelationshipMember[];
+    following: PublicProfileRelationshipMember[];
+  };
   connections: {
     fundraisers: PublicFundraiserSummary[];
     communities: PublicCommunityReference[];
@@ -134,12 +144,14 @@ export type PublicCommunityResponse = {
     status: PostStatus;
     moderationStatus: ModerationStatus;
     authorDisplayName: string;
+    authorProfileSlug: string | null;
     createdAt: string;
     comments: Array<{
       id: string;
       body: string;
       moderationStatus: ModerationStatus;
       authorDisplayName: string;
+      authorProfileSlug: string | null;
       createdAt: string;
     }>;
   }>;

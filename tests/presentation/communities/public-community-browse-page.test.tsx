@@ -102,10 +102,10 @@ describe("PublicCommunityBrowsePage", () => {
     expect(screen.getByText("combined followers")).toBeInTheDocument();
 
     const neighborsCard = screen.getByRole("link", {
-      name: /Neighbors Helping Neighbors/i,
+      name: "Neighbors Helping Neighbors",
     });
     const pantryCard = screen.getByRole("link", {
-      name: /Weekend Pantry Crew/i,
+      name: "Weekend Pantry Crew",
     });
 
     expect(neighborsCard).toHaveAttribute(
@@ -113,6 +113,10 @@ describe("PublicCommunityBrowsePage", () => {
       "/communities/neighbors-helping-neighbors",
     );
     expect(pantryCard).toHaveAttribute("href", "/communities/weekend-pantry-crew");
+    expect(screen.getAllByRole("link", { name: "Avery Johnson" })).toHaveLength(2);
+    expect(
+      screen.getByRole("link", { name: "Open community Neighbors Helping Neighbors" }),
+    ).toHaveAttribute("href", "/communities/neighbors-helping-neighbors");
   });
 });
 

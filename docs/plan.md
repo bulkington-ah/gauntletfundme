@@ -370,6 +370,34 @@ This plan breaks the MVP into dependency-ordered milestones and small implementa
   - targeted fundraiser presentation tests
   - `npm run build`
 
+### Task 034: Profile relationship navigation
+- Description: Add dedicated follower and following profile routes, expose profile relationship members in the public read models, and make public profile references clickable across the connected public surfaces.
+- Expected files affected:
+  - `docs/plan.md`
+  - `src/application/public-content/**`
+  - `src/infrastructure/public-content/**`
+  - `src/infrastructure/persistence/postgres/**`
+  - `src/app/profiles/**`
+  - `src/presentation/profiles/**`
+  - `src/presentation/fundraisers/**`
+  - `src/presentation/communities/**`
+  - `tests/application/public-content/**`
+  - `tests/infrastructure/persistence/**`
+  - `tests/presentation/**`
+  - `tasks/task_034_profile_relationship_navigation.md`
+- Acceptance criteria:
+  - the profile page `followers` and `following` counters link to dedicated public relationship routes
+  - profile relationship routes render public member lists from the existing profile query pipeline
+  - public profile read models include relationship members and profile-only following counts
+  - community discussion authors and fundraiser/community profile references navigate to public profile pages when a public profile slug exists
+  - fundraiser and community browse cards preserve primary destination links while exposing organizer or owner profile links separately
+- Tests required:
+  - application public-content query tests
+  - repository tests for profile relationship lists and counts
+  - presentation tests for profile, fundraiser, community, and browse navigation updates
+  - public route-handler tests for additive response payload changes
+  - `npm run build`
+
 ### Task 022: Public community page Web Awesome redesign
 - Description: Rebuild the public community page with a split hero, leaderboard presentation, and tabbed sections backed by derived community data.
 - Expected files affected:

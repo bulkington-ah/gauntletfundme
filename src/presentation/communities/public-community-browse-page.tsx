@@ -83,11 +83,7 @@ export const PublicCommunityBrowsePage = ({
           {model.communities.length > 0 ? (
             <div className={styles.grid}>
               {model.communities.map((community) => (
-                <Link
-                  className={styles.card}
-                  href={`/communities/${community.slug}`}
-                  key={community.slug}
-                >
+                <article className={styles.card} key={community.slug}>
                   <div className={styles.cardTop}>
                     <div className={styles.communityBadge} aria-hidden="true">
                       {toInitials(community.name)}
@@ -98,7 +94,12 @@ export const PublicCommunityBrowsePage = ({
                   </div>
 
                   <div className={styles.cardBody}>
-                    <h2 className={styles.cardTitle}>{community.name}</h2>
+                    <Link
+                      className={styles.cardTitleLink}
+                      href={`/communities/${community.slug}`}
+                    >
+                      <h2 className={styles.cardTitle}>{community.name}</h2>
+                    </Link>
                     <p className={styles.cardDescription}>{community.description}</p>
                   </div>
 
@@ -116,13 +117,26 @@ export const PublicCommunityBrowsePage = ({
                   <div className={styles.cardFooter}>
                     <div>
                       <p className={styles.footerLabel}>Owner</p>
-                      <p className={styles.footerValue}>{community.owner.displayName}</p>
+                      {community.owner.profileSlug ? (
+                        <Link
+                          className={`${styles.footerValue} ${styles.profileLink}`}
+                          href={`/profiles/${community.owner.profileSlug}`}
+                        >
+                          {community.owner.displayName}
+                        </Link>
+                      ) : (
+                        <p className={styles.footerValue}>{community.owner.displayName}</p>
+                      )}
                     </div>
-                    <span className={styles.cardArrow} aria-hidden="true">
+                    <Link
+                      aria-label={`Open community ${community.name}`}
+                      className={styles.cardArrowLink}
+                      href={`/communities/${community.slug}`}
+                    >
                       →
-                    </span>
+                    </Link>
                   </div>
-                </Link>
+                </article>
               ))}
             </div>
           ) : (

@@ -207,6 +207,20 @@ describe("API route handlers", () => {
         followingCount: 2,
         inspiredSupporterCount: 6,
       },
+      relationships: {
+        followers: expect.arrayContaining([
+          expect.objectContaining({
+            displayName: "Elena Gomez",
+            profileSlug: "elena-gomez",
+          }),
+        ]),
+        following: expect.arrayContaining([
+          expect.objectContaining({
+            displayName: "Jordan Lee",
+            profileSlug: "jordan-lee",
+          }),
+        ]),
+      },
       connections: {
         communities: expect.arrayContaining([
           expect.objectContaining({
@@ -267,17 +281,21 @@ describe("API route handlers", () => {
       discussion: [
         {
           title: "Volunteer reminder",
+          authorProfileSlug: "jordan-lee",
           comments: [
             {
               body: "Thank you. We will also have extra containers available onsite.",
+              authorProfileSlug: "avery-johnson",
             },
           ],
         },
         {
           title: "Kitchen kickoff update",
+          authorProfileSlug: "avery-johnson",
           comments: [
             {
               body: "I can help with prep and delivery on the first shift.",
+              authorProfileSlug: "jordan-lee",
             },
           ],
         },

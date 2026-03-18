@@ -24,6 +24,28 @@ describe("PublicProfilePage", () => {
             followingCount: 2,
             inspiredSupporterCount: 5,
           },
+          relationships: {
+            followers: [
+              {
+                displayName: "Jordan Lee",
+                profileSlug: "jordan-lee",
+                avatarUrl: null,
+                role: "supporter",
+                profileType: "supporter",
+                bio: "Supporter",
+              },
+            ],
+            following: [
+              {
+                displayName: "Morgan Patel",
+                profileSlug: "morgan-patel",
+                avatarUrl: null,
+                role: "moderator",
+                profileType: "supporter",
+                bio: "Community moderator",
+              },
+            ],
+          },
           connections: {
             fundraisers: [
               {
@@ -72,6 +94,28 @@ describe("PublicProfilePage", () => {
         followingCount: 2,
         inspiredSupporterCount: 5,
       },
+      relationships: {
+        followers: [
+          {
+            displayName: "Jordan Lee",
+            profileSlug: "jordan-lee",
+            avatarUrl: null,
+            role: "supporter",
+            profileType: "supporter",
+            bio: "Supporter",
+          },
+        ],
+        following: [
+          {
+            displayName: "Morgan Patel",
+            profileSlug: "morgan-patel",
+            avatarUrl: null,
+            role: "moderator",
+            profileType: "supporter",
+            bio: "Community moderator",
+          },
+        ],
+      },
       connections: {
         fundraisers: [
           {
@@ -111,6 +155,28 @@ describe("PublicProfilePage", () => {
             followerCount: 8,
             followingCount: 2,
             inspiredSupporterCount: 5,
+          },
+          relationships: {
+            followers: [
+              {
+                displayName: "Jordan Lee",
+                profileSlug: "jordan-lee",
+                avatarUrl: null,
+                role: "supporter",
+                profileType: "supporter",
+                bio: "Supporter",
+              },
+            ],
+            following: [
+              {
+                displayName: "Morgan Patel",
+                profileSlug: "morgan-patel",
+                avatarUrl: null,
+                role: "moderator",
+                profileType: "supporter",
+                bio: "Community moderator",
+              },
+            ],
           },
           connections: {
             fundraisers: [
@@ -201,11 +267,11 @@ describe("PublicProfilePage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Inspired 5 people to help")).toBeInTheDocument();
     expect(
-      screen.getByText((_, element) => element?.textContent === "8 followers"),
-    ).toBeInTheDocument();
+      screen.getByRole("link", { name: "8 followers" }),
+    ).toHaveAttribute("href", "/profiles/avery-johnson/followers");
     expect(
-      screen.getByText((_, element) => element?.textContent === "2 following"),
-    ).toBeInTheDocument();
+      screen.getByRole("link", { name: "2 following" }),
+    ).toHaveAttribute("href", "/profiles/avery-johnson/following");
     expect(screen.getByText("Fundraiser momentum")).toBeInTheDocument();
     expect(screen.getByText("Recent public activity")).toBeInTheDocument();
 
@@ -231,6 +297,9 @@ describe("PublicProfilePage", () => {
     expect(screen.getByText("$4,200 donated")).toBeInTheDocument();
     expect(screen.getByText("Kitchen kickoff update")).toBeInTheDocument();
     expect(screen.getByText("Meal prep starts Saturday.")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Jordan Lee\s+Mar 16, 2026/i }),
+    ).toHaveAttribute("href", "/profiles/jordan-lee");
     expect(
       screen.getByRole("link", { name: "Benefiting Warm Meals 2026" }),
     ).toHaveAttribute("href", "/fundraisers/warm-meals-2026");

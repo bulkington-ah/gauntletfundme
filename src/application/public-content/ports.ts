@@ -57,6 +57,8 @@ export type PublicProfileSnapshot = {
   followerCount: number;
   followingCount: number;
   inspiredSupporterCount: number;
+  followers: PublicActorSnapshot[];
+  following: PublicActorSnapshot[];
   featuredFundraisers: PublicFundraiserSummarySnapshot[];
   ownedCommunities: Community[];
   recentActivity: PublicProfileActivitySnapshot[];
@@ -70,9 +72,11 @@ export type PublicFundraiserSnapshot = {
 export type CommunityDiscussionSnapshot = {
   post: Post;
   author: User;
+  authorProfile: UserProfile | null;
   comments: Array<{
     comment: Comment;
     author: User;
+    authorProfile: UserProfile | null;
   }>;
 };
 

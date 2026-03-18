@@ -86,11 +86,7 @@ export const PublicFundraiserBrowsePage = ({
                 );
 
                 return (
-                  <Link
-                    className={styles.card}
-                    href={`/fundraisers/${fundraiser.slug}`}
-                    key={fundraiser.slug}
-                  >
+                  <article className={styles.card} key={fundraiser.slug}>
                     <div className={styles.cardHeader}>
                       <wa-badge appearance="outlined" pill>
                         {toTitleCase(fundraiser.status)}
@@ -103,7 +99,12 @@ export const PublicFundraiserBrowsePage = ({
                     </div>
 
                     <div className={styles.cardBody}>
-                      <h2 className={styles.cardTitle}>{fundraiser.title}</h2>
+                      <Link
+                        className={styles.cardTitleLink}
+                        href={`/fundraisers/${fundraiser.slug}`}
+                      >
+                        <h2 className={styles.cardTitle}>{fundraiser.title}</h2>
+                      </Link>
                       <p className={styles.cardDescription}>{fundraiser.storyExcerpt}</p>
                     </div>
 
@@ -133,15 +134,28 @@ export const PublicFundraiserBrowsePage = ({
                     <div className={styles.cardFooter}>
                       <div>
                         <p className={styles.footerLabel}>Organizer</p>
-                        <p className={styles.footerValue}>
-                          {fundraiser.organizer.displayName}
-                        </p>
+                        {fundraiser.organizer.profileSlug ? (
+                          <Link
+                            className={`${styles.footerValue} ${styles.profileLink}`}
+                            href={`/profiles/${fundraiser.organizer.profileSlug}`}
+                          >
+                            {fundraiser.organizer.displayName}
+                          </Link>
+                        ) : (
+                          <p className={styles.footerValue}>
+                            {fundraiser.organizer.displayName}
+                          </p>
+                        )}
                       </div>
-                      <span className={styles.cardArrow} aria-hidden="true">
+                      <Link
+                        aria-label={`Open fundraiser ${fundraiser.title}`}
+                        className={styles.cardArrowLink}
+                        href={`/fundraisers/${fundraiser.slug}`}
+                      >
                         →
-                      </span>
+                      </Link>
                     </div>
-                  </Link>
+                  </article>
                 );
               })}
             </div>

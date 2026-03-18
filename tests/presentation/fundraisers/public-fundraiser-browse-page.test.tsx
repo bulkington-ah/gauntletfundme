@@ -131,15 +131,20 @@ describe("PublicFundraiserBrowsePage", () => {
     expect(screen.getByText("public fundraisers")).toBeInTheDocument();
     expect(screen.getByText("active campaigns")).toBeInTheDocument();
 
-    const warmMealsCard = screen.getByRole("link", { name: /Warm Meals 2026/i });
-    const winterCoatCard = screen.getByRole("link", { name: /Winter Coat Drive 2026/i });
+    const warmMealsCard = screen.getByRole("link", { name: "Warm Meals 2026" });
+    const winterCoatCard = screen.getByRole("link", {
+      name: "Winter Coat Drive 2026",
+    });
 
     expect(warmMealsCard).toHaveAttribute("href", "/fundraisers/warm-meals-2026");
     expect(winterCoatCard).toHaveAttribute(
       "href",
       "/fundraisers/winter-coat-drive-2026",
     );
-    expect(screen.getAllByText("Avery Johnson")).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: "Avery Johnson" })).toHaveLength(2);
+    expect(
+      screen.getByRole("link", { name: "Open fundraiser Warm Meals 2026" }),
+    ).toHaveAttribute("href", "/fundraisers/warm-meals-2026");
     expect(screen.getByText("Weekend Pantry Crew")).toBeInTheDocument();
   });
 });

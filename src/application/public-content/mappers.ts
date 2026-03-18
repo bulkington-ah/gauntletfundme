@@ -5,6 +5,7 @@ import type {
   PublicCommunityReference,
   PublicCommunitySummary,
   PublicFundraiserBrowseEntry,
+  PublicProfileRelationshipMember,
   PublicFundraiserSummary,
 } from "./contracts";
 import type {
@@ -19,6 +20,15 @@ export const toPublicActorSummary = (
   displayName: snapshot.user.displayName,
   profileSlug: snapshot.profile?.slug ?? null,
   avatarUrl: snapshot.profile?.avatarUrl ?? null,
+});
+
+export const toPublicProfileRelationshipMember = (
+  snapshot: PublicActorSnapshot,
+): PublicProfileRelationshipMember => ({
+  ...toPublicActorSummary(snapshot),
+  role: snapshot.user.role,
+  profileType: snapshot.profile?.profileType ?? null,
+  bio: snapshot.profile?.bio ?? null,
 });
 
 export const toPublicCommunityReference = (
