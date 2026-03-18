@@ -18,6 +18,7 @@ const prototypeResetTableNames = [
   "auth_sessions",
   "auth_credentials",
   "reports",
+  "donation_intents",
   "donations",
   "follows",
   "comments",
@@ -43,6 +44,10 @@ export const createPostgresPrototypeDataResetRepository = (
 
       try {
         for (const tableName of prototypeResetTableNames) {
+          if (!(await checkTableExists(sqlClient, tableName))) {
+            continue;
+          }
+
           await sqlClient.query(`DELETE FROM ${tableName}`);
         }
 
@@ -55,4 +60,20 @@ export const createPostgresPrototypeDataResetRepository = (
       }
     },
   };
+};
+
+const checkTableExists = async (
+  sqlClient: SqlClient,
+  tableName: string,
+): Promise<boolean> => {
+  const result = await sqlClient.query<{ has_table: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM information_schema.tables
+       WHERE table_schema = 'public' AND table_name = $1
+     ) AS has_table`,
+    [tableName],
+  );
+
+  return Boolean(result.rows[0]?.has_table);
 };

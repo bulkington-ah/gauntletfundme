@@ -55,15 +55,19 @@ Remove automatic prototype catalog seeding from persistence bootstrap and replac
 - Completed on 2026-03-18.
 - Split persistence bootstrap so core schema and donation storage still initialize automatically, but prototype catalog data is no longer reseeded during repository startup.
 - Added a dedicated manual reset path through `resetPrototypeData`, a Postgres reset repository, and shared auth/demo seed helpers so the app can fully restore users, content, follows, donations, reports, sessions, and prototype credentials on demand.
+- Patched the reset repository to clear legacy `donation_intents` rows when that older table exists so local databases upgraded from the mocked donation intent flow no longer fail with a foreign-key violation during manual reset.
 - Added the hidden `/prototype/reset` page and `POST /api/prototype/reset` endpoint with a client-side button that shows inline success and failure states.
 - Updated home, login, and public error-state copy so the public surface no longer points at guaranteed seeded detail pages when the database starts empty.
 - Added regression coverage proving follow removals persist across refresh and are only restored after a manual reset.
 
 ## Verification
 - `npm test -- tests/application/persistence/reset-prototype-data.test.ts tests/infrastructure/persistence/postgres-bootstrap.test.ts tests/infrastructure/persistence/postgres-prototype-data-reset-repository.test.ts tests/infrastructure/persistence/postgres-public-content-engagement-repository.test.ts tests/infrastructure/auth/postgres-account-auth-repository.test.ts tests/presentation/api/auth-route-handlers.test.ts tests/presentation/api/prototype-route-handlers.test.ts tests/presentation/prototype/prototype-reset-control.test.tsx tests/presentation/prototype/prototype-reset-page.test.tsx tests/presentation/home/placeholder-home-page.test.tsx tests/presentation/profiles/public-profile-page.test.tsx tests/presentation/communities/public-community-page.test.tsx tests/presentation/fundraisers/public-fundraiser-page.test.tsx tests/e2e/mvp-user-journeys.test.ts`
+- `npm test -- tests/infrastructure/persistence/postgres-prototype-data-reset-repository.test.ts tests/presentation/api/prototype-route-handlers.test.ts tests/presentation/prototype/prototype-reset-control.test.tsx`
+- `curl -s -i -X POST http://localhost:3000/api/prototype/reset`
 - `npm run lint`
 - `npm run build`
 
 ## Handoff Notes
 - The hidden reset surface is intentionally public and unlinked. It is meant for prototype/demo environments only and should be revisited before any production hardening work.
 - The runtime now starts with schema-only readiness. Local developers need to visit `/prototype/reset` before expecting the demo catalog or prototype login credentials to exist.
+- Older local databases may still contain the pre-task-033 `donation_intents` table. Manual reset now clears that legacy data before removing seeded fundraisers and users.

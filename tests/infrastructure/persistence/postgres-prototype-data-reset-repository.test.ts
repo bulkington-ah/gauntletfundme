@@ -52,6 +52,32 @@ describe("PostgresPrototypeDataResetRepository", () => {
       authRepository.findViewerBySessionToken(sessionToken),
     ).resolves.toBeNull();
   });
+
+  it("clears legacy donation intents before removing seeded fundraisers", async () => {
+    const { pool, resetRepository } = createRepositoryHarness();
+
+    await resetRepository.resetPrototypeData();
+    await pool.query(`CREATE TYPE donation_intent_status AS ENUM ('started')`);
+    await pool.query(`
+      CREATE TABLE donation_intents (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+        fundraiser_id TEXT NOT NULL REFERENCES fundraisers(id) ON DELETE RESTRICT,
+        amount BIGINT NOT NULL CHECK (amount > 0),
+        status donation_intent_status NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await pool.query(
+      `INSERT INTO donation_intents
+         (id, user_id, fundraiser_id, amount, status, created_at)
+       VALUES
+         ('intent_reset_regression', 'user_supporter_jordan', 'fundraiser_warm_meals_2026', 4200, 'started', '2026-03-18T12:30:00.000Z')`,
+    );
+
+    await expect(resetRepository.resetPrototypeData()).resolves.toBeUndefined();
+    await expect(countRows(pool, "donation_intents")).resolves.toBe(0);
+  });
 });
 
 const createRepositoryHarness = () => {
@@ -60,6 +86,7 @@ const createRepositoryHarness = () => {
   const pool = new pg.Pool();
 
   return {
+    pool,
     authRepository: createPostgresAccountAuthRepository({
       sqlClient: pool,
     }),
@@ -70,4 +97,15 @@ const createRepositoryHarness = () => {
       sqlClient: pool,
     }),
   };
+};
+
+const countRows = async (
+  pool: ReturnType<typeof createRepositoryHarness>["pool"],
+  tableName: string,
+): Promise<number> => {
+  const result = await pool.query<{ row_count: string }>(
+    `SELECT COUNT(*)::text AS row_count FROM ${tableName}`,
+  );
+
+  return Number(result.rows[0]?.row_count ?? "0");
 };
