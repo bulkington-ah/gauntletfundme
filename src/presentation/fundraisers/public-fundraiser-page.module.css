@@ -431,8 +431,9 @@
 
 .sidebarStats {
   align-items: center;
-  display: flex;
+  display: grid;
   gap: 1rem;
+  grid-template-columns: 5.8rem minmax(0, 1fr);
 }
 
 .mobileSupportStats {
@@ -442,7 +443,9 @@
 }
 
 .progressCluster {
+  display: grid;
   flex: 0 0 auto;
+  place-items: center;
 }
 
 .progressRing {
@@ -460,6 +463,7 @@
 .supportSummary {
   display: grid;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 .supportAmount {
@@ -473,6 +477,24 @@
 .supportMeta {
   color: var(--wa-color-text-quiet);
   font-size: 0.98rem;
+}
+
+.sidebarStats .progressRing {
+  height: 5.8rem;
+  width: 5.8rem;
+}
+
+.sidebarStats .supportSummary {
+  align-content: start;
+}
+
+.sidebarStats .supportAmount {
+  font-size: clamp(1.5rem, 2.1vw, 2rem);
+  line-height: 1.04;
+}
+
+.sidebarStats .supportMeta {
+  line-height: 1.55;
 }
 
 .sidebarActions {
