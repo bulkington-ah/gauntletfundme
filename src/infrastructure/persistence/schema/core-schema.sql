@@ -28,17 +28,6 @@ CREATE TABLE user_profiles (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE fundraisers (
-  id TEXT PRIMARY KEY,
-  owner_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-  slug TEXT NOT NULL UNIQUE,
-  title TEXT NOT NULL,
-  story TEXT NOT NULL,
-  status fundraiser_status NOT NULL,
-  goal_amount BIGINT NOT NULL CHECK (goal_amount > 0),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 CREATE TABLE communities (
   id TEXT PRIMARY KEY,
   owner_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -46,6 +35,18 @@ CREATE TABLE communities (
   name TEXT NOT NULL,
   description TEXT NOT NULL,
   visibility community_visibility NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE fundraisers (
+  id TEXT PRIMARY KEY,
+  owner_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  community_id TEXT REFERENCES communities(id) ON DELETE SET NULL,
+  slug TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  story TEXT NOT NULL,
+  status fundraiser_status NOT NULL,
+  goal_amount BIGINT NOT NULL CHECK (goal_amount > 0),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -100,6 +101,7 @@ CREATE TABLE reports (
 
 CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
 CREATE INDEX idx_fundraisers_owner_user_id ON fundraisers(owner_user_id);
+CREATE INDEX idx_fundraisers_community_id ON fundraisers(community_id);
 CREATE INDEX idx_communities_owner_user_id ON communities(owner_user_id);
 CREATE INDEX idx_posts_community_id_created_at ON posts(community_id, created_at DESC);
 CREATE INDEX idx_comments_post_id_created_at ON comments(post_id, created_at DESC);

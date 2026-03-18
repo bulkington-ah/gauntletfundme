@@ -176,6 +176,7 @@ const prototypeCatalog: PrototypeCatalog = {
     createFundraiser({
       id: "fundraiser_warm_meals_2026",
       ownerUserId: "user_organizer_avery",
+      communityId: "community_neighbors_helping_neighbors",
       slug: "warm-meals-2026",
       title: "Warm Meals 2026",
       story:
@@ -187,6 +188,7 @@ const prototypeCatalog: PrototypeCatalog = {
     createFundraiser({
       id: "fundraiser_winter_coat_drive_2026",
       ownerUserId: "user_organizer_avery",
+      communityId: "community_neighbors_helping_neighbors",
       slug: "winter-coat-drive-2026",
       title: "Winter Coat Drive 2026",
       story:
@@ -198,6 +200,7 @@ const prototypeCatalog: PrototypeCatalog = {
     createFundraiser({
       id: "fundraiser_school_supplies_spring",
       ownerUserId: "user_organizer_avery",
+      communityId: "community_school_success_network",
       slug: "school-supplies-spring",
       title: "School Supplies Spring",
       story:
@@ -209,6 +212,7 @@ const prototypeCatalog: PrototypeCatalog = {
     createFundraiser({
       id: "fundraiser_community_fridge_expansion",
       ownerUserId: "user_organizer_avery",
+      communityId: "community_weekend_pantry_crew",
       slug: "community-fridge-expansion",
       title: "Community Fridge Expansion",
       story:

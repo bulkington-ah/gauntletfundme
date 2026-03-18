@@ -90,6 +90,19 @@ export const createPostgresPublicContentEngagementRepository = (
     return row ? mapUser(row) : null;
   };
 
+  const findCommunityById = async (communityId: string) => {
+    const result = await query<CommunityRow>(
+      `SELECT id, owner_user_id, slug, name, description, visibility, created_at
+       FROM communities
+       WHERE id = $1
+       LIMIT 1`,
+      [communityId],
+    );
+    const row = result.rows[0];
+
+    return row ? mapCommunity(row) : null;
+  };
+
   const findUserProfileByUserId = async (userId: string) => {
     const result = await query<UserProfileRow>(
       `SELECT id, user_id, slug, bio, avatar_url, profile_type, created_at
@@ -120,7 +133,16 @@ export const createPostgresPublicContentEngagementRepository = (
 
   const findFundraiserRowsByOwnerUserId = async (ownerUserId: string) => {
     const result = await query<FundraiserRow>(
-      `SELECT id, owner_user_id, slug, title, story, status, goal_amount, created_at
+      `SELECT
+         id,
+         owner_user_id,
+         community_id,
+         slug,
+         title,
+         story,
+         status,
+         goal_amount,
+         created_at
        FROM fundraisers
        WHERE owner_user_id = $1
        ORDER BY created_at DESC`,
@@ -135,6 +157,7 @@ export const createPostgresPublicContentEngagementRepository = (
       `SELECT
          f.id,
          f.owner_user_id,
+         f.community_id,
          f.slug,
          f.title,
          f.story,
@@ -149,6 +172,33 @@ export const createPostgresPublicContentEngagementRepository = (
        FROM fundraisers f
        INNER JOIN users u ON u.id = f.owner_user_id
        ORDER BY f.created_at DESC`,
+    );
+
+    return result.rows;
+  };
+
+  const findFundraiserRowsWithOwnersByCommunityId = async (communityId: string) => {
+    const result = await query<FundraiserWithOwnerRow>(
+      `SELECT
+         f.id,
+         f.owner_user_id,
+         f.community_id,
+         f.slug,
+         f.title,
+         f.story,
+         f.status,
+         f.goal_amount,
+         f.created_at,
+         u.id AS joined_user_id,
+         u.email,
+         u.display_name,
+         u.role,
+         u.created_at AS user_created_at
+       FROM fundraisers f
+       INNER JOIN users u ON u.id = f.owner_user_id
+       WHERE f.community_id = $1
+       ORDER BY f.created_at DESC`,
+      [communityId],
     );
 
     return result.rows;
@@ -187,13 +237,6 @@ export const createPostgresPublicContentEngagementRepository = (
     );
 
     return result.rows;
-  };
-
-  const findLatestCommunityByOwnerUserId = async (ownerUserId: string) => {
-    const communityRows = await findCommunityRowsByOwnerUserId(ownerUserId);
-    const row = communityRows[0];
-
-    return row ? mapCommunity(row) : null;
   };
 
   const findDonationRowsByFundraiserId = async (fundraiserId: string) => {
@@ -304,7 +347,6 @@ export const createPostgresPublicContentEngagementRepository = (
     fundraiserRow: FundraiserRow,
     owner: User,
     ownerProfile: PublicActorSnapshot["profile"],
-    relatedCommunity: PublicFundraiserSummarySnapshot["relatedCommunity"],
   ): Promise<PublicFundraiserSummarySnapshot> => {
     const donationMetricsResult = await query<{
       donation_count: string;
@@ -316,9 +358,12 @@ export const createPostgresPublicContentEngagementRepository = (
          COUNT(DISTINCT user_id)::text AS supporter_count,
          COALESCE(SUM(amount), 0)::text AS amount_raised
        FROM donations
-       WHERE fundraiser_id = $1`,
+      WHERE fundraiser_id = $1`,
       [fundraiserRow.id],
     );
+    const relatedCommunity = fundraiserRow.community_id
+      ? await findCommunityById(fundraiserRow.community_id)
+      : null;
 
     return {
       fundraiser: mapFundraiser(fundraiserRow),
@@ -341,17 +386,11 @@ export const createPostgresPublicContentEngagementRepository = (
     }
 
     const ownerProfile = await findUserProfileByUserId(ownerUserId);
-    const relatedCommunity = await findLatestCommunityByOwnerUserId(ownerUserId);
     const fundraiserRows = await findFundraiserRowsByOwnerUserId(ownerUserId);
 
     const summaries = await Promise.all(
       fundraiserRows.map((fundraiserRow) =>
-        buildFundraiserSummarySnapshotFromRow(
-          fundraiserRow,
-          owner,
-          ownerProfile,
-          relatedCommunity,
-        ),
+        buildFundraiserSummarySnapshotFromRow(fundraiserRow, owner, ownerProfile),
       ),
     );
 
@@ -365,7 +404,7 @@ export const createPostgresPublicContentEngagementRepository = (
     owner: mapJoinedUser(communityRow),
     ownerProfile: await findUserProfileByUserId(communityRow.owner_user_id),
     followerCount: await countFollowersByTarget("community", communityRow.id),
-    fundraiserCount: (await findFundraiserRowsByOwnerUserId(communityRow.owner_user_id))
+    fundraiserCount: (await findFundraiserRowsWithOwnersByCommunityId(communityRow.id))
       .length,
   });
 
@@ -622,7 +661,6 @@ export const createPostgresPublicContentEngagementRepository = (
             fundraiserRow,
             owner,
             await findUserProfileByUserId(fundraiserRow.owner_user_id),
-            await findLatestCommunityByOwnerUserId(fundraiserRow.owner_user_id),
           );
         }),
       );
@@ -713,6 +751,7 @@ export const createPostgresPublicContentEngagementRepository = (
         `SELECT
            f.id,
            f.owner_user_id,
+           f.community_id,
            f.slug,
            f.title,
            f.story,
@@ -738,9 +777,6 @@ export const createPostgresPublicContentEngagementRepository = (
       }
       const owner = mapJoinedUser(fundraiserRow);
       const ownerProfile = await findUserProfileByUserId(fundraiserRow.owner_user_id);
-      const relatedCommunity = await findLatestCommunityByOwnerUserId(
-        fundraiserRow.owner_user_id,
-      );
       const donationRows = await findDonationRowsByFundraiserId(
         fundraiserRow.id,
       );
@@ -750,7 +786,6 @@ export const createPostgresPublicContentEngagementRepository = (
           fundraiserRow,
           owner,
           ownerProfile,
-          relatedCommunity,
         ),
         viewerFollowState: await buildViewerFollowState(input.viewerUserId, {
           ownerUserId: fundraiserRow.owner_user_id,
@@ -803,9 +838,18 @@ export const createPostgresPublicContentEngagementRepository = (
       if (!communityRow) {
         return null;
       }
-      const fundraisers = await findFundraiserSummariesByOwnerUserId(
-        communityRow.owner_user_id,
+      const fundraisers = await Promise.all(
+        (
+          await findFundraiserRowsWithOwnersByCommunityId(communityRow.id)
+        ).map(async (fundraiserRow) =>
+          buildFundraiserSummarySnapshotFromRow(
+            fundraiserRow,
+            mapJoinedUser(fundraiserRow),
+            await findUserProfileByUserId(fundraiserRow.owner_user_id),
+          ),
+        ),
       );
+      fundraisers.sort(compareFundraiserSummaries);
 
       return {
         community: mapCommunity(communityRow),
@@ -1274,6 +1318,7 @@ type UserProfileRow = {
 type FundraiserRow = {
   id: string;
   owner_user_id: string;
+  community_id: string | null;
   slug: string;
   title: string;
   story: string;
@@ -1409,6 +1454,7 @@ const mapFundraiser = (row: FundraiserRow) =>
   createFundraiser({
     id: row.id,
     ownerUserId: row.owner_user_id,
+    communityId: row.community_id,
     slug: row.slug,
     title: row.title,
     story: row.story,

@@ -33,6 +33,7 @@ export type UserProfileRecord = {
 export type FundraiserRecord = {
   id: string;
   owner_user_id: string;
+  community_id: string | null;
   slug: string;
   title: string;
   story: string;

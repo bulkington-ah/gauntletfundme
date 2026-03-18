@@ -54,7 +54,11 @@ describe("PostgresPublicContentEngagementRepository", () => {
     expect(fundraisers[0]?.fundraiser.slug).toBe("community-fridge-expansion");
     expect(fundraisers[0]?.owner.displayName).toBe("Avery Johnson");
     expect(fundraisers[0]?.ownerProfile?.slug).toBe("avery-johnson");
-    expect(fundraisers[0]?.relatedCommunity?.slug).toBe("school-success-network");
+    expect(fundraisers[0]?.relatedCommunity?.slug).toBe("weekend-pantry-crew");
+    expect(
+      fundraisers.find((entry) => entry.fundraiser.slug === "school-supplies-spring")
+        ?.relatedCommunity?.slug,
+    ).toBe("school-success-network");
     expect(fundraisers.find((entry) => entry.fundraiser.slug === "warm-meals-2026"))
       .toMatchObject({
         amountRaised: 22000,
@@ -78,13 +82,19 @@ describe("PostgresPublicContentEngagementRepository", () => {
       communities.find((entry) => entry.community.slug === "neighbors-helping-neighbors"),
     ).toMatchObject({
       followerCount: 4,
-      fundraiserCount: 4,
+      fundraiserCount: 2,
     });
     expect(
       communities.find((entry) => entry.community.slug === "weekend-pantry-crew"),
     ).toMatchObject({
       followerCount: 3,
-      fundraiserCount: 4,
+      fundraiserCount: 1,
+    });
+    expect(
+      communities.find((entry) => entry.community.slug === "school-success-network"),
+    ).toMatchObject({
+      followerCount: 2,
+      fundraiserCount: 1,
     });
   });
 
@@ -448,12 +458,12 @@ describe("PostgresPublicContentEngagementRepository", () => {
       "Noah Kim",
     );
     expect(communitySnapshot?.followerCount).toBe(4);
-    expect(communitySnapshot?.fundraisers).toHaveLength(4);
+    expect(communitySnapshot?.fundraisers).toHaveLength(2);
     expect(communitySnapshot?.featuredFundraiser?.fundraiser.slug).toBe(
       "warm-meals-2026",
     );
-    expect(communitySnapshot?.amountRaised).toBe(50500);
-    expect(communitySnapshot?.donationCount).toBe(11);
+    expect(communitySnapshot?.amountRaised).toBe(30000);
+    expect(communitySnapshot?.donationCount).toBe(7);
   });
 
   it("backfills legacy donation intent rows into completed donations during bootstrap", async () => {

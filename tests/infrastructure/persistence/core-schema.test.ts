@@ -36,9 +36,13 @@ describe("core persistence schema", () => {
       "CREATE TYPE report_target_type AS ENUM ('post', 'comment');",
     );
     expect(sql).toContain("owner_user_id TEXT NOT NULL REFERENCES users(id)");
+    expect(sql).toContain(
+      "community_id TEXT REFERENCES communities(id) ON DELETE SET NULL",
+    );
     expect(sql).toContain("moderation_status moderation_status NOT NULL");
     expect(sql).toContain("UNIQUE (user_id, target_type, target_id)");
     expect(sql).toContain("CREATE INDEX idx_follows_target_lookup");
+    expect(sql).toContain("CREATE INDEX idx_fundraisers_community_id");
     expect(sql).toContain("CREATE INDEX idx_posts_community_id_created_at");
     expect(sql).toContain("CREATE INDEX idx_comments_post_id_created_at");
   });

@@ -54,6 +54,7 @@ describe("core domain models", () => {
     const fundraiser = createFundraiser({
       id: "fundraiser_123",
       ownerUserId: "user_123",
+      communityId: "community_123",
       slug: "Warm Meals 2026",
       title: "Warm Meals 2026",
       story: "Funding hot meals for families all winter.",
@@ -73,6 +74,7 @@ describe("core domain models", () => {
 
     expect(profile.slug).toBe("casey-for-community");
     expect(profile.avatarUrl).toBe("https://example.com/avatar.png");
+    expect(fundraiser.communityId).toBe("community_123");
     expect(fundraiser.slug).toBe("warm-meals-2026");
     expect(community.slug).toBe("neighbors-helping-neighbors");
     expectTypeOf(profile).toEqualTypeOf<UserProfile>();
@@ -104,6 +106,21 @@ describe("core domain models", () => {
         createdAt,
       }),
     ).toThrowError("amount must be a positive integer.");
+  });
+
+  it("defaults fundraiser communityId to null when no community is linked", () => {
+    const fundraiser = createFundraiser({
+      id: "fundraiser_123",
+      ownerUserId: "user_123",
+      slug: "warm-meals-2026",
+      title: "Warm Meals 2026",
+      story: "Funding hot meals for families all winter.",
+      status: "active",
+      goalAmount: 250000,
+      createdAt,
+    });
+
+    expect(fundraiser.communityId).toBeNull();
   });
 
   it("tracks content and moderation state for posts and comments", () => {

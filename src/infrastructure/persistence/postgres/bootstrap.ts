@@ -1,3 +1,4 @@
+import { getPrototypeCatalog } from "@/infrastructure/demo-data";
 import { loadCoreSchemaSql } from "@/infrastructure/persistence/schema";
 
 import type { SqlClient } from "./sql-client";
@@ -28,6 +29,7 @@ const initializePersistence = async (sqlClient: SqlClient): Promise<void> => {
   if (!hasUsersTable) {
     await sqlClient.query(loadCoreSchemaSql());
   } else {
+    await ensureFundraiserCommunityLinkage(sqlClient);
     await ensureDonationStorage(sqlClient);
   }
 };
@@ -50,6 +52,58 @@ const checkTableExists = async (
   );
 
   return Boolean(result.rows[0]?.has_table);
+};
+
+const checkColumnExists = async (
+  sqlClient: SqlClient,
+  tableName: string,
+  columnName: string,
+): Promise<boolean> => {
+  const result = await sqlClient.query<{ has_column: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = $1
+         AND column_name = $2
+     ) AS has_column`,
+    [tableName, columnName],
+  );
+
+  return Boolean(result.rows[0]?.has_column);
+};
+
+const ensureFundraiserCommunityLinkage = async (
+  sqlClient: SqlClient,
+): Promise<void> => {
+  if (!(await checkTableExists(sqlClient, "fundraisers"))) {
+    return;
+  }
+
+  if (!(await checkColumnExists(sqlClient, "fundraisers", "community_id"))) {
+    await sqlClient.query(`
+      ALTER TABLE fundraisers
+      ADD COLUMN community_id TEXT REFERENCES communities(id) ON DELETE SET NULL
+    `);
+  }
+
+  await sqlClient.query(
+    `CREATE INDEX IF NOT EXISTS idx_fundraisers_community_id ON fundraisers(community_id)`,
+  );
+
+  for (const fundraiser of getPrototypeCatalog().fundraisers) {
+    if (!fundraiser.communityId) {
+      continue;
+    }
+
+    await sqlClient.query(
+      `UPDATE fundraisers
+       SET community_id = $2
+       WHERE id = $1
+         AND community_id IS NULL`,
+      [fundraiser.id, fundraiser.communityId],
+    );
+  }
 };
 
 const ensureDonationStorage = async (sqlClient: SqlClient): Promise<void> => {

@@ -55,7 +55,7 @@ Core relational entities for the MVP:
   - fields: `id`, `userId`, `slug`, `bio`, `avatarUrl`, `profileType`
 - `Fundraiser`
   - fundraiser owned by a user or organizing identity
-  - fields: `id`, `ownerUserId`, `slug`, `title`, `story`, `status`, `goalAmount`, `createdAt`
+  - fields: `id`, `ownerUserId`, `communityId`, `slug`, `title`, `story`, `status`, `goalAmount`, `createdAt`
 - `Community`
   - discussion and engagement space linked to a cause or organizer
   - fields: `id`, `ownerUserId`, `slug`, `name`, `description`, `visibility`, `createdAt`
@@ -77,6 +77,7 @@ Core relational entities for the MVP:
 
 Modeling assumptions:
 - `targetType` fields should be enum-based to keep cross-entity actions explicit.
+- `Fundraiser.communityId` should store the fundraiser's explicit linked community when one exists; reads must not infer community linkage from shared ownership alone.
 - Soft-delete or status fields are preferred over hard deletion for moderated content.
 - Roles should remain simple in v1: `supporter`, `organizer`, `moderator`, `admin`.
 

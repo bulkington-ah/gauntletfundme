@@ -30,6 +30,9 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
   const findUserById = (userId: string): User | null =>
     catalog.users.find((user) => user.id === userId) ?? null;
 
+  const findCommunityById = (communityId: string) =>
+    catalog.communities.find((community) => community.id === communityId) ?? null;
+
   const findUserProfileByUserId = (userId: string): UserProfile | null =>
     catalog.userProfiles.find((profile) => profile.userId === userId) ?? null;
 
@@ -107,6 +110,11 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
       .filter((fundraiser) => fundraiser.ownerUserId === ownerUserId)
       .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
 
+  const findFundraisersByCommunityId = (communityId: string) =>
+    catalog.fundraisers
+      .filter((fundraiser) => fundraiser.communityId === communityId)
+      .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+
   const findDonationsForFundraiser = (fundraiserId: string) =>
     catalog.donations
       .filter((donation) => donation.fundraiserId === fundraiserId)
@@ -140,7 +148,7 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
       owner,
       ownerProfile: findUserProfileByUserId(owner.id),
       followerCount: countFollowers("community", community.id),
-      fundraiserCount: findFundraisersByOwnerUserId(community.ownerUserId).length,
+      fundraiserCount: findFundraisersByCommunityId(community.id).length,
     };
   };
 
@@ -246,7 +254,9 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
       fundraiser,
       owner,
       ownerProfile: findUserProfileByUserId(owner.id),
-      relatedCommunity: findCommunitiesByOwnerUserId(owner.id)[0] ?? null,
+      relatedCommunity: fundraiser.communityId
+        ? findCommunityById(fundraiser.communityId)
+        : null,
       donationCount: donations.length,
       supporterCount: new Set(donations.map((donation) => donation.userId)).size,
       amountRaised: donations.reduce((sum, donation) => sum + donation.amount, 0),
@@ -274,6 +284,17 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
     ownerUserId: string,
   ): PublicFundraiserSummarySnapshot[] =>
     findFundraisersByOwnerUserId(ownerUserId)
+      .flatMap((fundraiser) => {
+        const summary = buildFundraiserSummarySnapshot(fundraiser.id);
+
+        return summary ? [summary] : [];
+      })
+      .sort(compareFundraiserSummaries);
+
+  const findFundraiserSummariesByCommunityId = (
+    communityId: string,
+  ): PublicFundraiserSummarySnapshot[] =>
+    findFundraisersByCommunityId(communityId)
       .flatMap((fundraiser) => {
         const summary = buildFundraiserSummarySnapshot(fundraiser.id);
 
@@ -504,7 +525,7 @@ export const createStaticPublicContentRepository = (): PublicContentReadReposito
         return null;
       }
 
-      const fundraisers = findFundraiserSummariesByOwnerUserId(community.ownerUserId);
+      const fundraisers = findFundraiserSummariesByCommunityId(community.id);
 
       return {
         community,

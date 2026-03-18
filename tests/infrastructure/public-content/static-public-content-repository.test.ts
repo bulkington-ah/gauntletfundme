@@ -56,4 +56,28 @@ describe("StaticPublicContentRepository", () => {
       isOwnTarget: true,
     });
   });
+
+  it("uses explicit fundraiser linkage for related community context and community aggregates", async () => {
+    const repository = createStaticPublicContentRepository();
+
+    const fundraisers = await repository.listFundraisers();
+    const community = await repository.findCommunityBySlug({
+      slug: "neighbors-helping-neighbors",
+    });
+
+    expect(
+      fundraisers.find((entry) => entry.fundraiser.slug === "community-fridge-expansion")
+        ?.relatedCommunity?.slug,
+    ).toBe("weekend-pantry-crew");
+    expect(
+      fundraisers.find((entry) => entry.fundraiser.slug === "school-supplies-spring")
+        ?.relatedCommunity?.slug,
+    ).toBe("school-success-network");
+    expect(community?.fundraisers.map((entry) => entry.fundraiser.slug)).toEqual([
+      "warm-meals-2026",
+      "winter-coat-drive-2026",
+    ]);
+    expect(community?.amountRaised).toBe(30000);
+    expect(community?.donationCount).toBe(7);
+  });
 });

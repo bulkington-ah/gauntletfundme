@@ -12,6 +12,7 @@ export type FundraiserStatus = (typeof fundraiserStatuses)[number];
 export type Fundraiser = {
   id: string;
   ownerUserId: string;
+  communityId: string | null;
   slug: string;
   title: string;
   story: string;
@@ -20,13 +21,18 @@ export type Fundraiser = {
   createdAt: Date;
 };
 
-export type CreateFundraiserInput = Fundraiser;
+export type CreateFundraiserInput = Omit<Fundraiser, "communityId"> & {
+  communityId?: string | null;
+};
 
 export const createFundraiser = (
   input: CreateFundraiserInput,
 ): Fundraiser => ({
   id: requireNonEmptyString(input.id, "id"),
   ownerUserId: requireNonEmptyString(input.ownerUserId, "ownerUserId"),
+  communityId: input.communityId
+    ? requireNonEmptyString(input.communityId, "communityId")
+    : null,
   slug: normalizeSlug(input.slug, "slug"),
   title: requireNonEmptyString(input.title, "title"),
   story: requireNonEmptyString(input.story, "story"),

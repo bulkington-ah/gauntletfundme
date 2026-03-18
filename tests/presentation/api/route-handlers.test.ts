@@ -295,9 +295,9 @@ describe("API route handlers", () => {
       community: {
         slug: "neighbors-helping-neighbors",
         followerCount: 4,
-        fundraiserCount: 4,
-        amountRaised: 50500,
-        donationCount: 11,
+        fundraiserCount: 2,
+        amountRaised: 30000,
+        donationCount: 7,
       },
       featuredFundraiser: {
         slug: "warm-meals-2026",

@@ -32,25 +32,6 @@ export const seedPrototypeCatalog = async (sqlClient: SqlClient): Promise<void> 
     );
   }
 
-  for (const fundraiser of catalog.fundraisers) {
-    await sqlClient.query(
-      `INSERT INTO fundraisers
-         (id, owner_user_id, slug, title, story, status, goal_amount, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       ON CONFLICT (id) DO NOTHING`,
-      [
-        fundraiser.id,
-        fundraiser.ownerUserId,
-        fundraiser.slug,
-        fundraiser.title,
-        fundraiser.story,
-        fundraiser.status,
-        fundraiser.goalAmount,
-        fundraiser.createdAt,
-      ],
-    );
-  }
-
   for (const community of catalog.communities) {
     await sqlClient.query(
       `INSERT INTO communities
@@ -65,6 +46,26 @@ export const seedPrototypeCatalog = async (sqlClient: SqlClient): Promise<void> 
         community.description,
         community.visibility,
         community.createdAt,
+      ],
+    );
+  }
+
+  for (const fundraiser of catalog.fundraisers) {
+    await sqlClient.query(
+      `INSERT INTO fundraisers
+         (id, owner_user_id, community_id, slug, title, story, status, goal_amount, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       ON CONFLICT (id) DO NOTHING`,
+      [
+        fundraiser.id,
+        fundraiser.ownerUserId,
+        fundraiser.communityId,
+        fundraiser.slug,
+        fundraiser.title,
+        fundraiser.story,
+        fundraiser.status,
+        fundraiser.goalAmount,
+        fundraiser.createdAt,
       ],
     );
   }
